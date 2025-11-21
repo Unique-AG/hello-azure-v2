@@ -291,37 +291,176 @@ echo -e "${BLUE}Importing Azure AD groups into terraform state...${NC}"
 echo ""
 
 # Azure AD Groups
-# Import format: {object_id} (the GUID assigned by Azure AD)
+# Import format: /groups/{object_id} (the GUID assigned by Azure AD)
 # These groups are used for role-based access control (RBAC)
 import_resource_if_not_exists \
     "azuread_group.telemetry_observer" \
-    "3e60cd87-c622-44d7-801f-fc691822d0ca" \
+    "/groups/3e60cd87-c622-44d7-801f-fc691822d0ca" \
     "azuread_group.telemetry_observer"
 
 import_resource_if_not_exists \
     "azuread_group.sensitive_data_observer" \
-    "5be17159-b6e6-4823-b478-c9430f90ebe1" \
+    "/groups/5be17159-b6e6-4823-b478-c9430f90ebe1" \
     "azuread_group.sensitive_data_observer"
 
 import_resource_if_not_exists \
     "azuread_group.devops" \
-    "dfffea4f-9516-4a4d-ad56-b21c4f174b82" \
+    "/groups/dfffea4f-9516-4a4d-ad56-b21c4f174b82" \
     "azuread_group.devops"
 
 import_resource_if_not_exists \
     "azuread_group.emergency_admin" \
-    "3139d505-c738-49ca-8182-b9f4b334059b" \
+    "/groups/3139d505-c738-49ca-8182-b9f4b334059b" \
     "azuread_group.emergency_admin"
 
 import_resource_if_not_exists \
     "azuread_group.admin_kubernetes_cluster" \
-    "a435bed7-88b3-464f-bc3c-ba000d37ece5" \
+    "/groups/a435bed7-88b3-464f-bc3c-ba000d37ece5" \
     "azuread_group.admin_kubernetes_cluster"
 
 import_resource_if_not_exists \
     "azuread_group.main_keyvault_secret_writer" \
-    "fa8f2e2c-154e-4d4a-a99c-7dfa825858ef" \
+    "/groups/fa8f2e2c-154e-4d4a-a99c-7dfa825858ef" \
     "azuread_group.main_keyvault_secret_writer"
+
+echo ""
+echo -e "${BLUE}Importing application registration resources into terraform state...${NC}"
+echo ""
+
+# Azure AD Service Principal for Microsoft Graph
+# This is a well-known service principal that already exists in Azure AD
+# Import format: /servicePrincipals/{object_id}
+import_resource_if_not_exists \
+    "azuread_service_principal.msgraph" \
+    "/servicePrincipals/29c402c3-5bb1-4677-9a9b-80f77cd74944" \
+    "azuread_service_principal.msgraph"
+
+# Application Registration Module Resources
+# Import format: /applications/{object_id} for applications, /servicePrincipals/{object_id} for service principals
+import_resource_if_not_exists \
+    "module.application_registration.azuread_application.this" \
+    "/applications/6f3b9b9b-c440-4696-883d-ea19a0a3b554" \
+    "module.application_registration.azuread_application.this"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_service_principal.this" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010" \
+    "module.application_registration.azuread_service_principal.this"
+
+# Application App Roles
+# Import format: /applications/{application_id}/appRoles/{role_id}
+import_resource_if_not_exists \
+    "module.application_registration.azuread_application_app_role.maintainers" \
+    "/applications/6f3b9b9b-c440-4696-883d-ea19a0a3b554/appRoles/2ca08d18-0116-978f-bc4e-a110cc8a12d9" \
+    "module.application_registration.azuread_application_app_role.maintainers"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_application_app_role.managed_roles[\"application_support\"]" \
+    "/applications/6f3b9b9b-c440-4696-883d-ea19a0a3b554/appRoles/719570d9-6707-40f4-9193-29ae0745392e" \
+    "module.application_registration.azuread_application_app_role.managed_roles[application_support]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_application_app_role.managed_roles[\"infrastructure_support\"]" \
+    "/applications/6f3b9b9b-c440-4696-883d-ea19a0a3b554/appRoles/0a7f4e66-4942-4a2e-a433-82e54464f116" \
+    "module.application_registration.azuread_application_app_role.managed_roles[infrastructure_support]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_application_app_role.managed_roles[\"system_support\"]" \
+    "/applications/6f3b9b9b-c440-4696-883d-ea19a0a3b554/appRoles/8719acef-9791-41e4-9621-92d05315181c" \
+    "module.application_registration.azuread_application_app_role.managed_roles[system_support]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_application_app_role.managed_roles[\"user\"]" \
+    "/applications/6f3b9b9b-c440-4696-883d-ea19a0a3b554/appRoles/6a902661-cfac-44f4-846c-bc5ceaa012d4" \
+    "module.application_registration.azuread_application_app_role.managed_roles[user]"
+
+# Application Password
+# Import format: {application_id}/password/{key_id}
+import_resource_if_not_exists \
+    "module.application_registration.azuread_application_password.aad_app_password[0]" \
+    "6f3b9b9b-c440-4696-883d-ea19a0a3b554/password/fa3e3b35-6c30-4a97-b5f9-1fe3f30d195d" \
+    "module.application_registration.azuread_application_password.aad_app_password[0]"
+
+# App Role Assignments - Maintainers
+# Import format: {id} (the full path from state)
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.maintainers[\"084a1c45-5010-4aab-bab6-7b86a9d10e5c\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/RRxKCBBQq0q6tnuGqdEOXEeWO3NWueZItSB0uhLHfLQ" \
+    "module.application_registration.azuread_app_role_assignment.maintainers[084a1c45]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.maintainers[\"3b48f167-cb68-4655-b45b-878e170af84d\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/Z_FIO2jLVUa0W4eOFwr4TTafg3vVXT5Em4jqhTXUjt8" \
+    "module.application_registration.azuread_app_role_assignment.maintainers[3b48f167]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.maintainers[\"4b89a1f0-8038-4929-81e6-6d128dac7aa0\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/8KGJSziAKUmB5m0Sjax6oF3WDUAtnwpAhQJJAOJZjLQ" \
+    "module.application_registration.azuread_app_role_assignment.maintainers[4b89a1f0]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.maintainers[\"4ee4611f-b24c-444b-8d34-edab333bf868\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/H2HkTkyyS0SNNO2rMzv4aEeaT8GgFQFCo2P1rtQyp3s" \
+    "module.application_registration.azuread_app_role_assignment.maintainers[4ee4611f]"
+
+# App Role Assignments - Managed Roles (application_support)
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[\"application_support:084a1c45-5010-4aab-bab6-7b86a9d10e5c\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/RRxKCBBQq0q6tnuGqdEOXCe-72KXeWRBs_OM6Qk-K3A" \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[application_support:084a1c45]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[\"application_support:3b48f167-cb68-4655-b45b-878e170af84d\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/Z_FIO2jLVUa0W4eOFwr4TdnphcTuf0xIqmODzGXHbBg" \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[application_support:3b48f167]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[\"application_support:4b89a1f0-8038-4929-81e6-6d128dac7aa0\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/8KGJSziAKUmB5m0Sjax6oLIA2TWno25PoU_6NU8h3wE" \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[application_support:4b89a1f0]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[\"application_support:4ee4611f-b24c-444b-8d34-edab333bf868\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/H2HkTkyyS0SNNO2rMzv4aEvieKf9F0RJhH8NS1WYbUs" \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[application_support:4ee4611f]"
+
+# App Role Assignments - Managed Roles (user)
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[\"user:084a1c45-5010-4aab-bab6-7b86a9d10e5c\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/RRxKCBBQq0q6tnuGqdEOXGbH1YDlewtDmQTItNgzE08" \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[user:084a1c45]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[\"user:3b48f167-cb68-4655-b45b-878e170af84d\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/Z_FIO2jLVUa0W4eOFwr4TYRyzkPg6slBiQMy4oG5wZE" \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[user:3b48f167]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[\"user:4b89a1f0-8038-4929-81e6-6d128dac7aa0\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/8KGJSziAKUmB5m0Sjax6oHhDPWazNnpMsDPxtUeOPB8" \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[user:4b89a1f0]"
+
+import_resource_if_not_exists \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[\"user:4ee4611f-b24c-444b-8d34-edab333bf868\"]" \
+    "/servicePrincipals/5dbf19b3-6943-4696-9334-55b8c5566010/appRoleAssignedTo/H2HkTkyyS0SNNO2rMzv4aHU7MVR2up9KnsngViZrQVQ" \
+    "module.application_registration.azuread_app_role_assignment.managed_roles[user:4ee4611f]"
+
+# Key Vault Secrets
+# NOTE: These depend on key vault resources which are in Phase 2 (perimeter resources).
+# These will be imported after key vaults are defined and imported.
+# Import format: {key_vault_id}/secrets/{secret_name}
+# import_resource_if_not_exists \
+#     "module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]" \
+#     "https://hakv2testv2.vault.azure.net/secrets/aad-app-ha-test-gitops-client-id" \
+#     "module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]"
+#
+# import_resource_if_not_exists \
+#     "module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]" \
+#     "https://hakv2testv2.vault.azure.net/secrets/aad-app-ha-test-gitops-client-secret" \
+#     "module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]"
+
+echo -e "${YELLOW}  [INFO] Skipping key vault secrets imports.${NC}"
+echo -e "${YELLOW}         These will be imported in Phase 2 after key vault resources are defined.${NC}"
 
 echo ""
 echo -e "${GREEN}Resources imported successfully!${NC}"

@@ -40,3 +40,6 @@ terraform.rc
 
 # Ignore deprecated files
 *.deprecated
+
+# Ignore generated Terraform environments
+02_infrastructure/generated/

@@ -1,0 +1,9 @@
+subscription_id      = "${environment.subscription_id}"
+resource_group_name  = "${environment.resource_group_name}"
+storage_account_name = "${environment.storage_account_name}"
+container_name       = "${environment.container_name}"
+key                  = "${environment.key}"
+tenant_id            = "${environment.tenant_id}"
+client_id            = "${environment.client_id}"
+use_oidc             = true
+
