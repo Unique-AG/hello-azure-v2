@@ -1,131 +1,167 @@
-# Infrastructure Template Generator
+# Infrastructure Configuration
 
-This directory uses Terraform's `templatefile()` function to generate environment-specific configurations from templates, reducing duplication and ensuring consistency across environments.
+This directory contains the infrastructure Terraform configurations organized by deployment phase (day-1, day-2) and environment-specific variables.
 
 ## Structure
 
 ```
 02_infrastructure/
-├── generator.tf              # Main generator using templatefile() and local_file
-├── build.sh                  # Automated build script
-├── environments.tfvars      # Environment definitions (dev, test)
-├── templates/                # Template files (.tftmpl)
-│   ├── 00-config.auto.tfvars.tftmpl
-│   ├── 00-environment.auto.tfvars.tftmpl
-│   ├── 90-backend.tf.tftmpl
-│   ├── 91-providers.tf.tftmpl
-│   └── 92-versions.tf.tftmpl
-├── test/                    # Source files (shared resource definitions)
-│   ├── 01-variables.tf
-│   ├── 02-locals.tf
-│   ├── 03-data.tf
-│   ├── 10-resource-groups.tf
-│   └── ... (other resource files)
-└── generated/               # Generated environments (gitignored)
-    ├── dev/
-    └── test/
+├── day-1/          # Foundational infrastructure (resource groups, networking, managed identities, custom roles)
+├── day-2/          # Identity/governance resources (Azure AD groups, application registration, federated credentials)
+├── test/           # Test environment-specific variables
+│   ├── 00-config.auto.tfvars           # Provider configuration (subscription_id, tenant_id, client_id, use_oidc)
+│   ├── 00-parameters-day-1.auto.tfvars        # Day-1 environment-specific parameters
+│   ├── 00-parameters-day-2.auto.tfvars  # Day-2 environment-specific parameters
+│   ├── backend-config-day-1.hcl         # Backend config for day-1 (separate state file)
+│   └── backend-config-day-2.hcl         # Backend config for day-2 (separate state file)
+└── dev/            # Dev environment-specific variables
+    ├── 00-config.auto.tfvars           # Provider configuration
+    ├── 00-parameters-day-1.auto.tfvars        # Day-1 environment-specific parameters
+    ├── 00-parameters-day-2.auto.tfvars  # Day-2 environment-specific parameters
+    ├── backend-config-day-1.hcl         # Backend config for day-1
+    └── backend-config-day-2.hcl         # Backend config for day-2
 ```
-
-## How It Works
-
-1. **Templates** (`.tftmpl` files) contain parameterized Terraform configurations
-2. **Generator** (`generator.tf`) uses `templatefile()` to render templates with environment-specific values
-3. **Build Script** (`build.sh`) runs the generator and copies shared files to each environment
-4. **Generated Output** creates complete, ready-to-use Terraform configurations in `generated/`
 
 ## Usage
 
-### Generate Environments
+### Initializing Terraform Backend
 
+Each day-X configuration uses a **separate state file** to avoid conflicts. The backend configuration must be passed via `-backend-config` flags during `terraform init`.
+
+**Day-1 Initialization:**
 ```bash
-cd 02_infrastructure
-./build.sh
+cd day-1
+terraform init -backend-config=../test/backend-config-day-1.hcl
 ```
 
-This will:
-- Generate environment-specific files from templates
-- Copy shared resource files to each generated environment
-- Create complete Terraform configurations in `generated/dev/` and `generated/test/`
-
-### Use Generated Environment
-
+**Day-2 Initialization:**
 ```bash
-# Navigate to generated environment
-cd generated/test
-
-# Initialize Terraform
-terraform init
-
-# Plan changes
-terraform plan
-
-# Apply changes
-terraform apply
+cd day-2
+terraform init -backend-config=../test/backend-config-day-2.hcl
 ```
 
-### Adding a New Environment
+**Note:** Each day-X has its own state file:
+- day-1: `terraform-infra-v2-day-1.tfstate`
+- day-2: `terraform-infra-v2-day-2.tfstate`
 
-1. Edit `environments.tfvars` and add a new environment entry:
+This ensures state isolation and prevents conflicts between different deployment phases.
+
+### Running Terraform Plan/Apply
+
+Use `-var-file` to load environment-specific variables. Each day-X has its own parameters file:
+
+**Day-1 (Foundational Infrastructure):**
+```bash
+cd day-1
+terraform plan \
+  -var-file=../test/00-config.auto.tfvars \
+  -var-file=../test/00-parameters-day-1.auto.tfvars
+
+terraform apply \
+  -var-file=../test/00-config.auto.tfvars \
+  -var-file=../test/00-parameters-day-1.auto.tfvars
+```
+
+**Day-2 (Identity/Governance):**
+```bash
+cd day-2
+terraform plan \
+  -var-file=../test/00-config.auto.tfvars \
+  -var-file=../test/00-parameters-day-2.auto.tfvars
+
+terraform apply \
+  -var-file=../test/00-config.auto.tfvars \
+  -var-file=../test/00-parameters-day-2.auto.tfvars
+```
+
+**Important:** Day-2 must be deployed **after** day-1, as it references resources created in day-1 using data sources (by name and resource group).
+
+### Environment-Specific Files
+
+- **00-config.auto.tfvars**: Contains provider configuration (subscription_id, tenant_id, client_id, use_oidc) - used by both day-1 and day-2
+- **00-parameters-day-1.auto.tfvars**: Contains day-1 environment-specific parameters (resource names, locations, user IDs, etc.)
+- **00-parameters-day-2.auto.tfvars**: Contains day-2 environment-specific parameters (references to day-1 resources by name)
+- **backend-config-day-1.hcl**: Backend configuration for day-1 (separate state file)
+- **backend-config-day-2.hcl**: Backend configuration for day-2 (separate state file)
+
+## Deployment Order
+
+1. **day-1**: Deploy foundational infrastructure first
+   - Creates resource groups, key vaults, networking, managed identities, etc.
+   - State stored in: `terraform-infra-v2-day-1.tfstate`
+
+2. **day-2**: Deploy identity/governance resources (depends on resources from day-1)
+   - Uses data sources to look up day-1 resources by name and resource group
+   - Creates Azure AD groups, application registrations, federated credentials
+   - State stored in: `terraform-infra-v2-day-2.tfstate`
+
+## Cross-Day Dependencies
+
+Day-2 does **not** use `terraform_remote_state` to reference day-1. Instead, it uses **data sources** to look up resources by name:
 
 ```hcl
-environments = {
-  # ... existing environments
-  prod = {
-    name                 = "prod"
-    subscription_id      = "..."
-    storage_account_name = "..."
-    # ... other configuration
-  }
+# Day-2 looks up resources created in day-1
+data "azurerm_key_vault" "key_vault_sensitive" {
+  name                = var.key_vault_sensitive.name
+  resource_group_name = var.key_vault_sensitive.resource_group_name
+}
+
+data "azurerm_kubernetes_cluster" "cluster" {
+  name                = var.aks.name
+  resource_group_name = var.aks.resource_group_name
 }
 ```
 
-2. Run the build script:
+This approach provides:
+- **Loose coupling**: Day-2 doesn't depend on day-1 state
+- **Independent deployment**: Day-2 can be deployed once resources exist
+- **Resilience**: Works even if day-1 state is lost/recreated
 
+## Importing Existing Resources
+
+If you have existing resources in Azure that need to be imported into Terraform state, use the import scripts. The import process is split across day-1 and day-2 to match the separate state files.
+Please note that you need to initialize terraform state before running the import scripts.
+e.g.
+
+for dev environment:
 ```bash
-./build.sh
+cd day-1
+terraform init -backend-config=../dev/backend-config-day-1.hcl
+cd day-2
+terraform init -backend-config=../dev/backend-config-day-2.hcl
+```
+for test environment:
+```bash
+cd day-1
+terraform init -backend-config=../test/backend-config-day-1.hcl
+cd day-2
+terraform init -backend-config=../test/backend-config-day-2.hcl
 ```
 
-3. The new environment will be generated in `generated/prod/`
 
-## Template Variables
 
-Each template receives an `environment` object with the following properties:
+## Import scripts:
+- day-1/import_azure_resources.sh
+- day-2/import_azure_resources.sh
 
-- `name` - Environment name (dev, test, prod)
-- `subscription_id` - Azure subscription ID
-- `storage_account_name` - Terraform state storage account
-- `container_name` - Terraform state container
-- `key` - Terraform state file key
-- `resource_group_name` - Resource group for Terraform state
-- `tenant_id` - Azure AD tenant ID
-- `client_id` - Azure AD application client ID
-- `name_prefix` - Prefix for resource naming
-- `environment` - Environment identifier
-- `dns_zone_name` - DNS zone name
+```bash
+cd day-1
+terraform init -backend-config=../test/backend-config-day-1.hcl
+./import_azure_resources.sh
+```
 
-## Customizing Templates
+```bash
+cd day-2
+terraform init -backend-config=../test/backend-config-day-2.hcl
+./import_azure_resources.sh
+```
 
-To modify environment-specific configurations:
+### Important Notes
 
-1. Edit the corresponding template file in `templates/`
-2. Use `${environment.variable_name}` syntax to reference environment values
-3. Run `./build.sh` to regenerate all environments
-
-## Shared Files
-
-The following files are shared across all environments and are copied from `test/`:
-
-- `01-variables.tf` - Variable definitions
-- `02-locals.tf` - Local values
-- `03-data.tf` - Data sources
-- `10-resource-groups.tf` - Resource groups
-- `20-networking.tf` - Networking resources
-- `21-managed-identities.tf` - Managed identities
-- `22-custom-roles.tf` - Custom role definitions
-- `23-azuread-groups.tf` - Azure AD groups
-- `24-application-registration.tf` - Application registrations
-- `25-federated-identity-credentials.tf` - Federated credentials
-- `99-outputs.tf` - Output definitions
-
-These files are not templated because they contain the same logic for all environments, with only variable values differing.
+- **Day-1 must be imported before day-2**: Day-2 resources depend on resources created in day-1 (e.g., key vaults, resource groups)
+- **Separate state files**: Each day-X uses its own state file:
+  - Day-1: `terraform-infra-v2-day-1.tfstate`
+  - Day-2: `terraform-infra-v2-day-2.tfstate`
+- **Idempotent**: The import scripts will skip resources that are already in state
+- **Expected drifts**: After import, running `terraform plan` will show cosmetic drifts (API version differences, module-internal changes). These are safe and documented in the script output
 
