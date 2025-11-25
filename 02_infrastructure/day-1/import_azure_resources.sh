@@ -95,6 +95,26 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing Subscription Budgets"
+echo "=========================================="
+echo ""
+
+echo "Checking azurerm_consumption_budget_subscription.subscription_budget..."
+if ! terraform state show azurerm_consumption_budget_subscription.subscription_budget >/dev/null 2>&1; then
+  echo "  Importing azurerm_consumption_budget_subscription.subscription_budget..."
+  # Read subscription_budget_name from VAR_PARAMS or use default
+  BUDGET_NAME=$(grep "^subscription_budget_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "subscription_budget")
+  BUDGET_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Consumption/budgets/${BUDGET_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_consumption_budget_subscription.subscription_budget \
+    "${BUDGET_ID}"
+  echo "  ✓ Imported azurerm_consumption_budget_subscription.subscription_budget"
+else
+  echo "  ✓ azurerm_consumption_budget_subscription.subscription_budget already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
 echo "Importing Virtual Network Module Resources"
 echo "=========================================="
 echo ""
