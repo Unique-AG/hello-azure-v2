@@ -1,20 +1,19 @@
 name: "[tf] [test] Infrastructure Apply 🏗️"
 on:
-  # pull_request:
-  #   branches:
-  #     - preview
-  #   paths:
-  #     - .github/workflows/test.infrastructure.tf.yaml
-  #     - infrastructure/test/**
-  #     - terraform-modules/**
-  # push:
-  #   branches:
-  #     - preview
-  #     - chore/enable-test-workflows
-  #   paths:
-  #     - .github/workflows/test.infrastructure.tf.yaml
-  #     - infrastructure/test/**
-  #     - terraform-modules/**
+  pull_request:
+    branches:
+      - preview
+    paths:
+      - .github/workflows/test.infrastructure.tf.yaml
+      - infrastructure/test/**
+      - terraform-modules/**
+  push:
+    branches:
+      - preview
+    paths:
+      - .github/workflows/test.infrastructure.tf.yaml
+      - infrastructure/test/**
+      - terraform-modules/**
   workflow_dispatch:
 
 permissions:
@@ -56,5 +55,5 @@ jobs:
         run: terraform plan -no-color
   
       - name: Terraform Apply
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/chore/enable-test-workflows') || (github.event_name == 'pull_request' && github.head_ref == 'chore/enable-test-workflows') #'refs/heads/preview'
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/preview') || (github.event_name == 'pull_request' && github.head_ref == 'preview')
         run: terraform apply -auto-approve -input=true

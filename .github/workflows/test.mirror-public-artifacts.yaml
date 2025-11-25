@@ -4,23 +4,12 @@ on:
   push:
     branches:
       - preview
-      - chore/enable-test-workflows
     paths:
       - .github/workflows/test.mirror-public-artifacts.yaml
       - mirroring/test/io.docker.yaml
       - mirroring/test/io.ghcr.yaml
       - mirroring/test/io.quay.yaml
   workflow_dispatch:
-
-  # push:
-  #   branches:
-  #     - preview
-  #     - chore/enable-test-workflows
-  #   paths:
-  #     - .github/workflows/test.mirror-public-artifacts.yaml
-  #     - mirroring/test/io.docker.yaml
-  #     - mirroring/test/io.ghcr.yaml
-  #     - mirroring/test/io.quay.yaml
 
 permissions:
   contents: read
