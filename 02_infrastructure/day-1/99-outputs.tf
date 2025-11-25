@@ -161,3 +161,28 @@
 #   description = "Name of the resource group for the vnet"
 #   value       = azurerm_resource_group.vnet.name
 # }
+
+output "postgresql_private_dns_zone_id" {
+  description = "ID of the PostgreSQL private DNS zone"
+  value       = azurerm_private_dns_zone.psql_private_dns_zone.id
+}
+
+output "dns_zone_name_servers" {
+  description = "The Name Servers for the DNS zone"
+  value       = azurerm_dns_zone.dns_zone.name_servers
+}
+
+output "dns_zone_name" {
+  description = "Name of the DNS zone"
+  value       = azurerm_dns_zone.dns_zone.name
+}
+
+output "dns_zone_id" {
+  description = "ID of the DNS zone"
+  value       = azurerm_dns_zone.dns_zone.id
+}
+
+output "speech_service_private_dns_zone_id" {
+  description = "ID of the speech service private DNS zone"
+  value       = azurerm_private_dns_zone.speech_service_private_dns_zone.id
+}

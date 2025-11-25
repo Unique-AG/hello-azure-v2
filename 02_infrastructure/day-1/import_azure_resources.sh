@@ -390,6 +390,142 @@ else
   echo "  ✓ azurerm_role_definition.acr_puller already in state, skipping"
 fi
 
+# DNS Zones and Records
+echo ""
+echo "=========================================="
+echo "Importing DNS Zones and Records..."
+echo "=========================================="
+
+# Read DNS zone name from VAR_PARAMS
+DNS_ZONE_NAME=$(grep "^dns_zone_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "")
+PSQL_DNS_ZONE_NAME=$(grep "^psql_private_dns_zone_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "psql.postgres.database.azure.com")
+SPEECH_DNS_ZONE_NAME=$(grep "^speech_service_private_dns_zone_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "")
+
+RESOURCE_GROUP_VNET_NAME=$(grep "^resource_group_vnet_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "rg-vnet-002")
+
+echo "Checking azurerm_dns_zone.dns_zone..."
+if ! terraform state show azurerm_dns_zone.dns_zone >/dev/null 2>&1; then
+  echo "  Importing azurerm_dns_zone.dns_zone..."
+  # TODO: Replace with actual DNS zone resource ID
+  # Get with: az network dns zone show --name <zone-name> --resource-group <rg-name> --query id -o tsv
+  DNS_ZONE_ID="${DNS_ZONE_ID:-/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/dnsZones/${DNS_ZONE_NAME}}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_dns_zone.dns_zone \
+    "${DNS_ZONE_ID}"
+  echo "  ✓ Imported azurerm_dns_zone.dns_zone"
+else
+  echo "  ✓ azurerm_dns_zone.dns_zone already in state, skipping"
+fi
+
+echo "Checking azurerm_private_dns_zone.psql_private_dns_zone..."
+if ! terraform state show azurerm_private_dns_zone.psql_private_dns_zone >/dev/null 2>&1; then
+  echo "  Importing azurerm_private_dns_zone.psql_private_dns_zone..."
+  # TODO: Replace with actual private DNS zone resource ID
+  # Get with: az network private-dns zone show --name <zone-name> --resource-group <rg-name> --query id -o tsv
+  PSQL_DNS_ZONE_ID="${PSQL_DNS_ZONE_ID:-/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/privateDnsZones/${PSQL_DNS_ZONE_NAME}}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_private_dns_zone.psql_private_dns_zone \
+    "${PSQL_DNS_ZONE_ID}"
+  echo "  ✓ Imported azurerm_private_dns_zone.psql_private_dns_zone"
+else
+  echo "  ✓ azurerm_private_dns_zone.psql_private_dns_zone already in state, skipping"
+fi
+
+echo "Checking azurerm_private_dns_zone.speech_service_private_dns_zone..."
+if ! terraform state show azurerm_private_dns_zone.speech_service_private_dns_zone >/dev/null 2>&1; then
+  echo "  Importing azurerm_private_dns_zone.speech_service_private_dns_zone..."
+  # TODO: Replace with actual private DNS zone resource ID
+  # Get with: az network private-dns zone show --name <zone-name> --resource-group <rg-name> --query id -o tsv
+  SPEECH_DNS_ZONE_ID="${SPEECH_DNS_ZONE_ID:-/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/privateDnsZones/${SPEECH_DNS_ZONE_NAME}}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_private_dns_zone.speech_service_private_dns_zone \
+    "${SPEECH_DNS_ZONE_ID}"
+  echo "  ✓ Imported azurerm_private_dns_zone.speech_service_private_dns_zone"
+else
+  echo "  ✓ azurerm_private_dns_zone.speech_service_private_dns_zone already in state, skipping"
+fi
+
+# DNS A Records
+echo ""
+echo "Importing DNS A Records..."
+echo "Checking azurerm_dns_a_record.adnsar_root..."
+if ! terraform state show azurerm_dns_a_record.adnsar_root >/dev/null 2>&1; then
+  echo "  Importing azurerm_dns_a_record.adnsar_root..."
+  # DNS A record ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/dnsZones/{zone}/A/{name}
+  # From terraform.tfstate: /subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/rg-vnet-002/providers/Microsoft.Network/dnsZones/test-hello.azure.unique.dev/A/@
+  DNS_A_ROOT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/dnsZones/${DNS_ZONE_NAME}/A/@"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_dns_a_record.adnsar_root \
+    "${DNS_A_ROOT_ID}"
+  echo "  ✓ Imported azurerm_dns_a_record.adnsar_root"
+else
+  echo "  ✓ azurerm_dns_a_record.adnsar_root already in state, skipping"
+fi
+
+# Import subdomain A records
+echo "Checking azurerm_dns_a_record.adnsar_sub_domains..."
+# The keys in the original state are: api, argo, zitadel
+# Note: zitadel has name "id" but key "zitadel"
+declare -A SUBDOMAIN_NAMES=(
+  ["api"]="api"
+  ["argo"]="argo"
+  ["zitadel"]="id"
+)
+
+for subdomain_key in api argo zitadel; do
+  echo "Checking azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]..."
+  if ! terraform state show "azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]" >/dev/null 2>&1; then
+    echo "  Importing azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]..."
+    # Get the actual subdomain name (DNS record name, not the key)
+    # Try to get from variable first, otherwise use the mapping
+    SUBDOMAIN_NAME=$(grep -A 10 "dns_zone_sub_domain_records\|dns_subdomain_records" "${VAR_PARAMS}" 2>/dev/null | grep -A 5 "${subdomain_key}" | grep "name" | cut -d'"' -f2 | head -1)
+    if [ -z "${SUBDOMAIN_NAME}" ]; then
+      SUBDOMAIN_NAME="${SUBDOMAIN_NAMES[${subdomain_key}]}"
+    fi
+    # DNS A record ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/dnsZones/{zone}/A/{name}
+    DNS_A_SUBDOMAIN_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/dnsZones/${DNS_ZONE_NAME}/A/${SUBDOMAIN_NAME}"
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      "azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]" \
+      "${DNS_A_SUBDOMAIN_ID}"
+    echo "  ✓ Imported azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]"
+  else
+    echo "  ✓ azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"] already in state, skipping"
+  fi
+done
+
+# Private DNS Zone Virtual Network Links
+echo ""
+echo "Importing Private DNS Zone Virtual Network Links..."
+echo "Checking azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link..."
+if ! terraform state show azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link >/dev/null 2>&1; then
+  echo "  Importing azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link..."
+  # Private DNS zone VNet link ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/privateDnsZones/{zone}/virtualNetworkLinks/{link-name}
+  # From terraform.tfstate: /subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/rg-vnet-002/providers/Microsoft.Network/privateDnsZones/psql.postgres.database.azure.com/virtualNetworkLinks/PsqlVnetZone.com
+  PSQL_VNET_LINK_NAME=$(grep "^azurerm_private_dns_zone_virtual_network_link_name\|^azurerm_private_dns_zone_virtual_network_link_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 | head -1 || echo "PsqlVnetZone.com")
+  PSQL_VNET_LINK_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/privateDnsZones/${PSQL_DNS_ZONE_NAME}/virtualNetworkLinks/${PSQL_VNET_LINK_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link \
+    "${PSQL_VNET_LINK_ID}"
+  echo "  ✓ Imported azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link"
+else
+  echo "  ✓ azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link already in state, skipping"
+fi
+
+echo "Checking azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link..."
+if ! terraform state show azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link >/dev/null 2>&1; then
+  echo "  Importing azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link..."
+  # Private DNS zone VNet link ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/privateDnsZones/{zone}/virtualNetworkLinks/{link-name}
+  # From terraform.tfstate: /subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/rg-vnet-002/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com/virtualNetworkLinks/speech-service-private-dns-zone-vnet-link-test
+  SPEECH_VNET_LINK_NAME=$(grep "^speech_service_private_dns_zone_virtual_network_link_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 | head -1 || echo "")
+  SPEECH_VNET_LINK_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/privateDnsZones/${SPEECH_DNS_ZONE_NAME}/virtualNetworkLinks/${SPEECH_VNET_LINK_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link \
+    "${SPEECH_VNET_LINK_ID}"
+  echo "  ✓ Imported azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link"
+else
+  echo "  ✓ azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link already in state, skipping"
+fi
+
 echo ""
 echo "=========================================="
 echo "Import script completed!"
