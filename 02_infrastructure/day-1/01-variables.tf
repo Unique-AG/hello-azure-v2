@@ -140,13 +140,31 @@ variable "log_analytics_workspace_name" {
 
 variable "budget_contact_emails" {
   description = "List of email addresses for budget notifications"
-  type        = list(string)
+  type        = set(string)
+}
+
+variable "subscription_budget_name" {
+  description = "Name of the subscription budget"
+  type        = string
+  default     = "subscription_budget"
+}
+
+variable "subscription_budget_amount" {
+  description = "The amount for the subscription budget"
+  type        = number
+  default     = 2000
 }
 
 # AKS Configuration
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
+}
+
+variable "aks_public_ip_name" {
+  description = "Name of the AKS public IP"
+  type        = string
+  default     = "aks_public_ip"
 }
 
 # Managed Identities

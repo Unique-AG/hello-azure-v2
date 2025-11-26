@@ -25,6 +25,10 @@ crash.*.log
 *.tfvars
 *.tfvars.json
 
+# Exception: Track configuration and parameter files (they are part of the repository structure)
+!00-config.auto.tfvars
+!00-parameters*.auto.tfvars
+
 # Ignore override files
 override.tf
 override.tf.json
@@ -37,9 +41,3 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
-
-# Ignore deprecated files
-*.deprecated
-
-# Ignore generated Terraform environments
-02_infrastructure/generated/
