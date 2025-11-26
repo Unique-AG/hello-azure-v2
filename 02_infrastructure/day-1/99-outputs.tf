@@ -162,6 +162,21 @@
 #   value       = azurerm_resource_group.vnet.name
 # }
 
+output "aks_public_ip_id" {
+  description = "ID of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.id
+}
+
+output "aks_public_ip_name" {
+  description = "Name of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.name
+}
+
+output "aks_public_ip_address" {
+  description = "IP address of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.ip_address
+}
+
 output "postgresql_private_dns_zone_id" {
   description = "ID of the PostgreSQL private DNS zone"
   value       = azurerm_private_dns_zone.psql_private_dns_zone.id
@@ -186,3 +201,5 @@ output "speech_service_private_dns_zone_id" {
   description = "ID of the speech service private DNS zone"
   value       = azurerm_private_dns_zone.speech_service_private_dns_zone.id
 }
+
+
