@@ -115,6 +115,27 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing Public IPs"
+echo "=========================================="
+echo ""
+
+echo "Checking azurerm_public_ip.aks_public_ip..."
+if ! terraform state show azurerm_public_ip.aks_public_ip >/dev/null 2>&1; then
+  echo "  Importing azurerm_public_ip.aks_public_ip..."
+  # Get with: az network public-ip show --name <aks_public_ip_name> --resource-group <resource_group_core_name> --query id -o tsv
+  # Read aks_public_ip_name from VAR_PARAMS or use default
+  AKS_PUBLIC_IP_NAME=$(grep "^aks_public_ip_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "aks_public_ip")
+  PUBLIC_IP_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Network/publicIPAddresses/${AKS_PUBLIC_IP_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_public_ip.aks_public_ip \
+    "${PUBLIC_IP_ID}"
+  echo "  ✓ Imported azurerm_public_ip.aks_public_ip"
+else
+  echo "  ✓ azurerm_public_ip.aks_public_ip already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
 echo "Importing Virtual Network Module Resources"
 echo "=========================================="
 echo ""

@@ -161,6 +161,12 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "aks_public_ip_name" {
+  description = "Name of the AKS public IP"
+  type        = string
+  default     = "aks_public_ip"
+}
+
 # Managed Identities
 variable "aks_user_assigned_identity_name" {
   description = "The name of the AKS user-assigned identity."
