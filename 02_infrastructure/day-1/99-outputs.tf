@@ -161,3 +161,18 @@
 #   description = "Name of the resource group for the vnet"
 #   value       = azurerm_resource_group.vnet.name
 # }
+
+output "aks_public_ip_id" {
+  description = "ID of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.id
+}
+
+output "aks_public_ip_name" {
+  description = "Name of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.name
+}
+
+output "aks_public_ip_address" {
+  description = "IP address of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.ip_address
+}
