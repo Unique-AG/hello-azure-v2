@@ -26,13 +26,13 @@ data "azuread_user" "gitops_maintainer" {
 
 # Key Vault data sources (created in day-1)
 data "azurerm_key_vault" "key_vault_core" {
-  name                = var.key_vault_core.name
-  resource_group_name = var.key_vault_core.resource_group_name
+  name                = local.key_vault_core_computed.name
+  resource_group_name = local.key_vault_core_computed.resource_group_name
 }
 
 data "azurerm_key_vault" "key_vault_sensitive" {
-  name                = var.key_vault_sensitive.name
-  resource_group_name = var.key_vault_sensitive.resource_group_name
+  name                = local.key_vault_sensitive_computed.name
+  resource_group_name = local.key_vault_sensitive_computed.resource_group_name
 }
 
 # Resource Group data sources (created in day-1)
@@ -51,13 +51,13 @@ data "azurerm_resource_group" "vnet" {
 # Kubernetes cluster data source (created in day-1 or workloads)
 # Note: This will fail if cluster doesn't exist, but that's expected during initial setup
 data "azurerm_kubernetes_cluster" "cluster" {
-  name                = var.aks.name
-  resource_group_name = var.aks.resource_group_name
+  name                = local.aks_computed.name
+  resource_group_name = local.aks_computed.resource_group_name
 }
 
 # DNS Zone data source (created in day-1)
 data "azurerm_dns_zone" "dns_zone" {
-  name                = var.dns_zone.name
-  resource_group_name = var.dns_zone.resource_group_name
+  name                = local.dns_zone_computed.name
+  resource_group_name = local.dns_zone_computed.resource_group_name
 }
 

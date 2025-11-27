@@ -1,30 +1,17 @@
 # Day-2 specific parameters
-# These reference resources created in day-1 by name and resource group
-# Note: Day-2 also needs many of the same variables as day-1 for configuration
+env = "test"
 
-# Environment-specific configuration (shared with day-1)
-dns_zone_name                       = "test-hello.azure.unique.dev"
-name_prefix                         = "ha-test"
-subnet_agw_cidr                     = "10.202.3.0/28"
-budget_contact_emails               = ["support@unique.ch"]
-kv_sku                              = "premium"
-log_analytics_workspace_name        = "la-test"
-aks_user_assigned_identity_name     = "aks-id-test"
-cluster_name                        = "aks-test"
-gitops_display_name                 = "GitOps"
-document_intelligence_identity_name = "docint-id-test"
-ingestion_cache_identity_name       = "cache-id-test"
-ingestion_storage_identity_name     = "storage-id-test"
-psql_user_assigned_identity_name   = "psql-id-test"
-csi_identity_name                   = "csi-id-test"
-grafana_identity_name               = "grafana-id-test"
-main_kv_name                        = "hakv1testv2"
-sensitive_kv_name                   = "hakv2testv2"
-environment                         = "test"
-container_registry_name             = "uqhacrtest"
-redis_name                          = "uqharedis-test"
-ingestion_cache_sa_name             = "uqhacachetest"
-ingestion_storage_sa_name           = "uqhastoragetest"
+# Network configuration
+subnet_agw_cidr = "10.202.3.0/28"
+
+# Budget configuration
+budget_contact_emails = ["support@unique.ch"]
+
+# Key Vault configuration
+kv_sku = "premium"
+
+# GitOps configuration
+gitops_display_name = "GitOps"
 
 # DNS subdomain records
 dns_subdomain_records = {
@@ -76,44 +63,19 @@ telemetry_observer_user_ids = [
   "3b48f167-cb68-4655-b45b-878e170af84d",
 ]
 
-# DNS Configuration
-custom_subdomain_name                       = "ha-test"
-document_intelligence_custom_subdomain_name = "di-ha-test"
-speech_service_private_dns_zone_name                      = "privatelink.cognitiveservices.azure.com"
-speech_service_custom_subdomain_name                      = "ss-hello-azure-test"
-speech_service_private_dns_zone_virtual_network_link_name = "vnet-link-speech-service"
+# Speech Service configuration (private DNS zone name is not environment-specific)
+speech_service_private_dns_zone_name = "privatelink.cognitiveservices.azure.com"
 
 # Resource Group Names (created in day-0)
 resource_group_core_name      = "resource-group-core"
 resource_group_sensitive_name = "resource-group-sensitive"
 resource_group_name_vnet      = "rg-vnet-002"
 
-# Key Vaults (created in day-0)
-key_vault_core = {
-  name                = "hakv1testv2"
-  resource_group_name = "resource-group-core"
-}
-
-key_vault_sensitive = {
-  name                = "hakv2testv2"
-  resource_group_name = "resource-group-sensitive"
-}
-
-# AKS Cluster (created in day-0 or workloads)
-aks = {
-  name                = "aks-test"
-  resource_group_name = "resource-group-core"
-}
-
-# DNS Zone (created in day-0)
-dns_zone = {
-  name                = "test-hello.azure.unique.dev"
-  resource_group_name = "rg-vnet-002"
-}
+# Key Vaults, AKS, and DNS Zone objects are computed in locals from var.env
+# No need to set them here - locals will create them with computed names
 
 # Application Registration
 application_registration_gitops_display_name = "GitOps"
-application_secret_display_name              = "ha-test-gitops"
 
 # User permissions
 gitops_maintainer_user_ids = [
@@ -158,4 +120,3 @@ cluster_workload_identities = {
     namespace = "unique"
   }
 }
-

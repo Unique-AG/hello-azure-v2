@@ -1,12 +1,11 @@
 # Day-2 specific parameters
-# These reference resources created in day-0 by name and resource group
 
-# Resource Group Names (created in day-0)
+# Resource Group Names
 resource_group_core_name      = "resource-group-core"
 resource_group_sensitive_name = "resource-group-sensitive"
 resource_group_name_vnet      = "rg-vnet-002"
 
-# Key Vaults (created in day-0)
+# Key Vaults
 key_vault_core = {
   name                = "helloazuremain"
   resource_group_name = "resource-group-core"
@@ -17,21 +16,21 @@ key_vault_sensitive = {
   resource_group_name = "resource-group-sensitive"
 }
 
-# AKS Cluster (created in day-0 or workloads)
+# AKS Cluster
 aks = {
-  name                = "aks-dev"
+  name                = "aks-dev"  # Matches computed pattern "aks-${var.env}" when env=dev
   resource_group_name = "resource-group-core"
 }
 
-# DNS Zone (created in day-0)
+# DNS Zone
 dns_zone = {
-  name                = "hello.azure.unique.dev"
+  name                = "hello.azure.unique.dev"  # Override: doesn't follow "${var.env}-hello.azure.unique.dev" pattern
   resource_group_name = "resource-group-core"
 }
 
 # Application Registration
 application_registration_gitops_display_name = "GitOps"
-application_secret_display_name              = "hello-azure-dev-gitops"
+application_secret_display_name = "hello-azure-dev-gitops"
 
 # User permissions
 gitops_maintainer_user_ids = [
@@ -77,4 +76,3 @@ cluster_workload_identities = {
     namespace = "unique"
   }
 }
-

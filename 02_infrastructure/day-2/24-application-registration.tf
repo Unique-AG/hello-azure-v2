@@ -19,7 +19,7 @@ module "application_registration" {
   client_secret_generation_config = {
     enabled     = true
     keyvault_id = data.azurerm_key_vault.key_vault_sensitive.id
-    secret_name = var.application_secret_display_name
+    secret_name = local.application_secret_display_name
   }
   redirect_uris = [
     "https://argo.${data.azurerm_dns_zone.dns_zone.name}/auth/callback",
