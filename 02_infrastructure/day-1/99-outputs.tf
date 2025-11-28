@@ -162,23 +162,17 @@
 #   value       = azurerm_resource_group.vnet.name
 # }
 
-# Key Vault Outputs
-output "main_key_vault_name" {
-  description = "The name of the main Key Vault"
-  value       = azurerm_key_vault.main_kv.name
+output "aks_public_ip_id" {
+  description = "ID of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.id
 }
 
-output "main_key_vault_id" {
-  description = "The ID of the main Key Vault"
-  value       = azurerm_key_vault.main_kv.id
+output "aks_public_ip_name" {
+  description = "Name of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.name
 }
 
-output "sensitive_key_vault_name" {
-  description = "The name of the sensitive Key Vault"
-  value       = azurerm_key_vault.sensitive_kv.name
-}
-
-output "sensitive_key_vault_id" {
-  description = "The ID of the sensitive Key Vault"
-  value       = azurerm_key_vault.sensitive_kv.id
+output "aks_public_ip_address" {
+  description = "IP address of the public IP dedicated to the AKS"
+  value       = azurerm_public_ip.aks_public_ip.ip_address
 }

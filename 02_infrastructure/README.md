@@ -8,18 +8,20 @@ This directory contains the infrastructure Terraform configurations organized by
 02_infrastructure/
 ├── day-1/          # Foundational infrastructure (resource groups, networking, managed identities, custom roles)
 ├── day-2/          # Identity/governance resources (Azure AD groups, application registration, federated credentials)
-├── test/           # Test environment-specific variables
-│   ├── 00-config.auto.tfvars           # Provider configuration (subscription_id, tenant_id, client_id, use_oidc)
-│   ├── 00-parameters-day-1.auto.tfvars        # Day-1 environment-specific parameters
+├── environments/test/           # Test environment-specific variables
+│   ├── 00-config-day-1.auto.tfvars      # Day-1 provider & backend configuration
+│   ├── 00-config-day-2.auto.tfvars      # Day-2 provider & backend configuration
+│   ├── 00-parameters-day-1.auto.tfvars  # Day-1 environment-specific parameters
 │   ├── 00-parameters-day-2.auto.tfvars  # Day-2 environment-specific parameters
-│   ├── backend-config-day-1.hcl         # Backend config for day-1 (separate state file)
-│   └── backend-config-day-2.hcl         # Backend config for day-2 (separate state file)
-└── dev/            # Dev environment-specific variables
-    ├── 00-config.auto.tfvars           # Provider configuration
-    ├── 00-parameters-day-1.auto.tfvars        # Day-1 environment-specific parameters
+│   ├── backend-config-day-1.hcl         # Backend config for day-1 terraform init
+│   └── backend-config-day-2.hcl         # Backend config for day-2 terraform init
+└── environments/dev/            # Dev environment-specific variables
+    ├── 00-config-day-1.auto.tfvars      # Day-1 provider & backend configuration
+    ├── 00-config-day-2.auto.tfvars      # Day-2 provider & backend configuration
+    ├── 00-parameters-day-1.auto.tfvars  # Day-1 environment-specific parameters
     ├── 00-parameters-day-2.auto.tfvars  # Day-2 environment-specific parameters
-    ├── backend-config-day-1.hcl         # Backend config for day-1
-    └── backend-config-day-2.hcl         # Backend config for day-2
+    ├── backend-config-day-1.hcl         # Backend config for day-1 terraform init
+    └── backend-config-day-2.hcl         # Backend config for day-2 terraform init
 ```
 
 ## Usage
@@ -31,13 +33,13 @@ Each day-X configuration uses a **separate state file** to avoid conflicts. The 
 **Day-1 Initialization:**
 ```bash
 cd day-1
-terraform init -backend-config=../test/backend-config-day-1.hcl
+terraform init -backend-config=../environments/test/backend-config-day-1.hcl
 ```
 
 **Day-2 Initialization:**
 ```bash
 cd day-2
-terraform init -backend-config=../test/backend-config-day-2.hcl
+terraform init -backend-config=../environments/test/backend-config-day-2.hcl
 ```
 
 **Note:** Each day-X has its own state file:
@@ -54,35 +56,36 @@ Use `-var-file` to load environment-specific variables. Each day-X has its own p
 ```bash
 cd day-1
 terraform plan \
-  -var-file=../test/00-config.auto.tfvars \
-  -var-file=../test/00-parameters-day-1.auto.tfvars
+  -var-file=../environments/test/00-config-day-1.auto.tfvars \
+  -var-file=../environments/test/00-parameters-day-1.auto.tfvars
 
 terraform apply \
-  -var-file=../test/00-config.auto.tfvars \
-  -var-file=../test/00-parameters-day-1.auto.tfvars
+  -var-file=../environments/test/00-config-day-1.auto.tfvars \
+  -var-file=../environments/test/00-parameters-day-1.auto.tfvars
 ```
 
 **Day-2 (Identity/Governance):**
 ```bash
 cd day-2
 terraform plan \
-  -var-file=../test/00-config.auto.tfvars \
-  -var-file=../test/00-parameters-day-2.auto.tfvars
+  -var-file=../environments/test/00-config-day-2.auto.tfvars \
+  -var-file=../environments/test/00-parameters-day-2.auto.tfvars
 
 terraform apply \
-  -var-file=../test/00-config.auto.tfvars \
-  -var-file=../test/00-parameters-day-2.auto.tfvars
+  -var-file=../environments/test/00-config-day-2.auto.tfvars \
+  -var-file=../environments/test/00-parameters-day-2.auto.tfvars
 ```
 
 **Important:** Day-2 must be deployed **after** day-1, as it references resources created in day-1 using data sources (by name and resource group).
 
 ### Environment-Specific Files
 
-- **00-config.auto.tfvars**: Contains provider configuration (subscription_id, tenant_id, client_id, use_oidc) - used by both day-1 and day-2
+- **00-config-day-1.auto.tfvars**: Contains day-1 provider and backend configuration (subscription_id, tenant_id, client_id, use_oidc, backend settings)
+- **00-config-day-2.auto.tfvars**: Contains day-2 provider and backend configuration (subscription_id, tenant_id, client_id, use_oidc, backend settings)
 - **00-parameters-day-1.auto.tfvars**: Contains day-1 environment-specific parameters (resource names, locations, user IDs, etc.)
 - **00-parameters-day-2.auto.tfvars**: Contains day-2 environment-specific parameters (references to day-1 resources by name)
-- **backend-config-day-1.hcl**: Backend configuration for day-1 (separate state file)
-- **backend-config-day-2.hcl**: Backend configuration for day-2 (separate state file)
+- **backend-config-day-1.hcl**: Backend configuration for day-1 terraform init (contains only backend settings, used with `-backend-config` flag)
+- **backend-config-day-2.hcl**: Backend configuration for day-2 terraform init (contains only backend settings, used with `-backend-config` flag)
 
 ## Deployment Order
 
@@ -126,33 +129,45 @@ e.g.
 for dev environment:
 ```bash
 cd day-1
-terraform init -backend-config=../dev/backend-config-day-1.hcl
+terraform init -backend-config=../environments/dev/backend-config-day-1.hcl
 cd day-2
-terraform init -backend-config=../dev/backend-config-day-2.hcl
+terraform init -backend-config=../environments/dev/backend-config-day-2.hcl
 ```
 for test environment:
 ```bash
 cd day-1
-terraform init -backend-config=../test/backend-config-day-1.hcl
+terraform init -backend-config=../environments/test/backend-config-day-1.hcl
 cd day-2
-terraform init -backend-config=../test/backend-config-day-2.hcl
+terraform init -backend-config=../environments/test/backend-config-day-2.hcl
 ```
-
-
 
 ## Import scripts:
 - day-1/import_azure_resources.sh
 - day-2/import_azure_resources.sh
 
+for dev environment:
 ```bash
 cd day-1
-terraform init -backend-config=../test/backend-config-day-1.hcl
+terraform init -backend-config=../environments/dev/backend-config-day-1.hcl
 ./import_azure_resources.sh
 ```
 
 ```bash
 cd day-2
-terraform init -backend-config=../test/backend-config-day-2.hcl
+terraform init -backend-config=../environments/dev/backend-config-day-2.hcl
+./import_azure_resources.sh
+```
+
+for test environment:
+```bash
+cd day-1
+terraform init -backend-config=../environments/test/backend-config-day-1.hcl
+./import_azure_resources.sh
+```
+
+```bash
+cd day-2
+terraform init -backend-config=../environments/test/backend-config-day-2.hcl
 ./import_azure_resources.sh
 ```
 

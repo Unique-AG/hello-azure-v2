@@ -7,14 +7,15 @@ This directory contains the bootstrap Terraform configuration for initializing t
 ```
 01_bootstrap/
 ├── day-0/          # Shared Terraform code (resource groups, storage account, Azure AD application, federated credentials, service principals, role assignments)
-├── test/           # Test environment-specific variables
-│   ├── 00-config.auto.tfvars           # Provider configuration (subscription_id, tenant_id, client_id, use_oidc)
-│   ├── 00-parameters.auto.tfvars       # Environment-specific parameters (tfstate_location)
-│   └── backend-config-day-0.hcl        # Backend config for day-0 state file
-└── dev/            # Dev environment-specific variables
-    ├── 00-config.auto.tfvars           # Provider configuration
-    ├── 00-parameters.auto.tfvars       # Environment-specific parameters
-    └── backend-config-day-0.hcl        # Backend config for day-0 state file
+└── environments/   # Environment-specific variables
+    ├── test/       # Test environment-specific variables
+    │   ├── 00-config.auto.tfvars           # Provider configuration (subscription_id, tenant_id, client_id, use_oidc)
+    │   ├── 00-parameters.auto.tfvars       # Environment-specific parameters
+    │   └── backend-config-day-0.hcl        # Backend config for day-0 state file
+    └── dev/        # Dev environment-specific variables
+        ├── 00-config.auto.tfvars           # Provider configuration
+        ├── 00-parameters.auto.tfvars       # Environment-specific parameters
+        └── backend-config-day-0.hcl        # Backend config for day-0 state file
 ```
 
 ## What is the purpose of this step
@@ -54,7 +55,7 @@ The backend configuration must be passed via `-backend-config` flag during `terr
 **Day-0 Initialization:**
 ```bash
 cd day-0
-terraform init -backend-config=../test/backend-config-day-0.hcl
+terraform init -backend-config=../environments/test/backend-config-day-0.hcl
 ```
 
 **Note:** The state file is stored at:
@@ -69,24 +70,24 @@ Use `-var-file` to load environment-specific variables:
 ```bash
 cd day-0
 terraform plan \
-  -var-file=../test/00-config.auto.tfvars \
-  -var-file=../test/00-parameters.auto.tfvars
+  -var-file=../environments/test/00-config.auto.tfvars \
+  -var-file=../environments/test/00-parameters.auto.tfvars
 
 terraform apply \
-  -var-file=../test/00-config.auto.tfvars \
-  -var-file=../test/00-parameters.auto.tfvars
+  -var-file=../environments/test/00-config.auto.tfvars \
+  -var-file=../environments/test/00-parameters.auto.tfvars
 ```
 
 **Dev Environment:**
 ```bash
 cd day-0
 terraform plan \
-  -var-file=../dev/00-config.auto.tfvars \
-  -var-file=../dev/00-parameters.auto.tfvars
+  -var-file=../environments/dev/00-config.auto.tfvars \
+  -var-file=../environments/dev/00-parameters.auto.tfvars
 
 terraform apply \
-  -var-file=../dev/00-config.auto.tfvars \
-  -var-file=../dev/00-parameters.auto.tfvars
+  -var-file=../environments/dev/00-config.auto.tfvars \
+  -var-file=../environments/dev/00-parameters.auto.tfvars
 ```
 
 ### Environment-Specific Files
@@ -125,19 +126,19 @@ Navigate to day-0 and apply the Terraform changes:
 cd day-0
 terraform init
 terraform apply \
-  -var-file=../test/00-config.auto.tfvars \
-  -var-file=../test/00-parameters.auto.tfvars
+  -var-file=../environments/test/00-config.auto.tfvars \
+  -var-file=../environments/test/00-parameters.auto.tfvars
 ```
 
 Next, populate the `client_id` in the environment's `00-config.auto.tfvars` from the newly created application:
 ```bash
 var_value=$(terraform output client_id)
 # MacOS
-sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../test/00-config.auto.tfvars
+sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config.auto.tfvars
 # Linux
-sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../test/00-config.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config.auto.tfvars
 # Windows
-sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../test/00-config.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config.auto.tfvars
 ```
 
 ### Phase 2: Migrate to Remote State
@@ -160,7 +161,7 @@ terraform {
 Now migrate the local state to the newly created storage in Azure:
 ```bash
 cd day-0
-terraform init -backend-config=../test/backend-config-day-0.hcl -migrate-state
+terraform init -backend-config=../environments/test/backend-config-day-0.hcl -migrate-state
 ```
 
 Now you are ready to make all the changes from within CI pipelines.

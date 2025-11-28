@@ -2,7 +2,7 @@
 # These roles provide fine-grained access control for different user groups
 
 locals {
-  env_suffix = var.environment != null ? "-${var.environment}" : ""
+  env_suffix = "-${var.env}"
 }
 
 resource "azurerm_role_definition" "emergency_admin" {
