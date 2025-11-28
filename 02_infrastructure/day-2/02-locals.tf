@@ -22,32 +22,9 @@ locals {
   ingestion_cache_sa_name             = "${var.ingestion_cache_sa_name}${var.env}"
   ingestion_storage_sa_name           = "${var.ingestion_storage_sa_name}${var.env}"
 
-  # Key Vault names (computed from var.env)
+  # Key Vault names
   main_kv_name                        = "${var.main_kv_name}${var.env}v2"
   sensitive_kv_name                   = "${var.sensitive_kv_name}${var.env}v2"
-
-  # Key Vault objects - use provided object if available, otherwise compute from var.env
-  key_vault_core_computed = var.key_vault_core != null ? var.key_vault_core : {
-    name                = local.main_kv_name
-    resource_group_name = var.resource_group_core_name
-  }
-
-  key_vault_sensitive_computed = var.key_vault_sensitive != null ? var.key_vault_sensitive : {
-    name                = local.sensitive_kv_name
-    resource_group_name = var.resource_group_sensitive_name
-  }
-
-  # AKS cluster object - use provided object if available, otherwise compute from var.env
-  aks_computed = var.aks != null ? var.aks : {
-    name                = local.cluster_name
-    resource_group_name = var.resource_group_core_name
-  }
-
-  # DNS zone object - use provided object if available, otherwise compute from var.env
-  dns_zone_computed = var.dns_zone != null ? var.dns_zone : {
-    name                = local.dns_zone_name
-    resource_group_name = var.resource_group_name_vnet
-  }
 
   # Link names
   speech_service_private_dns_zone_virtual_network_link_name = "${var.speech_service_private_dns_zone_virtual_network_link_name}-${var.env}"

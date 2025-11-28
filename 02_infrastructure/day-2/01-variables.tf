@@ -77,6 +77,7 @@ variable "resource_group_name_vnet" {
 variable "name_prefix" {
   description = "Prefix used for naming resources"
   type        = string
+  default     = "ha"
 }
 
 variable "tags" {
@@ -136,7 +137,6 @@ variable "key_vault_core" {
     name                = string
     resource_group_name = string
   })
-  default = null
 }
 
 variable "key_vault_sensitive" {
@@ -145,7 +145,6 @@ variable "key_vault_sensitive" {
     name                = string
     resource_group_name = string
   })
-  default = null
 }
 
 # Monitoring and Analytics

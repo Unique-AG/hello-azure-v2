@@ -374,8 +374,3 @@ variable "cluster_workload_identities" {
     }
   }
 }
-
-variable "sensitive_kv_id" {
-  description = "The ID of the sensitive key vault"
-  type        = string
-}

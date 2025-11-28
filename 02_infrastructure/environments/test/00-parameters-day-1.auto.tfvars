@@ -96,7 +96,3 @@ speech_service_private_dns_zone_name = "privatelink.cognitiveservices.azure.com"
 
 # Application Registration
 application_registration_gitops_display_name = "GitOps"
-
-# Key Vault IDs (will be set after key vaults are created/imported)
-# For now, using the known ID from the existing infrastructure
-sensitive_kv_id = "/subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/resource-group-sensitive/providers/Microsoft.KeyVault/vaults/hakv2testv2"
