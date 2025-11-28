@@ -11,6 +11,7 @@ variable "env" {
 variable "resource_group_name" {
   description = "The resource group name for the tfstate"
   type        = string
+  default     = "rg-terraform-state"
 }
 
 variable "storage_account_name" {
@@ -26,6 +27,7 @@ variable "container_name" {
 variable "key" {
   description = "The key for the tfstate"
   type        = string
+  default     = "terraform-init"
 }
 
 variable "tfstate_location" {
