@@ -26,7 +26,7 @@ crash.*.log
 *.tfvars.json
 
 # Exception: Track configuration and parameter files (they are part of the repository structure)
-!00-config.auto.tfvars
+!00-config*.auto.tfvars
 !00-parameters*.auto.tfvars
 
 # Ignore override files

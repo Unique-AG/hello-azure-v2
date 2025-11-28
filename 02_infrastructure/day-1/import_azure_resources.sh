@@ -6,7 +6,7 @@
 # IMPORTANT: Before running this script, you need to:
 # 1. Get the actual Azure resource IDs for each resource
 # 2. Replace the placeholder values (marked with TODO) with actual IDs
-# 3. Ensure terraform is initialized: terraform init -backend-config=../test/backend-config-day-1.hcl
+# 3. Ensure terraform is initialized: terraform init -backend-config=../environments/test/backend-config-day-1.hcl
 #
 # To get resource IDs:
 # - Resource Groups: az group show --name <rg-name> --query id -o tsv
@@ -18,8 +18,8 @@
 set -euo pipefail
 
 ENV="${1:-test}"
-VAR_CONFIG="../${ENV}/00-config.auto.tfvars"
-VAR_PARAMS="../${ENV}/00-parameters-day-1.auto.tfvars"
+VAR_CONFIG="../environments/${ENV}/00-config-day-1.auto.tfvars"
+VAR_PARAMS="../environments/${ENV}/00-parameters-day-1.auto.tfvars"
 
 # Subscription ID - get from config or set here
 SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-782871a0-bcee-44fb-851f-ccd3e69ada2a}"
