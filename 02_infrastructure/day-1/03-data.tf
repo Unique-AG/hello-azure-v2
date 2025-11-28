@@ -30,6 +30,6 @@ data "azuread_user" "gitops_maintainer" {
 data "azurerm_kubernetes_cluster" "cluster" {
   name                = local.cluster_name
   resource_group_name = azurerm_resource_group.core.name
-  depends_on          = [var.cluster_id] # Required for AGIC identity access. Note: This may cause role assignments to be recreated on plan, but is necessary for AGIC to function properly.
+  #depends_on          = [var.cluster_id] # Required for AGIC identity access. Note: This may cause role assignments to be recreated on plan, but is necessary for AGIC to function properly.
 }
 

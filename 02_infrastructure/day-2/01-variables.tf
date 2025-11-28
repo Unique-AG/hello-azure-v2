@@ -2,129 +2,111 @@
 variable "subscription_id" {
   description = "The UUID ID of the suscription"
   type        = string
-  default     = null
 }
 
 variable "tenant_id" {
   description = "The ID of the tenenat"
   type        = string
-  default     = null
 }
 
 variable "client_id" {
   description = "The client ID for OIDC"
   type        = string
-  default     = null
 }
 
 variable "use_oidc" {
   description = "Whether to use OIDC"
   type        = bool
-  default     = null
 }
 
 variable "resource_group_name" {
   description = "The resource group name for the tfstate."
   type        = string
-  default     = null
 }
 variable "storage_account_name" {
   description = "The resource group name for the storage account name"
   type        = string
-  default     = null
 }
 variable "container_name" {
   description = "The resource group name for the tfstate container name"
   type        = string
-  default     = null
 }
 variable "key" {
   description = "The key for the tfstate"
   type        = string
-  default     = null
 }
 
 # Resource Locations
 variable "resource_audit_location" {
   description = "The location for resource audit resources"
   type        = string
-  default     = null
 }
 
 variable "resource_group_core_location" {
   description = "The location for core resource group"
   type        = string
-  default     = null
 }
 
 variable "resource_group_sensitive_location" {
   description = "The location for sensitive resource group"
   type        = string
-  default     = null
 }
 
 variable "resource_vnet_location" {
   description = "The location for virtual network resources"
   type        = string
-  default     = null
 }
 
 # Resource Group Names
 variable "resource_group_core_name" {
   description = "The core resource group name"
   type        = string
-  default     = "resource-group-core"
 }
 
 variable "resource_group_sensitive_name" {
   description = "The sensitive resource group name"
   type        = string
-  default     = "resource-group-sensitive"
 }
 
 variable "resource_group_name_vnet" {
   description = "Name of the resource group containing the VNET"
   type        = string
-  default     = null
 }
 
 # Naming and Tagging
 variable "name_prefix" {
   description = "Prefix used for naming resources"
   type        = string
-  default     = null
 }
 
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
-  default     = null
 }
 
 # Network Configuration
 variable "subnet_agw_cidr" {
   description = "CIDR block for the Application Gateway subnet"
   type        = string
-  default     = null
 }
 
 # DNS Configuration
 variable "dns_zone_name" {
   description = "The DNS zone name for the environment"
   type        = string
-  default     = null
+  default     = "hello.azure.unique.dev"
 }
 
 variable "custom_subdomain_name" {
   description = "The custom subdomain name to use for the application"
   type        = string
-  default     = null
+  default     = "ha"
 }
 
 variable "document_intelligence_custom_subdomain_name" {
   description = "The custom subdomain name to use for the document intelligence"
   type        = string
-  default     = null
+  default     = "di-ha"
 }
 
 variable "dns_subdomain_records" {
@@ -133,10 +115,21 @@ variable "dns_subdomain_records" {
     name    = string
     records = list(string)
   }))
-  default     = null
 }
 
 # Key Vault Configuration
+variable "main_kv_name" {
+  description = "Name of the main Key Vault"
+  type        = string
+  default     = "hakv1"
+}
+
+variable "sensitive_kv_name" {
+  description = "Name of the sensitive key vault"
+  type        = string
+  default     = "hakv2"
+}
+
 variable "key_vault_core" {
   description = "Name and resource group of the core key vault"
   type = object({
@@ -159,13 +152,12 @@ variable "key_vault_sensitive" {
 variable "log_analytics_workspace_name" {
   description = "Name of the Log Analytics workspace"
   type        = string
-  default     = null
+  default     = "la"
 }
 
 variable "budget_contact_emails" {
   description = "List of email addresses for budget notifications"
   type        = list(string)
-  default     = null
 }
 
 # AKS Configuration
@@ -181,135 +173,123 @@ variable "aks" {
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
-  default     = null
+  default     = "aks"
 }
 
 # Managed Identities
 variable "aks_user_assigned_identity_name" {
   description = "The name of the AKS user-assigned identity"
   type        = string
-  default     = null
+  default     = "aks-id"
 }
 
 variable "document_intelligence_identity_name" {
   description = "The name of the document intelligence identity"
   type        = string
-  default     = null
+  default     = "docint-id"
 }
 
 variable "ingestion_cache_identity_name" {
   description = "The name of the ingestion cache identity"
   type        = string
-  default     = null
+  default     = "cache-id"
 }
 
 variable "ingestion_storage_identity_name" {
   description = "The name of the ingestion storage identity"
   type        = string
-  default     = null
+  default     = "storage-id"
 }
 
 variable "grafana_identity_name" {
   description = "The name of the Grafana user-assigned identity"
   type        = string
-  default     = null
+  default     = "grafana-id"
 }
 
 variable "psql_user_assigned_identity_name" {
   description = "The name of the PostgreSQL user-assigned identity"
   type        = string
-  default     = null
+  default     = "psql-id"
 }
 
 variable "csi_identity_name" {
   description = "Name of the CSI identity"
   type        = string
-  default     = null
+  default     = "csi-id"
 }
 
 # GitOps Configuration
 variable "gitops_display_name" {
   description = "Display name for GitOps application registration"
   type        = string
-  default     = null
 }
 
 # Access Control
 variable "cluster_admin_user_ids" {
   description = "List of user object IDs that will be granted cluster administrator permissions"
   type        = list(string)
-  default     = null
 }
 
 variable "gitops_maintainer_user_ids" {
   description = "List of user object IDs that will be granted GitOps maintainer permissions"
   type        = list(string)
-  default     = null
 }
 
 variable "keyvault_secret_writer_user_ids" {
   description = "List of user object IDs that will be granted permissions to write secrets to Key Vault"
   type        = list(string)
-  default     = null
 }
 
 variable "telemetry_observer_user_ids" {
   description = "List of user object IDs that will be granted permissions to view telemetry data"
   type        = list(string)
-  default     = null
 }
 
 variable "env" {
   description = "Environment name (e.g., dev, test or prod)"
   type        = string
-
-  validation {
-    condition     = var.env != "" && (var.env == "dev" || var.env == "test" || var.env == "prod")
-    error_message = "The env variable must be either 'dev' or 'test' or 'prod' and cannot be empty."
-  }
-  default     = null
 }
 
 variable "container_registry_name" {
   description = "Name of the Azure Container Registry"
   type        = string
-  default     = null
+  default     = "uqhacr"
 }
 
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
-  default     = null
+  default     = "uqharedis"
 }
 
 variable "ingestion_cache_sa_name" {
   description = "Name of the storage account used for ingestion cache"
   type        = string
-  default     = null
+  default     = "uqhacache"
 }
 
 variable "ingestion_storage_sa_name" {
   description = "Name of the storage account used for ingestion storage"
   type        = string
-  default     = null
+  default     = "uqhastorage"
 }
 
 variable "speech_service_private_dns_zone_name" {
   description = "The name of the private DNS zone for the speech service"
   type        = string
-  default     = null
 }
 
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
   description = "The name of the virtual network link for the speech service private DNS zone"
   type        = string
-  default     = null
+  default     = "speech-service-private-dns-zone-vnet-link"
 }
 
 variable "speech_service_custom_subdomain_name" {
   description = "The custom subdomain name to use for the speech service"
   type        = string
-  default     = null
+  default     = "ss-hello-azure"
 }
 
 # Azure AD Groups
@@ -353,13 +333,12 @@ variable "main_keyvault_secret_writer_group_display_name" {
 variable "application_registration_gitops_display_name" {
   description = "Display name for the GitOps application registration"
   type        = string  
-  default     = null
 }
 
 variable "application_secret_display_name" {
   description = "Display name for the GitOps application secret"
   type        = string
-  default     = null
+  default     = "gitops"
 }
 
 # Federated Identity Credentials
