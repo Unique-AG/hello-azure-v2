@@ -95,6 +95,48 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing Subscription Provider Registrations"
+echo "=========================================="
+echo ""
+
+echo "Checking azurerm_resource_provider_registration.azure_dashboard_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_dashboard_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_dashboard_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Dashboard"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_dashboard_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_dashboard_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_dashboard_provider already in state, skipping"
+fi
+
+echo "Checking azurerm_resource_provider_registration.azure_monitor_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_monitor_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_monitor_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Monitor"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_monitor_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_monitor_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_monitor_provider already in state, skipping"
+fi
+
+echo "Checking azurerm_resource_provider_registration.azure_alerts_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_alerts_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_alerts_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.AlertsManagement"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_alerts_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_alerts_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_alerts_provider already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
 echo "Importing Subscription Budgets"
 echo "=========================================="
 echo ""
