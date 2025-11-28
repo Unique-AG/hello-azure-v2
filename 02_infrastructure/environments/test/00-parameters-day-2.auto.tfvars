@@ -72,27 +72,14 @@ resource_group_sensitive_name = "resource-group-sensitive"
 resource_group_name_vnet      = "rg-vnet-002"
 
 # Key Vaults, AKS, and DNS Zone objects are computed in locals from var.env
-key_vault_core = {
-  name                = "helloazuremain"
-  resource_group_name = "resource-group-core"
-}
-
-key_vault_sensitive = {
-  name                = "helloazuresensitive"
-  resource_group_name = "resource-group-sensitive"
-}
+main_kv_name = "helloazuremain"
+sensitive_kv_name = "helloazuresensitive"
 
 # AKS Cluster
-aks = {
-  name                = "aks-test"
-  resource_group_name = "resource-group-core"
-}
+cluster_name = "aks-test"
 
 # DNS Zone
-dns_zone = {
-  name                = "hello.azure.unique.test"
-  resource_group_name = "resource-group-core"
-}
+dns_zone_name = "hello.azure.unique.test"
 
 # Application Registration
 application_registration_gitops_display_name = "GitOps"

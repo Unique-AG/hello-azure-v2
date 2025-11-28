@@ -26,13 +26,13 @@ data "azuread_user" "gitops_maintainer" {
 
 // TODO: uncomment when keyvaults are added to day-1
 # data "azurerm_key_vault" "key_vault_core" {
-#   name                = var.key_vault_core.name
-#   resource_group_name = var.key_vault_core.resource_group_name
+#   name                = local.key_vault_core.name
+#   resource_group_name = local.key_vault_core.resource_group_name
 # }
 
 # data "azurerm_key_vault" "key_vault_sensitive" {
-#   name                = var.key_vault_sensitive.name
-#   resource_group_name = var.key_vault_sensitive.resource_group_name
+#   name                = local.key_vault_sensitive.name
+#   resource_group_name = local.key_vault_sensitive.resource_group_name
 # }
 
 # Resource Group data sources (created in day-1)

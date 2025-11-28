@@ -131,22 +131,6 @@ variable "sensitive_kv_name" {
   default     = "hakv2"
 }
 
-variable "key_vault_core" {
-  description = "Name and resource group of the core key vault"
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-}
-
-variable "key_vault_sensitive" {
-  description = "Name and resource group of the sensitive key vault"
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-}
-
 # Monitoring and Analytics
 variable "log_analytics_workspace_name" {
   description = "Name of the Log Analytics workspace"
@@ -160,14 +144,14 @@ variable "budget_contact_emails" {
 }
 
 # AKS Configuration
-variable "aks" {
-  description = "Name and resource group of the AKS cluster"
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-  default = null
-}
+# variable "aks" {
+#   description = "Name and resource group of the AKS cluster"
+#   type = object({
+#     name                = string
+#     resource_group_name = string
+#   })
+#   default = null
+# }
 
 variable "cluster_name" {
   description = "Name of the AKS cluster"
@@ -376,11 +360,11 @@ variable "cluster_workload_identities" {
 }
 
 # DNS Zone Configuration
-variable "dns_zone" {
-  description = "Name and resource group of the DNS zone"
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-  default = null
-}
+# variable "dns_zone" {
+#   description = "Name and resource group of the DNS zone"
+#   type = object({
+#     name                = string
+#     resource_group_name = string
+#   })
+#   default = null
+# }

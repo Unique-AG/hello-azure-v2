@@ -26,6 +26,21 @@ locals {
   main_kv_name                        = "${var.main_kv_name}${var.env}v2"
   sensitive_kv_name                   = "${var.sensitive_kv_name}${var.env}v2"
 
+  key_vault_core = {
+      name                = "${var.main_kv_name}${var.env}v2"
+      resource_group_name = var.resource_group_core_name
+  }
+
+  aks = {
+    name                = "${var.cluster_name}-${var.env}"
+    resource_group_name = var.resource_group_core_name
+  }
+
+  dns_zone = {
+    name                = "${var.dns_zone_name}-${var.env}"
+    resource_group_name = var.resource_group_name_vnet
+  }
+
   # Link names
   speech_service_private_dns_zone_virtual_network_link_name = "${var.speech_service_private_dns_zone_virtual_network_link_name}-${var.env}"
 
