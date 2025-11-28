@@ -120,6 +120,33 @@ variable "dns_subdomain_records" {
   }))
 }
 
+variable "dns_zone_root_records" {
+  description = "List of IP addresses for the root A record in the DNS zone. When importing, get this value from the original terraform state using: terraform state show 'module.perimeter.azurerm_dns_a_record.adnsar_root'"
+  type        = set(string)
+  default     = []
+}
+
+variable "dns_zone_sub_domain_records" {
+  description = "Map of subdomain names to their respective A record IP addresses. When importing, get these values from the original terraform state."
+  type = map(object({
+    name    = string
+    records = set(string)
+  }))
+  default = {}
+}
+
+variable "psql_private_dns_zone_name" {
+  description = "Name of the PostgreSQL private DNS zone"
+  type        = string
+  default     = "psql.postgres.database.azure.com"
+}
+
+variable "azurerm_private_dns_zone_virtual_network_link_name" {
+  description = "Name of the virtual network link for PostgreSQL private DNS zone"
+  type        = string
+  default     = "PsqlVnetZone.com"
+}
+
 # Key Vault Configuration
 variable "kv_sku" {
   description = "SKU for Key Vault"
