@@ -21,14 +21,15 @@ locals {
   redis_name                          = "${var.redis_name}-${var.env}"
   ingestion_cache_sa_name             = "${var.ingestion_cache_sa_name}${var.env}"
   ingestion_storage_sa_name           = "${var.ingestion_storage_sa_name}${var.env}"
-
-  # Key Vault names
-  main_kv_name                        = "${var.main_kv_name}${var.env}v2"
-  sensitive_kv_name                   = "${var.sensitive_kv_name}${var.env}v2"
-
+  
   key_vault_core = {
       name                = "${var.main_kv_name}${var.env}v2"
       resource_group_name = var.resource_group_core_name
+  }
+
+  key_vault_sensitive = {
+    name                = "${var.sensitive_kv_name}${var.env}v2"
+    resource_group_name = var.resource_group_sensitive_name
   }
 
   aks = {
