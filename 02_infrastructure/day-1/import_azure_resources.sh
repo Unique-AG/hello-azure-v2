@@ -433,6 +433,53 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing Key Vaults"
+echo "=========================================="
+echo ""
+
+# Read Key Vault names from VAR_PARAMS or use defaults
+MAIN_KV_NAME_PREFIX=$(grep "^main_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "hakv1")
+SENSITIVE_KV_NAME_PREFIX=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "hakv2")
+
+# Compute full Key Vault names (matching local.main_kv_name and local.sensitive_kv_name pattern)
+# Pattern: ${var.main_kv_name}${var.env}v2
+# We need to get env from VAR_CONFIG or VAR_PARAMS
+ENV_VALUE=$(grep "^env" "${VAR_CONFIG}" "${VAR_PARAMS}" 2>/dev/null | head -1 | cut -d'"' -f2 || echo "${ENV}")
+MAIN_KV_NAME="${MAIN_KV_NAME_PREFIX}${ENV_VALUE}v2"
+SENSITIVE_KV_NAME="${SENSITIVE_KV_NAME_PREFIX}${ENV_VALUE}v2"
+
+echo "Checking azurerm_key_vault.main_kv..."
+if ! terraform state show azurerm_key_vault.main_kv >/dev/null 2>&1; then
+  echo "  Importing azurerm_key_vault.main_kv..."
+  echo "  Key Vault name: ${MAIN_KV_NAME}"
+  echo "  Resource Group: ${RESOURCE_GROUP_CORE_NAME}"
+  # Get with: az keyvault show --name ${MAIN_KV_NAME} --resource-group ${RESOURCE_GROUP_CORE_NAME} --query id -o tsv
+  MAIN_KV_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.KeyVault/vaults/${MAIN_KV_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_key_vault.main_kv \
+    "${MAIN_KV_ID}"
+  echo "  ✓ Imported azurerm_key_vault.main_kv"
+else
+  echo "  ✓ azurerm_key_vault.main_kv already in state, skipping"
+fi
+
+echo "Checking azurerm_key_vault.sensitive_kv..."
+if ! terraform state show azurerm_key_vault.sensitive_kv >/dev/null 2>&1; then
+  echo "  Importing azurerm_key_vault.sensitive_kv..."
+  echo "  Key Vault name: ${SENSITIVE_KV_NAME}"
+  echo "  Resource Group: ${RESOURCE_GROUP_SENSITIVE_NAME}"
+  # Get with: az keyvault show --name ${SENSITIVE_KV_NAME} --resource-group ${RESOURCE_GROUP_SENSITIVE_NAME} --query id -o tsv
+  SENSITIVE_KV_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.KeyVault/vaults/${SENSITIVE_KV_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_key_vault.sensitive_kv \
+    "${SENSITIVE_KV_ID}"
+  echo "  ✓ Imported azurerm_key_vault.sensitive_kv"
+else
+  echo "  ✓ azurerm_key_vault.sensitive_kv already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
 echo "Import script completed!"
 echo "=========================================="
 echo "Next steps:"

@@ -143,16 +143,6 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
-# AKS Configuration
-# variable "aks" {
-#   description = "Name and resource group of the AKS cluster"
-#   type = object({
-#     name                = string
-#     resource_group_name = string
-#   })
-#   default = null
-# }
-
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
@@ -358,13 +348,3 @@ variable "cluster_workload_identities" {
     }
   }
 }
-
-# DNS Zone Configuration
-# variable "dns_zone" {
-#   description = "Name and resource group of the DNS zone"
-#   type = object({
-#     name                = string
-#     resource_group_name = string
-#   })
-#   default = null
-# }
