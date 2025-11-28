@@ -313,6 +313,60 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing Key Vaults"
+echo "=========================================="
+echo ""
+
+# Read Key Vault names from locals (computed from var.env)
+# For import, we need to construct the resource IDs
+# Format: /subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.KeyVault/vaults/{vault_name}
+
+echo "Checking azurerm_key_vault.main_kv..."
+if ! terraform state show azurerm_key_vault.main_kv >/dev/null 2>&1; then
+  echo "  Importing azurerm_key_vault.main_kv..."
+  # Get with: az keyvault show --name <main_kv_name> --resource-group ${RESOURCE_GROUP_CORE_NAME} --query id -o tsv
+  # Or construct: /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.KeyVault/vaults/<main_kv_name>
+  # The name is computed from var.env in locals as "hakv1${var.env}v2"
+  # For test: hakv1testv2, for dev: hakv1devv2
+  MAIN_KV_NAME=$(grep "^main_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "")
+  if [[ -z "${MAIN_KV_NAME}" ]]; then
+    # Try to get from computed value - if env=test, then hakv1testv2
+    ENV_VALUE=$(grep "^env" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "test")
+    MAIN_KV_NAME="hakv1${ENV_VALUE}v2"
+  fi
+  MAIN_KV_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.KeyVault/vaults/${MAIN_KV_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_key_vault.main_kv \
+    "${MAIN_KV_ID}"
+  echo "  ✓ Imported azurerm_key_vault.main_kv"
+else
+  echo "  ✓ azurerm_key_vault.main_kv already in state, skipping"
+fi
+
+echo "Checking azurerm_key_vault.sensitive_kv..."
+if ! terraform state show azurerm_key_vault.sensitive_kv >/dev/null 2>&1; then
+  echo "  Importing azurerm_key_vault.sensitive_kv..."
+  # Get with: az keyvault show --name <sensitive_kv_name> --resource-group ${RESOURCE_GROUP_SENSITIVE_NAME} --query id -o tsv
+  # Or construct: /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.KeyVault/vaults/<sensitive_kv_name>
+  # The name is computed from var.env in locals as "hakv2${var.env}v2"
+  # For test: hakv2testv2, for dev: hakv2devv2
+  SENSITIVE_KV_NAME=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "")
+  if [[ -z "${SENSITIVE_KV_NAME}" ]]; then
+    # Try to get from computed value - if env=test, then hakv2testv2
+    ENV_VALUE=$(grep "^env" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "test")
+    SENSITIVE_KV_NAME="hakv2${ENV_VALUE}v2"
+  fi
+  SENSITIVE_KV_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.KeyVault/vaults/${SENSITIVE_KV_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_key_vault.sensitive_kv \
+    "${SENSITIVE_KV_ID}"
+  echo "  ✓ Imported azurerm_key_vault.sensitive_kv"
+else
+  echo "  ✓ azurerm_key_vault.sensitive_kv already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
 echo "Importing Custom Role Definitions"
 echo "=========================================="
 echo ""

@@ -123,13 +123,15 @@ variable "kv_sku" {
 }
 
 variable "main_kv_name" {
-  description = "Name of the main Key Vault"
+  description = "Name of the main Key Vault (computed from var.env if not set)"
   type        = string
+  default     = null
 }
 
 variable "sensitive_kv_name" {
-  description = "Name of the sensitive key vault"
+  description = "Name of the sensitive key vault (computed from var.env if not set)"
   type        = string
+  default     = null
 }
 
 # Monitoring and Analytics
@@ -245,6 +247,16 @@ variable "speech_service_private_dns_zone_name" {
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
   description = "The name of the virtual network link for the speech service private DNS zone."
   type        = string
+}
+
+variable "env" {
+  description = "Environment name (e.g., dev, test)"
+  type        = string
+
+  validation {
+    condition     = var.env != "" && (var.env == "dev" || var.env == "test")
+    error_message = "The env variable must be either 'dev' or 'test' and cannot be empty."
+  }
 }
 
 variable "speech_service_custom_subdomain_name" {

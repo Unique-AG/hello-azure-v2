@@ -161,3 +161,24 @@
 #   description = "Name of the resource group for the vnet"
 #   value       = azurerm_resource_group.vnet.name
 # }
+
+# Key Vault Outputs
+output "main_key_vault_name" {
+  description = "The name of the main Key Vault"
+  value       = azurerm_key_vault.main_kv.name
+}
+
+output "main_key_vault_id" {
+  description = "The ID of the main Key Vault"
+  value       = azurerm_key_vault.main_kv.id
+}
+
+output "sensitive_key_vault_name" {
+  description = "The name of the sensitive Key Vault"
+  value       = azurerm_key_vault.sensitive_kv.name
+}
+
+output "sensitive_key_vault_id" {
+  description = "The ID of the sensitive Key Vault"
+  value       = azurerm_key_vault.sensitive_kv.id
+}
