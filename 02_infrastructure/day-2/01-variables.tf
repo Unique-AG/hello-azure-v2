@@ -238,12 +238,12 @@ variable "telemetry_observer_user_ids" {
 }
 
 variable "env" {
-  description = "Environment name (e.g., dev, test)"
+  description = "Environment name (e.g., dev, test or prod)"
   type        = string
 
   validation {
-    condition     = var.env != "" && (var.env == "dev" || var.env == "test")
-    error_message = "The env variable must be either 'dev' or 'test' and cannot be empty."
+    condition     = var.env != "" && (var.env == "dev" || var.env == "test" || var.env == "prod")
+    error_message = "The env variable must be either 'dev' or 'test' or 'prod' and cannot be empty."
   }
 }
 
