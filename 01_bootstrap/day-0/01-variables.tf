@@ -1,6 +1,7 @@
 variable "subscription_id" {
   description = "The UUID ID of the subscription"
   type        = string
+  default     = null
 }
 
 variable "env" {
@@ -11,6 +12,7 @@ variable "env" {
     condition     = var.env != "" && (var.env == "dev" || var.env == "test" || var.env == "prod")
     error_message = "The env variable must be either 'dev' or 'test' or 'prod' and cannot be empty."
   }
+  default     = null
 }
 
 variable "resource_group_name" {
@@ -22,6 +24,7 @@ variable "resource_group_name" {
 variable "storage_account_name" {
   description = "The storage account name for the tfstate"
   type        = string
+  default     = null
 }
 
 variable "container_name" {
@@ -45,14 +48,17 @@ variable "tfstate_location" {
 variable "tenant_id" {
   description = "The ID of the tenant"
   type        = string
+  default     = null
 }
 
 variable "client_id" {
   description = "The client ID for OIDC"
   type        = string
+  default     = null
 }
 
 variable "use_oidc" {
   description = "Whether to use OIDC"
   type        = bool
+  default     = null
 }
