@@ -485,3 +485,37 @@ variable "cluster_workload_identities" {
     }
   }
 }
+
+# Defender settings
+variable "defender_security_contact_email" {
+  description = "Email address for the Defender security contact"
+  type        = string
+  default     = "security-events@unique.ch"
+}
+
+variable "defender_storage_accounts_extensions" {
+  description = <<-EOT
+    Configures Azure Defender security extensions for Storage Accounts. 
+    
+    Each extension in the list includes:
+    - name: The extension identifier (e.g., "OnUploadMalwareScanning", "SensitiveDataDiscovery")
+    - additional_extension_properties: Optional key-value pairs for extension-specific settings
+  EOT
+  type = list(object({
+    name                            = string
+    additional_extension_properties = optional(map(string), {})
+  }))
+  default = [
+    {
+      name = "OnUploadMalwareScanning"
+      additional_extension_properties = {
+        AutomatedResponse              = "None"
+        BlobScanResultsOptions         = "BlobIndexTags"
+        CapGBPerMonthPerStorageAccount = "1000"
+      }
+    },
+    {
+      name = "SensitiveDataDiscovery"
+    }
+  ]
+}

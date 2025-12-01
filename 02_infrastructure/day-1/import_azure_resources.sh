@@ -679,6 +679,127 @@ else
   echo "  ✓ azurerm_log_analytics_workspace.this already in state, skipping"
 fi
 
+
+echo ""
+echo "=========================================="
+echo "Importing Defender Module Resources"
+echo "=========================================="
+echo ""
+
+# Security Contact
+echo "Checking module.defender.azapi_resource.security_contact..."
+if ! terraform state show module.defender.azapi_resource.security_contact >/dev/null 2>&1; then
+  echo "  Importing module.defender.azapi_resource.security_contact..."
+  # Import format: /subscriptions/{subscription-id}/providers/Microsoft.Security/securityContacts/default
+  # Note: The name is "default" (not "default1")
+  SECURITY_CONTACT_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/securityContacts/default"
+  set +e  # Temporarily disable exit on error for this import attempt
+  IMPORT_OUTPUT=$(terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    module.defender.azapi_resource.security_contact \
+    "${SECURITY_CONTACT_ID}" 2>&1)
+  IMPORT_EXIT_CODE=$?
+  set -e  # Re-enable exit on error
+  
+  if [ ${IMPORT_EXIT_CODE} -eq 0 ]; then
+    echo "  ✓ Imported module.defender.azapi_resource.security_contact"
+  else
+    echo "  ⚠️  Import failed for module.defender.azapi_resource.security_contact (exit code: ${IMPORT_EXIT_CODE})"
+    echo "     This may be expected if the resource doesn't exist yet."
+    echo "     Error: ${IMPORT_OUTPUT}"
+  fi
+else
+  echo "  ✓ module.defender.azapi_resource.security_contact already in state, skipping"
+fi
+
+# Security Center Subscription Pricing Resources
+# Import format: /subscriptions/{subscription-id}/providers/Microsoft.Security/pricings/{resource-type}
+declare -a DEFENDER_PRICING_TYPES=(
+  "AI"
+  "Arm"
+  "CloudPosture"
+  "Containers"
+  "KeyVaults"
+  "OpenSourceRelationalDatabases"
+  "StorageAccounts"
+  "VirtualMachines"
+)
+
+for pricing_type in "${DEFENDER_PRICING_TYPES[@]}"; do
+  RESOURCE_ADDRESS="module.defender.azurerm_security_center_subscription_pricing.standard_plan[\"${pricing_type}\"]"
+  if ! terraform state show "${RESOURCE_ADDRESS}" >/dev/null 2>&1; then
+    echo "  Attempting to import ${RESOURCE_ADDRESS}..."
+    PRICING_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/pricings/${pricing_type}"
+    set +e  # Temporarily disable exit on error for this import attempt
+    IMPORT_OUTPUT=$(terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      "${RESOURCE_ADDRESS}" \
+      "${PRICING_ID}" 2>&1)
+    IMPORT_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    
+    if [ ${IMPORT_EXIT_CODE} -eq 0 ]; then
+      echo "  ✓ Imported ${RESOURCE_ADDRESS}"
+    else
+      echo "  ⚠️  Import failed for ${RESOURCE_ADDRESS} (exit code: ${IMPORT_EXIT_CODE})"
+      echo "     This may be expected if the resource doesn't exist yet."
+      echo "     Error: ${IMPORT_OUTPUT}"
+    fi
+  else
+    echo "  ✓ ${RESOURCE_ADDRESS} already in state, skipping"
+  fi
+done
+
+echo ""
+
+echo ""
+echo "=========================================="
+echo "Expected Drifts After Import"
+echo "=========================================="
+echo ""
+echo "⚠️  The following drifts are EXPECTED and can be safely ignored:"
+echo ""
+echo "1. Defender Module - schema_validation_enabled:"
+echo "   - Resource: module.defender.azapi_resource.security_contact"
+echo "   - Drift: schema_validation_enabled shows as true -> false"
+echo "   - Reason: Azure API returns this as true, but the module explicitly sets it to false."
+echo "            This is a known azapi provider behavior where Azure returns a different"
+echo "            value than what Terraform sets. This is a validation setting that doesn't"
+echo "            affect resource functionality."
+echo "   - Action: Safe to ignore - this drift will appear in terraform plan but can be"
+echo "            safely ignored during apply."
+echo ""
+echo "2. General Cosmetic Drifts:"
+echo "   - API versions may differ between what's in state and what Terraform wants to set"
+echo "   - Read-only fields that Azure populates automatically"
+echo "   - These are cosmetic and don't affect functionality"
+echo ""
+echo "3. Budget Resource - time_period.start_date:"
+echo "   - Resource: azurerm_consumption_budget_subscription.subscription_budget"
+echo "   - Drift: time_period[0].start_date may show changes"
+echo "   - Reason: The budget uses timestamp() which changes on each plan"
+echo "   - Action: Already handled with lifecycle.ignore_changes in the resource definition"
+echo ""
+echo "=========================================="
+echo "Import script completed!"
+echo "=========================================="
+echo ""
+echo "⚠️  IMPORTANT: If Defender resources still show as 'to create' in terraform plan:"
+echo "   1. Verify the resources exist in Azure:"
+echo "      - Security Contact: az security contact show --name default --query id -o tsv"
+echo "      - Pricing: az security pricing show --name <resource-type> --query id -o tsv"
+echo "   2. If resources exist but imports failed, check the error messages above"
+echo "   3. For azapi_resource, you may need to use: terraform import -target=module.defender.azapi_resource.security_contact <resource-id>"
+echo ""
+echo "Next steps:"
+echo "   - Review and update all TODO placeholders with actual resource IDs"
+echo "   - Run 'terraform plan' to verify imports and identify any missing resources"
+echo "   - Review the 'Expected Drifts' section above for drifts that can be safely ignored"
+echo "   - If Defender resources still show drift, run the imports manually:"
+echo "     terraform import -target=module.defender.azapi_resource.security_contact /subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/securityContacts/default"
+echo "     terraform import -target=module.defender.azurerm_security_center_subscription_pricing.standard_plan[\"AI\"] /subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/pricings/AI"
+echo "     (repeat for each pricing resource type)"
+echo ""
+
+
 echo ""
 echo "=========================================="
 echo "Import script completed!"
