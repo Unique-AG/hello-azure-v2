@@ -72,8 +72,8 @@ resource_group_sensitive_name = "resource-group-sensitive"
 resource_group_name_vnet      = "rg-vnet-002"
 
 # Key Vaults, AKS, and DNS Zone objects are computed in locals from var.env
-main_kv_name = "helloazuremain"
-sensitive_kv_name = "helloazuresensitive"
+main_kv_name      = "hakv1"
+sensitive_kv_name = "hakv2"
 
 # AKS Cluster
 cluster_name = "aks-test"
@@ -93,11 +93,11 @@ gitops_maintainer_user_ids = [
 ]
 
 # Azure AD Groups
-telemetry_observer_group_display_name        = "Telemetry Observer"
-sensitive_data_observer_group_display_name   = "Sensitive Data Observer"
-devops_group_display_name                    = "DevOps"
-emergency_admin_group_display_name           = "Emergency Admin"
-admin_kubernetes_cluster_group_display_name  = "Admin Kubernetes Cluster"
+telemetry_observer_group_display_name          = "Telemetry Observer"
+sensitive_data_observer_group_display_name     = "Sensitive Data Observer"
+devops_group_display_name                      = "DevOps"
+emergency_admin_group_display_name             = "Emergency Admin"
+admin_kubernetes_cluster_group_display_name    = "Admin Kubernetes Cluster"
 main_keyvault_secret_writer_group_display_name = "Main KeyVault writer"
 
 # Federated Identity Credentials
