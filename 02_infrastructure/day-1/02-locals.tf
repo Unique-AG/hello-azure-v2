@@ -17,8 +17,8 @@ locals {
   psql_user_assigned_identity_name    = "${var.psql_user_assigned_identity_name}-${var.env}"
   csi_identity_name                   = "${var.csi_identity_name}-${var.env}"
   grafana_identity_name               = "${var.grafana_identity_name}-${var.env}"
-  main_kv_name                        = "${var.main_kv_name}${var.env}v2"
-  sensitive_kv_name                   = "${var.sensitive_kv_name}${var.env}v2"
+  main_kv_name                        = "${var.main_kv_name}${var.env}v2" #TODO: remove v2 when creating from scratch
+  sensitive_kv_name                   = "${var.sensitive_kv_name}${var.env}v2" #TODO: remove v2 when creating from scratch
   container_registry_name             = "${var.container_registry_name}${var.env}"
   redis_name                          = "${var.redis_name}-${var.env}"
   ingestion_cache_sa_name             = "${var.ingestion_cache_sa_name}-${var.env}"
