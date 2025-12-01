@@ -482,7 +482,13 @@ variable "defender_security_contact_email" {
 }
 
 variable "defender_storage_accounts_extensions" {
-  description = "List of Defender extensions for Storage Accounts"
+  description = <<-EOT
+    Configures Azure Defender security extensions for Storage Accounts. 
+    
+    Each extension in the list includes:
+    - name: The extension identifier (e.g., "OnUploadMalwareScanning", "SensitiveDataDiscovery")
+    - additional_extension_properties: Optional key-value pairs for extension-specific settings
+  EOT
   type = list(object({
     name                            = string
     additional_extension_properties = optional(map(string), {})
