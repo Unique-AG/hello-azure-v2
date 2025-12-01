@@ -105,17 +105,6 @@ locals {
     }
   }
 
-  # Defender settings
-  defender_settings = {
-    security_contact_settings = {
-      email = var.defender_security_contact_email
-    }
-
-    storage_accounts_defender_settings = {
-      extensions = var.defender_storage_accounts_extensions
-    }
-  }
-
   # TAGS
   tags = var.tags
 }
