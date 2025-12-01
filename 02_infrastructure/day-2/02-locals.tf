@@ -28,7 +28,7 @@ locals {
   }
 
   key_vault_sensitive = {
-    name                = "${var.sensitive_kv_name}${var.env}v2"
+    name                = "${var.sensitive_kv_name}${var.env}v2" #TODO: remove v2 when we have a new key vault
     resource_group_name = var.resource_group_sensitive_name
   }
 
