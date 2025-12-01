@@ -6,9 +6,9 @@ mkdocs
 *.tfstate.backup
 .vscode
 
+# CURSOR RULES
 .cursorrules
 CURSOR_RESEARCH.md
-REFACTORING_PLAN.md
 
 # Ignore .terraform directories
 **/.terraform/*
