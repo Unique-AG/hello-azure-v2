@@ -17,8 +17,6 @@ locals {
   psql_user_assigned_identity_name    = "${var.psql_user_assigned_identity_name}-${var.env}"
   csi_identity_name                   = "${var.csi_identity_name}-${var.env}"
   grafana_identity_name               = "${var.grafana_identity_name}-${var.env}"
-  # main_kv_name                        = "${var.main_kv_name}${var.env}v2"
-  # sensitive_kv_name                   = "${var.sensitive_kv_name}${var.env}v2"
   container_registry_name   = "${var.container_registry_name}${var.env}"
   redis_name                = "${var.redis_name}-${var.env}"
   ingestion_cache_sa_name   = "${var.ingestion_cache_sa_name}-${var.env}"
@@ -32,8 +30,8 @@ locals {
 
   # Backend config (for use in config files)
   backend_resource_group_name = "rg-terraform-state-${var.env}"
-  backend_key_day1            = "terraform-infra-${var.env}-v2-day-1.tfstate"
-  backend_key_day2            = "terraform-infra-${var.env}-v2-day-2.tfstate"
+  backend_key_day1            = "terraform-infra-${var.env}-v2-day-1.tfstate" #TODO: remove v2 when creating from scratch
+  backend_key_day2            = "terraform-infra-${var.env}-v2-day-2.tfstate" #TODO: remove v2 when creating from scratch
 
   # Dynamic DNS records - will be populated after application gateway is created
   # This is a placeholder that will be updated in a later phase when application gateway is created
