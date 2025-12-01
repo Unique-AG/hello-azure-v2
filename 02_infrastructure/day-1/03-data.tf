@@ -28,8 +28,8 @@ data "azuread_user" "gitops_maintainer" {
 # Note: This will fail if cluster doesn't exist, but that's expected during initial setup
 # The cluster will be created in a later phase
 data "azurerm_kubernetes_cluster" "cluster" {
-  name                = var.cluster_name
+  name                = local.cluster_name
   resource_group_name = azurerm_resource_group.core.name
-  depends_on          = [var.cluster_id] # Required for AGIC identity access. Note: This may cause role assignments to be recreated on plan, but is necessary for AGIC to function properly.
+  #depends_on          = [var.cluster_id] # Required for AGIC identity access. Note: This may cause role assignments to be recreated on plan, but is necessary for AGIC to function properly.
 }
 

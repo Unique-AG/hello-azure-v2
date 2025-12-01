@@ -6,7 +6,7 @@
 # IMPORTANT: Before running this script, you need to:
 # 1. Get the actual Azure resource IDs for each resource
 # 2. Replace the placeholder values (marked with TODO) with actual IDs
-# 3. Ensure terraform is initialized: terraform init -backend-config=../test/backend-config-day-1.hcl
+# 3. Ensure terraform is initialized: terraform init -backend-config=../environments/test/backend-config-day-1.hcl
 #
 # To get resource IDs:
 # - Resource Groups: az group show --name <rg-name> --query id -o tsv
@@ -18,8 +18,8 @@
 set -euo pipefail
 
 ENV="${1:-test}"
-VAR_CONFIG="../${ENV}/00-config.auto.tfvars"
-VAR_PARAMS="../${ENV}/00-parameters-day-1.auto.tfvars"
+VAR_CONFIG="../environments/${ENV}/00-config-day-1.auto.tfvars"
+VAR_PARAMS="../environments/${ENV}/00-parameters-day-1.auto.tfvars"
 
 # Subscription ID - get from config or set here
 SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-782871a0-bcee-44fb-851f-ccd3e69ada2a}"
@@ -91,6 +91,48 @@ if ! terraform state show azurerm_resource_group.sensitive >/dev/null 2>&1; then
   echo "  ✓ Imported azurerm_resource_group.sensitive"
 else
   echo "  ✓ azurerm_resource_group.sensitive already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
+echo "Importing Subscription Provider Registrations"
+echo "=========================================="
+echo ""
+
+echo "Checking azurerm_resource_provider_registration.azure_dashboard_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_dashboard_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_dashboard_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Dashboard"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_dashboard_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_dashboard_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_dashboard_provider already in state, skipping"
+fi
+
+echo "Checking azurerm_resource_provider_registration.azure_monitor_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_monitor_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_monitor_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Monitor"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_monitor_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_monitor_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_monitor_provider already in state, skipping"
+fi
+
+echo "Checking azurerm_resource_provider_registration.azure_alerts_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_alerts_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_alerts_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.AlertsManagement"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_alerts_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_alerts_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_alerts_provider already in state, skipping"
 fi
 
 echo ""
@@ -565,6 +607,53 @@ if ! terraform state show azurerm_private_dns_zone_virtual_network_link.speech_s
   echo "  ✓ Imported azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link"
 else
   echo "  ✓ azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
+echo "Importing Key Vaults"
+echo "=========================================="
+echo ""
+
+# Read Key Vault names from VAR_PARAMS or use defaults
+MAIN_KV_NAME_PREFIX=$(grep "^main_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "hakv1")
+SENSITIVE_KV_NAME_PREFIX=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "hakv2")
+
+# Compute full Key Vault names (matching local.main_kv_name and local.sensitive_kv_name pattern)
+# Pattern: ${var.main_kv_name}${var.env}v2
+# We need to get env from VAR_CONFIG or VAR_PARAMS
+ENV_VALUE=$(grep "^env" "${VAR_CONFIG}" "${VAR_PARAMS}" 2>/dev/null | head -1 | cut -d'"' -f2 || echo "${ENV}")
+MAIN_KV_NAME="${MAIN_KV_NAME_PREFIX}${ENV_VALUE}v2"
+SENSITIVE_KV_NAME="${SENSITIVE_KV_NAME_PREFIX}${ENV_VALUE}v2"
+
+echo "Checking azurerm_key_vault.main_kv..."
+if ! terraform state show azurerm_key_vault.main_kv >/dev/null 2>&1; then
+  echo "  Importing azurerm_key_vault.main_kv..."
+  echo "  Key Vault name: ${MAIN_KV_NAME}"
+  echo "  Resource Group: ${RESOURCE_GROUP_CORE_NAME}"
+  # Get with: az keyvault show --name ${MAIN_KV_NAME} --resource-group ${RESOURCE_GROUP_CORE_NAME} --query id -o tsv
+  MAIN_KV_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.KeyVault/vaults/${MAIN_KV_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_key_vault.main_kv \
+    "${MAIN_KV_ID}"
+  echo "  ✓ Imported azurerm_key_vault.main_kv"
+else
+  echo "  ✓ azurerm_key_vault.main_kv already in state, skipping"
+fi
+
+echo "Checking azurerm_key_vault.sensitive_kv..."
+if ! terraform state show azurerm_key_vault.sensitive_kv >/dev/null 2>&1; then
+  echo "  Importing azurerm_key_vault.sensitive_kv..."
+  echo "  Key Vault name: ${SENSITIVE_KV_NAME}"
+  echo "  Resource Group: ${RESOURCE_GROUP_SENSITIVE_NAME}"
+  # Get with: az keyvault show --name ${SENSITIVE_KV_NAME} --resource-group ${RESOURCE_GROUP_SENSITIVE_NAME} --query id -o tsv
+  SENSITIVE_KV_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.KeyVault/vaults/${SENSITIVE_KV_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_key_vault.sensitive_kv \
+    "${SENSITIVE_KV_ID}"
+  echo "  ✓ Imported azurerm_key_vault.sensitive_kv"
+else
+  echo "  ✓ azurerm_key_vault.sensitive_kv already in state, skipping"
 fi
 
 echo ""

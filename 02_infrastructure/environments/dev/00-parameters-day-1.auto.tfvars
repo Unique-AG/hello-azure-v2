@@ -1,21 +1,17 @@
 # Environment-specific configuration
-dns_zone_name                       = "hello.azure.unique.dev"
-name_prefix                         = "hello-azure"
-subnet_agw_cidr                     = "10.201.3.0/28"
-budget_contact_emails               = ["support@unique.ch"]
-kv_sku                              = "premium"
-log_analytics_workspace_name        = "loganalytics"
-aks_identity_name                   = "aks-identity"
-cluster_name                        = "aks-dev"
-gitops_display_name                 = "GitOps"
-document_intelligence_identity_name = "document-intelligence-identity"
-ingestion_cache_identity_name       = "ingestion-cache-identity"
-ingestion_storage_identity_name     = "ingestion-storage-identity"
-psql_identity_name                  = "psql-identity"
-csi_identity_name                   = "csi_identity"
-grafana_identity_name               = "grafana-identity"
-main_kv_name                        = "helloazuremain"
-sensitive_kv_name                   = "helloazuresensitive"
+env = "dev"
+
+# Network configuration
+subnet_agw_cidr = "10.201.3.0/28"
+
+# Budget configuration
+budget_contact_emails = ["support@unique.ch"]
+
+# Key Vault configuration
+kv_sku = "premium"
+
+# GitOps configuration
+gitops_display_name = "GitOps"
 
 # DNS subdomain records
 dns_subdomain_records = {
@@ -37,7 +33,6 @@ dns_subdomain_records = {
 tags = {
   app = "hello-azure"
 }
-
 # Resource locations
 resource_audit_location           = "swedencentral"
 resource_group_core_location      = "swedencentral"
@@ -77,9 +72,25 @@ telemetry_observer_user_ids = [
   "0f309293-9600-4c19-bd7c-3dff1fa678d9"
 ]
 
+dns_zone_name                               = "hello.azure.unique.dev"
+name_prefix                                 = "hello-azure"
+log_analytics_workspace_name                = "loganalytics"
+aks_user_assigned_identity_name             = "aks-identity"
+document_intelligence_identity_name         = "document-intelligence-identity"
+ingestion_cache_identity_name               = "ingestion-cache-identity"
+ingestion_storage_identity_name             = "ingestion-storage-identity"
+psql_user_assigned_identity_name            = "psql-identity"
+csi_identity_name                           = "csi_identity"
+grafana_identity_name                       = "grafana-identity"
+main_kv_name                                = "helloazuremain"
+sensitive_kv_name                           = "helloazuresensitive"
 custom_subdomain_name                       = "hello-azure"
 document_intelligence_custom_subdomain_name = "di-hello-azure"
 
-speech_service_private_dns_zone_virtual_network_link_name = "speech-service-private-dns-zone-vnet-link"
+# Speech Service configuration
 speech_service_private_dns_zone_name                      = "privatelink.cognitiveservices.azure.com"
-speech_service_custom_subdomain_name                      = "ss-hello-azure-dev"
+speech_service_private_dns_zone_virtual_network_link_name = "speech-service-private-dns-zone-vnet-link"
+
+# Application Registration
+application_registration_gitops_display_name = "GitOps"
+application_secret_display_name              = "hello-azure-dev-gitops"

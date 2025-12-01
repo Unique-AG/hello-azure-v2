@@ -1,6 +1,6 @@
 # Backend Configuration Variables
 variable "subscription_id" {
-  description = "The UUID ID of the suscription (not the full Azure Resource ID)."
+  description = "The UUID ID of the suscription"
   type        = string
 }
 
@@ -59,19 +59,17 @@ variable "resource_vnet_location" {
 
 # Resource Group Names
 variable "resource_group_core_name" {
-  description = "The core resource group name."
+  description = "The core resource group name"
   type        = string
-  default     = "resource-group-core"
 }
 
 variable "resource_group_sensitive_name" {
-  description = "The sensitive resource group name."
+  description = "The sensitive resource group name"
   type        = string
-  default     = "resource-group-sensitive"
 }
 
 variable "resource_group_name_vnet" {
-  description = "Name of the resource group containing the VNET."
+  description = "Name of the resource group containing the VNET"
   type        = string
 }
 
@@ -79,6 +77,7 @@ variable "resource_group_name_vnet" {
 variable "name_prefix" {
   description = "Prefix used for naming resources"
   type        = string
+  default     = "ha"
 }
 
 variable "tags" {
@@ -96,16 +95,19 @@ variable "subnet_agw_cidr" {
 variable "dns_zone_name" {
   description = "The DNS zone name for the environment"
   type        = string
+  default     = "hello.azure.unique.dev"
 }
 
 variable "custom_subdomain_name" {
   description = "The custom subdomain name to use for the application"
   type        = string
+  default     = "ha"
 }
 
 variable "document_intelligence_custom_subdomain_name" {
   description = "The custom subdomain name to use for the document intelligence"
   type        = string
+  default     = "di-ha"
 }
 
 variable "dns_subdomain_records" {
@@ -117,26 +119,23 @@ variable "dns_subdomain_records" {
 }
 
 # Key Vault Configuration
-variable "key_vault_core" {
-  description = "Name and resource group of the core key vault. Will be data sourced so the executing principal must have control plane read access to the key vault."
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
+variable "main_kv_name" {
+  description = "Name of the main Key Vault"
+  type        = string
+  default     = "hakv1"
 }
 
-variable "key_vault_sensitive" {
-  description = "Name and resource group of the sensitive key vault. Will be data sourced so the executing principal must have control plane read access to the key vault."
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
+variable "sensitive_kv_name" {
+  description = "Name of the sensitive key vault"
+  type        = string
+  default     = "hakv2"
 }
 
 # Monitoring and Analytics
 variable "log_analytics_workspace_name" {
   description = "Name of the Log Analytics workspace"
   type        = string
+  default     = "la"
 }
 
 variable "budget_contact_emails" {
@@ -144,49 +143,53 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
-# AKS Configuration
-variable "aks" {
-  description = "Name and resource group of the AKS cluster."
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
+variable "cluster_name" {
+  description = "Name of the AKS cluster"
+  type        = string
+  default     = "aks"
 }
 
 # Managed Identities
 variable "aks_user_assigned_identity_name" {
-  description = "The name of the AKS user-assigned identity."
+  description = "The name of the AKS user-assigned identity"
   type        = string
+  default     = "aks-id"
 }
 
 variable "document_intelligence_identity_name" {
-  description = "The name of the document intelligence identity."
+  description = "The name of the document intelligence identity"
   type        = string
+  default     = "docint-id"
 }
 
 variable "ingestion_cache_identity_name" {
-  description = "The name of the ingestion cache identity."
+  description = "The name of the ingestion cache identity"
   type        = string
+  default     = "cache-id"
 }
 
 variable "ingestion_storage_identity_name" {
-  description = "The name of the ingestion storage identity."
+  description = "The name of the ingestion storage identity"
   type        = string
+  default     = "storage-id"
 }
 
 variable "grafana_identity_name" {
-  description = "The name of the Grafana user-assigned identity."
+  description = "The name of the Grafana user-assigned identity"
   type        = string
+  default     = "grafana-id"
 }
 
 variable "psql_user_assigned_identity_name" {
-  description = "The name of the PostgreSQL user-assigned identity."
+  description = "The name of the PostgreSQL user-assigned identity"
   type        = string
+  default     = "psql-id"
 }
 
 variable "csi_identity_name" {
   description = "Name of the CSI identity"
   type        = string
+  default     = "csi-id"
 }
 
 # GitOps Configuration
@@ -216,44 +219,50 @@ variable "telemetry_observer_user_ids" {
   type        = list(string)
 }
 
-variable "environment" {
-  description = "Environment name (e.g., dev, staging, prod)"
+variable "env" {
+  description = "Environment name (e.g., dev, test or prod)"
   type        = string
 }
 
 variable "container_registry_name" {
   description = "Name of the Azure Container Registry"
   type        = string
+  default     = "uqhacr"
 }
 
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
+  default     = "uqharedis"
 }
 
 variable "ingestion_cache_sa_name" {
   description = "Name of the storage account used for ingestion cache"
   type        = string
+  default     = "uqhacache"
 }
 
 variable "ingestion_storage_sa_name" {
   description = "Name of the storage account used for ingestion storage"
   type        = string
+  default     = "uqhastorage"
 }
 
 variable "speech_service_private_dns_zone_name" {
-  description = "The name of the private DNS zone for the speech service."
+  description = "The name of the private DNS zone for the speech service"
   type        = string
 }
 
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
-  description = "The name of the virtual network link for the speech service private DNS zone."
+  description = "The name of the virtual network link for the speech service private DNS zone"
   type        = string
+  default     = "speech-service-private-dns-zone-vnet-link"
 }
 
 variable "speech_service_custom_subdomain_name" {
   description = "The custom subdomain name to use for the speech service"
   type        = string
+  default     = "ss-hello-azure"
 }
 
 # Azure AD Groups
@@ -302,11 +311,12 @@ variable "application_registration_gitops_display_name" {
 variable "application_secret_display_name" {
   description = "Display name for the GitOps application secret"
   type        = string
+  default     = "gitops"
 }
 
 # Federated Identity Credentials
 variable "cluster_workload_identities" {
-  description = "Workload Identities to be federated into the cluster."
+  description = "Workload Identities to be federated into the cluster"
   type = map(object({
     name      = string
     namespace = string
@@ -337,13 +347,4 @@ variable "cluster_workload_identities" {
       namespace = "unique"
     }
   }
-}
-
-# DNS Zone Configuration
-variable "dns_zone" {
-  description = "Name and resource group of the DNS zone."
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
 }

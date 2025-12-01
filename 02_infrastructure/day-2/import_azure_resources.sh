@@ -6,8 +6,8 @@
 set -euo pipefail
 
 ENV="${1:-test}"
-VAR_CONFIG="../${ENV}/00-config.auto.tfvars"
-VAR_PARAMS="../${ENV}/00-parameters-day-2.auto.tfvars"
+VAR_CONFIG="../environments/${ENV}/00-config-day-2.auto.tfvars"
+VAR_PARAMS="../environments/${ENV}/00-parameters-day-2.auto.tfvars"
 SERVICE_PRINCIPAL_ID="5dbf19b3-6943-4696-9334-55b8c5566010"
 
 echo "=========================================="

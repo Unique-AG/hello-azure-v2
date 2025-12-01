@@ -202,4 +202,22 @@ output "speech_service_private_dns_zone_id" {
   value       = azurerm_private_dns_zone.speech_service_private_dns_zone.id
 }
 
+output "key_vault_main_id" {
+  description = "The ID of the main Key Vault"
+  value       = azurerm_key_vault.main_kv.id
+}
 
+output "key_vault_main_name" {
+  description = "The name of the main Key Vault"
+  value       = azurerm_key_vault.main_kv.name
+}
+
+output "key_vault_sensitive_id" {
+  description = "The ID of the sensitive Key Vault"
+  value       = azurerm_key_vault.sensitive_kv.id
+}
+
+output "key_vault_sensitive_name" {
+  description = "The name of the sensitive Key Vault"
+  value       = azurerm_key_vault.sensitive_kv.name
+}
