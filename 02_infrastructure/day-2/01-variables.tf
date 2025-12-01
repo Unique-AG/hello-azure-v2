@@ -368,3 +368,68 @@ variable "cluster_workload_identities" {
 #   })
 #   default = null
 # }
+
+# Key Vault IDs (from day-1 outputs)
+variable "main_kv_id" {
+  description = "The ID of the main key vault"
+  type        = string
+}
+
+variable "sensitive_kv_id" {
+  description = "The ID of the sensitive key vault"
+  type        = string
+}
+
+# Application Gateway ID (from workloads)
+variable "application_gateway_id" {
+  description = "The ID of the Application Gateway"
+  type        = string
+  default     = ""
+}
+
+# DNS Zone ID (from day-1 outputs)
+variable "dns_zone_id" {
+  description = "ID of the DNS zone"
+  type        = string
+  default     = ""
+}
+
+# Resource Group VNet ID (from day-1)
+variable "resource_group_vnet_id" {
+  description = "The vnet resource group id"
+  type        = string
+  default     = ""
+}
+
+# AKS Cluster Configuration
+variable "cluster_id" {
+  description = "The ID of the AKS cluster"
+  type        = string
+  default     = ""
+}
+
+# User ID Sets for Role Assignments
+variable "cluster_admins" {
+  description = "Set of user object IDs that will be granted cluster administrator permissions"
+  type        = set(string)
+  default     = []
+}
+
+variable "main_keyvault_secret_writers" {
+  description = "Set of user object IDs that will be granted permissions to write secrets to main Key Vault"
+  type        = set(string)
+  default     = []
+}
+
+variable "telemetry_observers" {
+  description = "Set of user object IDs that will be granted permissions to view telemetry data"
+  type        = set(string)
+  default     = []
+}
+
+# Terraform Service Principal Client ID
+variable "terraform_client_id" {
+  description = "The client ID of the Terraform service principal for role assignments"
+  type        = string
+  default     = ""
+}

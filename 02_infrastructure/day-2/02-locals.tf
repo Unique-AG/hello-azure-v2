@@ -1,5 +1,8 @@
 # Local values that are computed or combined from variables
 locals {
+  # Environment suffix for resource naming
+  env_suffix = "-${var.env}"
+
   # DNS and naming
   dns_zone_name                       = "${var.env}-${var.dns_zone_name}"
   name_prefix                         = "${var.custom_subdomain_name}-${var.env}"
