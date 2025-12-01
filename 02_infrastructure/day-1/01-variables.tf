@@ -172,6 +172,18 @@ variable "log_analytics_workspace_name" {
   default     = "la"
 }
 
+variable "log_analytics_sku" {
+  description = "SKU for Log Analytics"
+  type        = string
+  default     = "PerGB2018"
+}
+
+variable "log_analytics_retention_in_days" {
+  description = "Retention in days for Log Analytics"
+  type        = number
+  default     = 30
+}
+
 variable "budget_contact_emails" {
   description = "List of email addresses for budget notifications"
   type        = set(string)

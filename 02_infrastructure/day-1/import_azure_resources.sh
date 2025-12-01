@@ -658,6 +658,30 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing Log Analytics Workspace"
+echo "=========================================="
+echo ""
+
+echo "Checking azurerm_log_analytics_workspace.this..."
+if ! terraform state show azurerm_log_analytics_workspace.this >/dev/null 2>&1; then
+  echo "  Importing azurerm_log_analytics_workspace.this..."
+  # Read log_analytics_workspace_name from VAR_PARAMS and construct the full name with env suffix
+  # The actual workspace name in Azure includes the environment suffix (e.g., "la-test")
+  LOG_ANALYTICS_WORKSPACE_BASE_NAME=$(grep "^log_analytics_workspace_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "la")
+  LOG_ANALYTICS_WORKSPACE_NAME="${LOG_ANALYTICS_WORKSPACE_BASE_NAME}-${ENV}"
+  # Get with: az monitor log-analytics workspace show --resource-group <resource_group_core_name> --workspace-name <log_analytics_workspace_name> --query id -o tsv
+  LOG_ANALYTICS_WORKSPACE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.OperationalInsights/workspaces/${LOG_ANALYTICS_WORKSPACE_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_log_analytics_workspace.this \
+    "${LOG_ANALYTICS_WORKSPACE_ID}"
+  echo "  ✓ Imported azurerm_log_analytics_workspace.this"
+else
+  echo "  ✓ azurerm_log_analytics_workspace.this already in state, skipping"
+fi
+
+
+echo ""
+echo "=========================================="
 echo "Importing Defender Module Resources"
 echo "=========================================="
 echo ""
@@ -773,5 +797,17 @@ echo "   - If Defender resources still show drift, run the imports manually:"
 echo "     terraform import -target=module.defender.azapi_resource.security_contact /subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/securityContacts/default"
 echo "     terraform import -target=module.defender.azurerm_security_center_subscription_pricing.standard_plan[\"AI\"] /subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/pricings/AI"
 echo "     (repeat for each pricing resource type)"
+echo ""
+
+
+echo ""
+echo "=========================================="
+echo "Import script completed!"
+echo "=========================================="
+echo "Next steps:"
+echo "   - Review and update all TODO placeholders with actual resource IDs"
+echo "   - Run 'terraform plan' to verify imports and identify any missing resources"
+echo "   - Import any additional resources shown in the plan"
+echo "   - Some cosmetic drifts are expected (API versions, etc.)"
 echo ""
 

@@ -8,6 +8,7 @@ locals {
   speech_service_custom_subdomain_name        = "${var.speech_service_custom_subdomain_name}-${var.env}"
 
   # Resource names
+
   log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
   aks_user_assigned_identity_name     = "${var.aks_user_assigned_identity_name}-${var.env}"
   cluster_name                        = "${var.cluster_name}-${var.env}"

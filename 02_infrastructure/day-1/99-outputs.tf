@@ -177,6 +177,15 @@ output "aks_public_ip_address" {
   value       = azurerm_public_ip.aks_public_ip.ip_address
 }
 
+output "log_analytics_workspace_name" {
+  description = "Name of the Log Analytics workspace"
+  value       = azurerm_log_analytics_workspace.this.name
+}
+
+output "log_analytics_workspace_id" {
+  description = "ID of the Log Analytics workspace"
+  value       = azurerm_log_analytics_workspace.this.id
+}
 output "postgresql_private_dns_zone_id" {
   description = "ID of the PostgreSQL private DNS zone"
   value       = azurerm_private_dns_zone.psql_private_dns_zone.id
