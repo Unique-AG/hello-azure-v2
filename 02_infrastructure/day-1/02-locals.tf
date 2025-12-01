@@ -8,5 +8,18 @@ locals {
       records = [] # Will be populated dynamically after application gateway is created
     }
   }
+
+  # Azure resource provider registrations
+  azure_resource_provider_registrations = {
+    azure_dashboard_provider = {
+      name = "Microsoft.Dashboard"
+    }
+    azure_monitor_provider = {
+      name = "Microsoft.Monitor"
+    }
+    azure_alerts_provider = {
+      name = "Microsoft.AlertsManagement"
+    }
+  }
 }
 
