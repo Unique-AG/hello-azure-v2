@@ -235,9 +235,81 @@ variable "gitops_maintainer_user_ids" {
   type        = list(string)
 }
 
+variable "keyvault_core_enabled_for_disk_encryption" {
+  description = "Whether to enable disk encryption for the core key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_core_soft_delete_retention_days" {
+  description = "The number of days to retain the deleted core key vault"
+  type        = number
+  default     = 7
+}
+
+variable "keyvault_core_purge_protection_enabled" {
+  description = "Whether to enable purge protection for the core key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_core_rbac_authorization_enabled" {
+  description = "Whether to enable RBAC authorization for the core key vault"
+  type        = bool
+  default     = true
+}
+
 variable "keyvault_secret_writer_user_ids" {
   description = "List of user object IDs that will be granted permissions to write secrets to Key Vault"
   type        = list(string)
+}
+
+variable "keyvault_core_network_acls" {
+  description = "Network ACLs for the core key vault"
+  type = object({
+    bypass         = string
+    default_action = string
+  })
+  default = {
+    bypass         = "AzureServices"
+    default_action = "Allow"
+  }
+}
+
+variable "keyvault_sensitive_enabled_for_disk_encryption" {
+  description = "Whether to enable disk encryption for the sensitive key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_sensitive_soft_delete_retention_days" {
+  description = "The number of days to retain the deleted sensitive key vault"
+  type        = number
+  default     = 7
+}
+
+variable "keyvault_sensitive_purge_protection_enabled" {
+  description = "Whether to enable purge protection for the sensitive key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_sensitive_rbac_authorization_enabled" {
+  description = "Whether to enable RBAC authorization for the sensitive key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_sensitive_network_acls" {
+  description = "Network ACLs for the sensitive key vault"
+  type = object({
+    bypass         = string
+    default_action = string
+  })
+  default = {
+    bypass         = "AzureServices"
+    default_action = "Allow"
+  }
 }
 
 variable "telemetry_observer_user_ids" {

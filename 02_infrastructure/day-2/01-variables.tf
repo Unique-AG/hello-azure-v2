@@ -305,7 +305,7 @@ variable "main_keyvault_secret_writer_group_display_name" {
 # Application Registration
 variable "application_registration_gitops_display_name" {
   description = "Display name for the GitOps application registration"
-  type        = string  
+  type        = string
 }
 
 variable "application_secret_display_name" {
