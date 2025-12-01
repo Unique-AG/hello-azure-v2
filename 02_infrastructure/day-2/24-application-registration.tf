@@ -19,10 +19,11 @@ module "application_registration" {
   client_secret_generation_config = {
     enabled     = true
     keyvault_id = data.azurerm_key_vault.key_vault_sensitive.id
-    secret_name = var.application_secret_display_name
+    secret_name = local.application_secret_display_name
   }
   redirect_uris = [
-    "https://argo.${data.azurerm_dns_zone.dns_zone.name}/auth/callback",
+    // TODO: enable once DNS zone is created
+    // "https://argo.${data.azurerm_dns_zone.dns_zone.name}/auth/callback",
   ]
   required_resource_access_list = {
     (data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph) = [

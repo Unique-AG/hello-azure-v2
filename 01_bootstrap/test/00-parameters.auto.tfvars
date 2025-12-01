@@ -1,2 +1,0 @@
-tfstate_location = "switzerlandnorth"
-

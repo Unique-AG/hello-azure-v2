@@ -65,13 +65,13 @@ variable "resource_group_core_name" {
 }
 
 variable "resource_group_sensitive_name" {
-  description = "The sensitive resource group name."
+  description = "The sensitive resource group name"
   type        = string
   default     = "resource-group-sensitive"
 }
 
 variable "resource_group_vnet_id" {
-  description = "The vnet resource group id."
+  description = "The vnet resource group id"
   type        = string
 }
 
@@ -79,6 +79,7 @@ variable "resource_group_vnet_id" {
 variable "name_prefix" {
   description = "Prefix used for naming resources"
   type        = string
+  default     = "ha"
 }
 
 variable "tags" {
@@ -96,16 +97,19 @@ variable "subnet_agw_cidr" {
 variable "dns_zone_name" {
   description = "The DNS zone name for the environment"
   type        = string
+  default     = "hello.azure.unique.dev"
 }
 
 variable "custom_subdomain_name" {
   description = "The custom subdomain name to use for the application"
   type        = string
+  default     = "ha"
 }
 
 variable "document_intelligence_custom_subdomain_name" {
   description = "The custom subdomain name to use for the document intelligence"
   type        = string
+  default     = "di-ha"
 }
 
 variable "dns_subdomain_records" {
@@ -125,17 +129,20 @@ variable "kv_sku" {
 variable "main_kv_name" {
   description = "Name of the main Key Vault"
   type        = string
+  default     = "hakv1"
 }
 
 variable "sensitive_kv_name" {
   description = "Name of the sensitive key vault"
   type        = string
+  default     = "hakv2"
 }
 
 # Monitoring and Analytics
 variable "log_analytics_workspace_name" {
   description = "Name of the Log Analytics workspace"
   type        = string
+  default     = "la"
 }
 
 variable "budget_contact_emails" {
@@ -159,6 +166,7 @@ variable "subscription_budget_amount" {
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
+  default     = "aks"
 }
 
 variable "aks_public_ip_name" {
@@ -169,38 +177,45 @@ variable "aks_public_ip_name" {
 
 # Managed Identities
 variable "aks_user_assigned_identity_name" {
-  description = "The name of the AKS user-assigned identity."
+  description = "The name of the AKS user-assigned identity"
   type        = string
+  default     = "aks-id"
 }
 
 variable "document_intelligence_identity_name" {
-  description = "The name of the document intelligence identity."
+  description = "The name of the document intelligence identity"
   type        = string
+  default     = "docint-id"
 }
 
 variable "ingestion_cache_identity_name" {
-  description = "The name of the ingestion cache identity."
+  description = "The name of the ingestion cache identity"
   type        = string
+  default     = "cache-id"
 }
 
 variable "ingestion_storage_identity_name" {
-  description = "The name of the ingestion storage identity."
+  description = "The name of the ingestion storage identity"
   type        = string
+  default     = "storage-id"
 }
 
 variable "grafana_identity_name" {
-  description = "The name of the Grafana user-assigned identity."
+  description = "The name of the Grafana user-assigned identity"
   type        = string
+  default     = "grafana-id"
 }
 
 variable "psql_user_assigned_identity_name" {
-  description = "The name of the PostgreSQL user-assigned identity."
+  description = "The name of the PostgreSQL user-assigned identity"
   type        = string
+  default     = "psql-id"
 }
 
 variable "csi_identity_name" {
   description = "Name of the CSI identity"
   type        = string
+  default     = "csi-id"
 }
 
 # GitOps Configuration
@@ -220,9 +235,81 @@ variable "gitops_maintainer_user_ids" {
   type        = list(string)
 }
 
+variable "keyvault_core_enabled_for_disk_encryption" {
+  description = "Whether to enable disk encryption for the core key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_core_soft_delete_retention_days" {
+  description = "The number of days to retain the deleted core key vault"
+  type        = number
+  default     = 7
+}
+
+variable "keyvault_core_purge_protection_enabled" {
+  description = "Whether to enable purge protection for the core key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_core_rbac_authorization_enabled" {
+  description = "Whether to enable RBAC authorization for the core key vault"
+  type        = bool
+  default     = true
+}
+
 variable "keyvault_secret_writer_user_ids" {
   description = "List of user object IDs that will be granted permissions to write secrets to Key Vault"
   type        = list(string)
+}
+
+variable "keyvault_core_network_acls" {
+  description = "Network ACLs for the core key vault"
+  type = object({
+    bypass         = string
+    default_action = string
+  })
+  default = {
+    bypass         = "AzureServices"
+    default_action = "Allow"
+  }
+}
+
+variable "keyvault_sensitive_enabled_for_disk_encryption" {
+  description = "Whether to enable disk encryption for the sensitive key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_sensitive_soft_delete_retention_days" {
+  description = "The number of days to retain the deleted sensitive key vault"
+  type        = number
+  default     = 7
+}
+
+variable "keyvault_sensitive_purge_protection_enabled" {
+  description = "Whether to enable purge protection for the sensitive key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_sensitive_rbac_authorization_enabled" {
+  description = "Whether to enable RBAC authorization for the sensitive key vault"
+  type        = bool
+  default     = true
+}
+
+variable "keyvault_sensitive_network_acls" {
+  description = "Network ACLs for the sensitive key vault"
+  type = object({
+    bypass         = string
+    default_action = string
+  })
+  default = {
+    bypass         = "AzureServices"
+    default_action = "Allow"
+  }
 }
 
 variable "telemetry_observer_user_ids" {
@@ -230,29 +317,33 @@ variable "telemetry_observer_user_ids" {
   type        = list(string)
 }
 
-variable "environment" {
-  description = "Environment name (e.g., dev, staging, prod)"
+variable "env" {
+  description = "Environment name (e.g., dev, test or prod)"
   type        = string
 }
 
 variable "container_registry_name" {
   description = "Name of the Azure Container Registry"
   type        = string
+  default     = "uqhacr"
 }
 
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
+  default     = "uqharedis"
 }
 
 variable "ingestion_cache_sa_name" {
   description = "Name of the storage account used for ingestion cache"
   type        = string
+  default     = "uqhacache"
 }
 
 variable "ingestion_storage_sa_name" {
   description = "Name of the storage account used for ingestion storage"
   type        = string
+  default     = "uqhastorage"
 }
 
 variable "speech_service_private_dns_zone_name" {
@@ -261,13 +352,15 @@ variable "speech_service_private_dns_zone_name" {
 }
 
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
-  description = "The name of the virtual network link for the speech service private DNS zone."
+  description = "The name of the virtual network link for the speech service private DNS zone"
   type        = string
+  default     = "privatelink.cognitiveservices.azure.com"
 }
 
 variable "speech_service_custom_subdomain_name" {
   description = "The custom subdomain name to use for the speech service"
   type        = string
+  default     = "ss-hello-azure"
 }
 
 # Azure AD Groups
@@ -316,11 +409,12 @@ variable "application_registration_gitops_display_name" {
 variable "application_secret_display_name" {
   description = "Display name for the GitOps application secret"
   type        = string
+  default     = "gitops"
 }
 
 # Federated Identity Credentials
 variable "cluster_workload_identities" {
-  description = "Workload Identities to be federated into the cluster."
+  description = "Workload Identities to be federated into the cluster"
   type = map(object({
     name      = string
     namespace = string
@@ -351,38 +445,4 @@ variable "cluster_workload_identities" {
       namespace = "unique"
     }
   }
-}
-
-# Key Vault IDs (will be set after Key Vaults are created)
-variable "main_kv_id" {
-  description = "The ID of the main key vault"
-  type        = string
-  default     = ""
-}
-
-variable "sensitive_kv_id" {
-  description = "The ID of the sensitive key vault"
-  type        = string
-  default     = ""
-}
-
-# Cluster ID (will be set after AKS cluster is created)
-variable "cluster_id" {
-  description = "The ID of the AKS cluster"
-  type        = string
-  default     = ""
-}
-
-# Application Gateway ID (will be set after Application Gateway is created)
-variable "application_gateway_id" {
-  description = "The ID of the Application Gateway"
-  type        = string
-  default     = ""
-}
-
-# DNS Zone ID (will be set after DNS zone is created)
-variable "dns_zone_id" {
-  description = "ID of the DNS zone"
-  type        = string
-  default     = ""
 }
