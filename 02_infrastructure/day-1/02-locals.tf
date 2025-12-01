@@ -9,11 +9,6 @@ locals {
 
   # Resource names
 
-  # Log Analytics
-  log_analytics = {
-    sku               = "PerGB2018"
-    retention_in_days = 30
-  }
   log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
   aks_user_assigned_identity_name     = "${var.aks_user_assigned_identity_name}-${var.env}"
   cluster_name                        = "${var.cluster_name}-${var.env}"
@@ -38,8 +33,8 @@ locals {
 
   # Backend config (for use in config files)
   backend_resource_group_name = "rg-terraform-state-${var.env}"
-  backend_key_day1            = "terraform-infra-${var.env}-v2-day-1.tfstate"
-  backend_key_day2            = "terraform-infra-${var.env}-v2-day-2.tfstate"
+  backend_key_day1            = "terraform-infra-${var.env}-v2-day-1.tfstate" #TODO: remove v2 when creating from scratch
+  backend_key_day2            = "terraform-infra-${var.env}-v2-day-2.tfstate" #TODO: remove v2 when creating from scratch
 
   # Dynamic DNS records - will be populated after application gateway is created
   # This is a placeholder that will be updated in a later phase when application gateway is created
@@ -49,5 +44,69 @@ locals {
       records = [] # Will be populated dynamically after application gateway is created
     }
   }
+
+  # DNS Zones and Records
+  dns_zones_and_records = {
+    dns_zone = {
+      name                = var.dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    psql_private_dns_zone = {
+      name                = var.psql_private_dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    speech_service_private_dns_zone = {
+      name                = var.speech_service_private_dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    dns_zone_sub_domain_records = var.dns_zone_sub_domain_records
+
+    dns_zone_root_records = var.dns_zone_root_records
+  }
+
+  azurerm_private_dns_zone_virtual_network_link_name = var.azurerm_private_dns_zone_virtual_network_link_name
+
+  # Key Vaults
+  key_vault_core = {
+    tenant_id                   = data.azurerm_subscription.current.tenant_id
+    name                        = "${var.main_kv_name}${var.env}v2" #TODO: remove v2 suffix when we have a new key vault
+    resource_group_name         = var.resource_group_core_name
+    enabled_for_disk_encryption = var.keyvault_core_enabled_for_disk_encryption
+    soft_delete_retention_days  = var.keyvault_core_soft_delete_retention_days
+    purge_protection_enabled    = var.keyvault_core_purge_protection_enabled
+    sku_name                    = var.kv_sku
+    tags                        = var.tags
+    rbac_authorization_enabled  = var.keyvault_core_rbac_authorization_enabled
+    network_acls                = var.keyvault_core_network_acls
+  }
+
+  key_vault_sensitive = {
+    tenant_id                   = data.azurerm_subscription.current.tenant_id
+    name                        = "${var.sensitive_kv_name}${var.env}v2" #TODO: remove v2 suffix when we have a new key vault
+    resource_group_name         = var.resource_group_sensitive_name
+    enabled_for_disk_encryption = var.keyvault_sensitive_enabled_for_disk_encryption
+    soft_delete_retention_days  = var.keyvault_sensitive_soft_delete_retention_days
+    purge_protection_enabled    = var.keyvault_sensitive_purge_protection_enabled
+    sku_name                    = var.kv_sku
+    tags                        = var.tags
+    rbac_authorization_enabled  = var.keyvault_sensitive_rbac_authorization_enabled
+    network_acls                = var.keyvault_sensitive_network_acls
+  }
+
+  # Azure resource provider registrations
+  azure_resource_provider_registrations = {
+    azure_dashboard_provider = {
+      name = "Microsoft.Dashboard"
+    }
+    azure_monitor_provider = {
+      name = "Microsoft.Monitor"
+    }
+    azure_alerts_provider = {
+      name = "Microsoft.AlertsManagement"
+    }
+  }
+
+  # TAGS
+  tags = var.tags
 }
 

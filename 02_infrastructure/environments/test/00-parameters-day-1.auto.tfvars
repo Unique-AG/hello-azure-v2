@@ -61,7 +61,7 @@ resource_group_sensitive_location = "swedencentral"
 resource_vnet_location            = "swedencentral"
 
 # Resource Group IDs (will be set after resource groups are created)
-resource_group_vnet_id = ""  # Will be set to azurerm_resource_group.vnet.id after creation
+resource_group_vnet_id = "" # Will be set to azurerm_resource_group.vnet.id after creation
 
 # User permissions
 cluster_admin_user_ids = [
