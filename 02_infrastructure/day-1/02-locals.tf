@@ -1,11 +1,11 @@
 # Local values that are computed or combined from variables
 locals {
   # DNS and naming
-  dns_zone_name                       = "${var.env}-${var.dns_zone_name}"
-  name_prefix                         = "${var.name_prefix}-${var.env}"
-  custom_subdomain_name               = "${var.custom_subdomain_name}-${var.env}"
+  dns_zone_name                               = "${var.env}-${var.dns_zone_name}"
+  name_prefix                                 = "${var.name_prefix}-${var.env}"
+  custom_subdomain_name                       = "${var.custom_subdomain_name}-${var.env}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"
-  speech_service_custom_subdomain_name = "${var.speech_service_custom_subdomain_name}-${var.env}"
+  speech_service_custom_subdomain_name        = "${var.speech_service_custom_subdomain_name}-${var.env}"
 
   # Resource names
   log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
@@ -32,8 +32,8 @@ locals {
 
   # Backend config (for use in config files)
   backend_resource_group_name = "rg-terraform-state-${var.env}"
-  backend_key_day1           = "terraform-infra-${var.env}-v2-day-1.tfstate"
-  backend_key_day2           = "terraform-infra-${var.env}-v2-day-2.tfstate"
+  backend_key_day1            = "terraform-infra-${var.env}-v2-day-1.tfstate"
+  backend_key_day2            = "terraform-infra-${var.env}-v2-day-2.tfstate"
 
   # Dynamic DNS records - will be populated after application gateway is created
   # This is a placeholder that will be updated in a later phase when application gateway is created
@@ -41,6 +41,17 @@ locals {
     for k, v in var.dns_subdomain_records : k => {
       name    = v.name
       records = [] # Will be populated dynamically after application gateway is created
+    }
+  }
+
+  # Defender settings
+  defender_settings = {
+    security_contact_settings = {
+      email = var.defender_security_contact_email
+    }
+
+    storage_accounts_defender_settings = {
+      extensions = var.defender_storage_accounts_extensions
     }
   }
 }
