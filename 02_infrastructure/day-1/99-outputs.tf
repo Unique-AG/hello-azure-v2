@@ -176,3 +176,23 @@ output "aks_public_ip_address" {
   description = "IP address of the public IP dedicated to the AKS"
   value       = azurerm_public_ip.aks_public_ip.ip_address
 }
+
+output "key_vault_main_id" {
+  description = "The ID of the main Key Vault"
+  value       = azurerm_key_vault.main_kv.id
+}
+
+output "key_vault_main_name" {
+  description = "The name of the main Key Vault"
+  value       = azurerm_key_vault.main_kv.name
+}
+
+output "key_vault_sensitive_id" {
+  description = "The ID of the sensitive Key Vault"
+  value       = azurerm_key_vault.sensitive_kv.id
+}
+
+output "key_vault_sensitive_name" {
+  description = "The name of the sensitive Key Vault"
+  value       = azurerm_key_vault.sensitive_kv.name
+}

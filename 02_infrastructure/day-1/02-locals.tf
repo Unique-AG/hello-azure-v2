@@ -1,11 +1,11 @@
 # Local values that are computed or combined from variables
 locals {
   # DNS and naming
-  dns_zone_name                       = "${var.env}-${var.dns_zone_name}"
-  name_prefix                         = "${var.name_prefix}-${var.env}"
-  custom_subdomain_name               = "${var.custom_subdomain_name}-${var.env}"
+  dns_zone_name                               = "${var.env}-${var.dns_zone_name}"
+  name_prefix                                 = "${var.name_prefix}-${var.env}"
+  custom_subdomain_name                       = "${var.custom_subdomain_name}-${var.env}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"
-  speech_service_custom_subdomain_name = "${var.speech_service_custom_subdomain_name}-${var.env}"
+  speech_service_custom_subdomain_name        = "${var.speech_service_custom_subdomain_name}-${var.env}"
 
   # Resource names
   log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
@@ -17,12 +17,10 @@ locals {
   psql_user_assigned_identity_name    = "${var.psql_user_assigned_identity_name}-${var.env}"
   csi_identity_name                   = "${var.csi_identity_name}-${var.env}"
   grafana_identity_name               = "${var.grafana_identity_name}-${var.env}"
-  main_kv_name                        = "${var.main_kv_name}${var.env}v2"
-  sensitive_kv_name                   = "${var.sensitive_kv_name}${var.env}v2"
-  container_registry_name             = "${var.container_registry_name}${var.env}"
-  redis_name                          = "${var.redis_name}-${var.env}"
-  ingestion_cache_sa_name             = "${var.ingestion_cache_sa_name}-${var.env}"
-  ingestion_storage_sa_name           = "${var.ingestion_storage_sa_name}-${var.env}"
+  container_registry_name   = "${var.container_registry_name}${var.env}"
+  redis_name                = "${var.redis_name}-${var.env}"
+  ingestion_cache_sa_name   = "${var.ingestion_cache_sa_name}-${var.env}"
+  ingestion_storage_sa_name = "${var.ingestion_storage_sa_name}-${var.env}"
 
   # Link names
   speech_service_private_dns_zone_virtual_network_link_name = "${var.speech_service_private_dns_zone_virtual_network_link_name}-${var.env}"
@@ -32,8 +30,8 @@ locals {
 
   # Backend config (for use in config files)
   backend_resource_group_name = "rg-terraform-state-${var.env}"
-  backend_key_day1           = "terraform-infra-${var.env}-v2-day-1.tfstate"
-  backend_key_day2           = "terraform-infra-${var.env}-v2-day-2.tfstate"
+  backend_key_day1            = "terraform-infra-${var.env}-v2-day-1.tfstate" #TODO: remove v2 when creating from scratch
+  backend_key_day2            = "terraform-infra-${var.env}-v2-day-2.tfstate" #TODO: remove v2 when creating from scratch
 
   # Dynamic DNS records - will be populated after application gateway is created
   # This is a placeholder that will be updated in a later phase when application gateway is created
@@ -43,5 +41,31 @@ locals {
       records = [] # Will be populated dynamically after application gateway is created
     }
   }
-}
 
+  # Key Vaults
+  key_vault_core = {
+    tenant_id                   = data.azurerm_subscription.current.tenant_id
+    name                        = "${var.main_kv_name}${var.env}v2" #TODO: remove v2 suffix when we have a new key vault
+    resource_group_name         = var.resource_group_core_name
+    enabled_for_disk_encryption = var.keyvault_core_enabled_for_disk_encryption
+    soft_delete_retention_days  = var.keyvault_core_soft_delete_retention_days
+    purge_protection_enabled    = var.keyvault_core_purge_protection_enabled
+    sku_name                    = var.kv_sku
+    tags                        = var.tags
+    rbac_authorization_enabled  = var.keyvault_core_rbac_authorization_enabled
+    network_acls                = var.keyvault_core_network_acls
+  }
+
+  key_vault_sensitive = {
+    tenant_id                   = data.azurerm_subscription.current.tenant_id
+    name                        = "${var.sensitive_kv_name}${var.env}v2" #TODO: remove v2 suffix when we have a new key vault
+    resource_group_name         = var.resource_group_sensitive_name
+    enabled_for_disk_encryption = var.keyvault_sensitive_enabled_for_disk_encryption
+    soft_delete_retention_days  = var.keyvault_sensitive_soft_delete_retention_days
+    purge_protection_enabled    = var.keyvault_sensitive_purge_protection_enabled
+    sku_name                    = var.kv_sku
+    tags                        = var.tags
+    rbac_authorization_enabled  = var.keyvault_sensitive_rbac_authorization_enabled
+    network_acls                = var.keyvault_sensitive_network_acls
+  }
+}
