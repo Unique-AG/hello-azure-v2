@@ -7,7 +7,6 @@ resource "azurerm_resource_group" "vnet" {
 }
 
 # Note: Resource group names need to match the actual names used in hello-azure/infrastructure/test
-# These will be verified during state import to ensure zero drift
 resource "azurerm_resource_group" "core" {
   name     = var.resource_group_core_name
   location = var.resource_group_core_location
