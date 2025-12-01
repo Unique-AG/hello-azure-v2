@@ -8,5 +8,32 @@ locals {
       records = [] # Will be populated dynamically after application gateway is created
     }
   }
+
+  # DNS Zones and Records
+  dns_zones_and_records = {
+    dns_zone = {
+      name = var.dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    psql_private_dns_zone = {
+      name = var.psql_private_dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    speech_service_private_dns_zone = {
+      name = var.speech_service_private_dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    dns_zone_sub_domain_records = {
+      name = var.dns_zone_sub_domain_records
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+
+    dns_zone_root_records = var.dns_zone_root_records
+  }
+
+  azurerm_private_dns_zone_virtual_network_link_name = var.azurerm_private_dns_zone_virtual_network_link_name
+
+  # TAGS
+  tags = var.tags
 }
 

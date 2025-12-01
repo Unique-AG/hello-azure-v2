@@ -2,12 +2,12 @@
 # Public DNS zone, private DNS zones for PostgreSQL and Speech Service, and DNS records
 
 resource "azurerm_private_dns_zone" "psql_private_dns_zone" {
-  name                = var.psql_private_dns_zone_name
+  name                = local.dns_zones_and_records.psql_private_dns_zone.name
   resource_group_name = azurerm_resource_group.vnet.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "psql-private-dns-zone-vnet-link" {
-  name                  = var.azurerm_private_dns_zone_virtual_network_link_name
+  name                  = local.azurerm_private_dns_zone_virtual_network_link_name
   private_dns_zone_name = azurerm_private_dns_zone.psql_private_dns_zone.name
   virtual_network_id    = module.vnet.resource_id
   resource_group_name   = azurerm_resource_group.vnet.name
@@ -15,9 +15,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "psql-private-dns-zone-
 }
 
 resource "azurerm_dns_zone" "dns_zone" {
-  name                = var.dns_zone_name
+  name                = local.dns_zones_and_records.dns_zone.name
   resource_group_name = azurerm_resource_group.vnet.name
-  tags                = var.tags
+  tags                = local.tags
 }
 
 resource "azurerm_dns_a_record" "adnsar_root" {
@@ -25,27 +25,27 @@ resource "azurerm_dns_a_record" "adnsar_root" {
   zone_name           = azurerm_dns_zone.dns_zone.name
   resource_group_name = azurerm_resource_group.vnet.name
   ttl                 = 300
-  records             = tolist(var.dns_zone_root_records)
-  tags                = var.tags
+  records             = tolist(local.dns_zones_and_records.dns_zone_root_records)
+  tags                = local.tags
 }
 
 resource "azurerm_dns_a_record" "adnsar_sub_domains" {
-  for_each            = var.dns_zone_sub_domain_records
+  for_each            = local.dns_zones_and_records.dns_zone_sub_domain_records
   name                = each.value.name
   zone_name           = azurerm_dns_zone.dns_zone.name
   resource_group_name = azurerm_resource_group.vnet.name
   ttl                 = 300
   records             = tolist(each.value.records)
-  tags                = var.tags
+  tags                = local.tags
 }
 
 resource "azurerm_private_dns_zone" "speech_service_private_dns_zone" {
-  name                = var.speech_service_private_dns_zone_name
+  name                = local.dns_zones_and_records.speech_service_private_dns_zone.name
   resource_group_name = azurerm_resource_group.vnet.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "speech_service_private_dns_zone_vnet_link" {
-  name                  = var.speech_service_private_dns_zone_virtual_network_link_name
+  name                  = local.azurerm_private_dns_zone_virtual_network_link_name
   private_dns_zone_name = azurerm_private_dns_zone.speech_service_private_dns_zone.name
   virtual_network_id    = module.vnet.resource_id
   resource_group_name   = azurerm_resource_group.vnet.name
