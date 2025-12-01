@@ -42,7 +42,31 @@ locals {
     }
   }
 
-  # Key Vaults
+  # DNS Zones and Records
+  dns_zones_and_records = {
+    dns_zone = {
+      name = var.dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    psql_private_dns_zone = {
+      name = var.psql_private_dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    speech_service_private_dns_zone = {
+      name = var.speech_service_private_dns_zone_name
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+    dns_zone_sub_domain_records = {
+      name = var.dns_zone_sub_domain_records
+      resource_group_name = azurerm_resource_group.vnet.name
+    }
+
+    dns_zone_root_records = var.dns_zone_root_records
+  }
+
+  azurerm_private_dns_zone_virtual_network_link_name = var.azurerm_private_dns_zone_virtual_network_link_name
+
+# Key Vaults
   key_vault_core = {
     tenant_id                   = data.azurerm_subscription.current.tenant_id
     name                        = "${var.main_kv_name}${var.env}v2" #TODO: remove v2 suffix when we have a new key vault
@@ -81,5 +105,8 @@ locals {
       name = "Microsoft.AlertsManagement"
     }
   }
+
+  # TAGS
+  tags = var.tags
 }
 
