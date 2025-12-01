@@ -68,4 +68,18 @@ locals {
     rbac_authorization_enabled  = var.keyvault_sensitive_rbac_authorization_enabled
     network_acls                = var.keyvault_sensitive_network_acls
   }
+
+  # Azure resource provider registrations
+  azure_resource_provider_registrations = {
+    azure_dashboard_provider = {
+      name = "Microsoft.Dashboard"
+    }
+    azure_monitor_provider = {
+      name = "Microsoft.Monitor"
+    }
+    azure_alerts_provider = {
+      name = "Microsoft.AlertsManagement"
+    }
+  }
 }
+
