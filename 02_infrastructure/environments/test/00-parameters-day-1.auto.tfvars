@@ -94,5 +94,8 @@ telemetry_observer_user_ids = [
 # Speech Service configuration (private DNS zone name is not environment-specific)
 speech_service_private_dns_zone_name = "privatelink.cognitiveservices.azure.com"
 
+# DNS Zone (created in day-1)
+dns_zone_name = "test-hello.azure.unique.dev"
+
 # Application Registration
 application_registration_gitops_display_name = "GitOps"

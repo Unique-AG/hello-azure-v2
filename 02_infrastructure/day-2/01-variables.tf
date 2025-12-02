@@ -143,6 +143,19 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
@@ -263,12 +276,6 @@ variable "speech_service_custom_subdomain_name" {
   description = "The custom subdomain name to use for the speech service"
   type        = string
   default     = "ss-hello-azure"
-}
-
-# Application Gateway
-variable "application_gateway_id" {
-  description = "The ID of the Application Gateway"
-  type        = string
 }
 
 # Azure AD Groups
