@@ -24,16 +24,16 @@ data "azuread_user" "gitops_maintainer" {
   object_id = each.value
 }
 
-// TODO: uncomment when keyvaults are added to day-1
-# data "azurerm_key_vault" "key_vault_core" {
-#   name                = local.key_vault_core.name
-#   resource_group_name = local.key_vault_core.resource_group_name
-# }
+// Key Vault data sources (created in day-1)
+data "azurerm_key_vault" "key_vault_core" {
+  name                = local.key_vault_core.name
+  resource_group_name = local.key_vault_core.resource_group_name
+}
 
-# data "azurerm_key_vault" "key_vault_sensitive" {
-#   name                = local.key_vault_sensitive.name
-#   resource_group_name = local.key_vault_sensitive.resource_group_name
-# }
+data "azurerm_key_vault" "key_vault_sensitive" {
+  name                = local.key_vault_sensitive.name
+  resource_group_name = local.key_vault_sensitive.resource_group_name
+}
 
 # Resource Group data sources (created in day-1)
 data "azurerm_resource_group" "core" {
@@ -48,36 +48,7 @@ data "azurerm_resource_group" "vnet" {
   name = var.resource_group_name_vnet
 }
 
-# Terraform Service Principal data source
-data "azuread_service_principal" "terraform" {
-  client_id = var.terraform_client_id != "" ? var.terraform_client_id : var.client_id
-}
-
-# Kubernetes cluster data source (created in day-1 or workloads)
-# Note: This will fail if cluster doesn't exist, but that's expected during initial setup
-data "azurerm_kubernetes_cluster" "cluster" {
-  name                = local.cluster_name
-  resource_group_name = var.resource_group_core_name
-  depends_on          = [var.cluster_id] # Required for AGIC identity access. Note: This may cause role assignments to be recreated on plan, but is necessary for AGIC to function properly.
-}
-
-# Azure AD User data sources for role assignments
-data "azuread_user" "cluster_admin" {
-  for_each  = var.cluster_admins
-  object_id = each.value
-}
-
-data "azuread_user" "main_keyvault_secret_writer" {
-  for_each  = var.main_keyvault_secret_writers
-  object_id = each.value
-}
-
-data "azuread_user" "telemetry_observer" {
-  for_each  = var.telemetry_observers
-  object_id = each.value
-}
-
-# Managed Identity data sources (from day-1)
+# Managed Identity data sources (created in day-1)
 data "azurerm_user_assigned_identity" "psql_identity" {
   name                = local.psql_user_assigned_identity_name
   resource_group_name = var.resource_group_sensitive_name
@@ -103,7 +74,7 @@ data "azurerm_user_assigned_identity" "grafana_identity" {
   resource_group_name = var.resource_group_core_name
 }
 
-# Custom Role Definition data sources (from day-1)
+# Custom Role Definition data sources (created in day-1)
 data "azurerm_role_definition" "acr_puller" {
   name  = "AcrPull Principals${local.env_suffix}"
   scope = data.azurerm_subscription.current.id
@@ -119,9 +90,37 @@ data "azurerm_role_definition" "telemetry_observer" {
   scope = data.azurerm_subscription.current.id
 }
 
-# # DNS Zone data source (created in day-1)
-# data "azurerm_dns_zone" "dns_zone" {
-#   name                = var.dns_zone.name
-#   resource_group_name = var.dns_zone.resource_group_name
-# }
+# DNS Zone data source (created in day-1)
+# Note: DNS zone name in day-1 uses var.dns_zone_name directly (without env suffix)
+data "azurerm_dns_zone" "dns_zone" {
+  name                = var.dns_zone_name
+  resource_group_name = var.resource_group_name_vnet
+}
+
+# Azure AD Service Principal for Terraform
+data "azuread_service_principal" "terraform" {
+  display_name = "terraform"
+}
+
+# Azure AD Users
+data "azuread_user" "cluster_admin" {
+  for_each  = toset(var.cluster_admin_user_ids)
+  object_id = each.value
+}
+
+data "azuread_user" "main_keyvault_secret_writer" {
+  for_each  = toset(var.keyvault_secret_writer_user_ids)
+  object_id = each.value
+}
+
+data "azuread_user" "telemetry_observer" {
+  for_each  = toset(var.telemetry_observer_user_ids)
+  object_id = each.value
+}
+
+# Kubernetes Cluster data source (will be created in day-2, but referenced here)
+data "azurerm_kubernetes_cluster" "cluster" {
+  name                = local.aks.name
+  resource_group_name = local.aks.resource_group_name
+}
 

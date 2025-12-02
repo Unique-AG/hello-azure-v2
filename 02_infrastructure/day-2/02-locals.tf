@@ -4,15 +4,15 @@ locals {
   env_suffix = "-${var.env}"
 
   # DNS and naming
-  dns_zone_name                       = "${var.env}-${var.dns_zone_name}"
-  name_prefix                         = "${var.custom_subdomain_name}-${var.env}"
-  custom_subdomain_name               = "${var.custom_subdomain_name}-${var.env}"
+  dns_zone_name                               = "${var.env}-${var.dns_zone_name}"
+  name_prefix                                 = "${var.custom_subdomain_name}-${var.env}"
+  custom_subdomain_name                       = "${var.custom_subdomain_name}-${var.env}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"
-  speech_service_custom_subdomain_name = "${var.speech_service_custom_subdomain_name}-${var.env}"
+  speech_service_custom_subdomain_name        = "${var.speech_service_custom_subdomain_name}-${var.env}"
 
   # Resource names
   log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
-  aks_user_assigned_identity_name     =  "${var.aks_user_assigned_identity_name}-${var.env}"
+  aks_user_assigned_identity_name     = "${var.aks_user_assigned_identity_name}-${var.env}"
   cluster_name                        = "${var.cluster_name}-${var.env}"
   document_intelligence_identity_name = "${var.document_intelligence_identity_name}-${var.env}"
   ingestion_cache_identity_name       = "${var.ingestion_cache_identity_name}-${var.env}"
@@ -25,13 +25,14 @@ locals {
   ingestion_cache_sa_name             = "${var.ingestion_cache_sa_name}${var.env}"
   ingestion_storage_sa_name           = "${var.ingestion_storage_sa_name}${var.env}"
 
-  # Key Vault names
-  main_kv_name                        = "${var.main_kv_name}${var.env}v2"
-  sensitive_kv_name                   = "${var.sensitive_kv_name}${var.env}v2"
-
   key_vault_core = {
-      name                = "${var.main_kv_name}${var.env}v2"
-      resource_group_name = var.resource_group_core_name
+    name                = "${var.main_kv_name}${var.env}v2" #TODO: remove v2 when we have a new key vault
+    resource_group_name = var.resource_group_core_name
+  }
+
+  key_vault_sensitive = {
+    name                = "${var.sensitive_kv_name}${var.env}v2" #TODO: remove v2 when we have a new key vault
+    resource_group_name = var.resource_group_sensitive_name
   }
 
   aks = {

@@ -95,6 +95,48 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing Subscription Provider Registrations"
+echo "=========================================="
+echo ""
+
+echo "Checking azurerm_resource_provider_registration.azure_dashboard_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_dashboard_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_dashboard_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Dashboard"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_dashboard_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_dashboard_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_dashboard_provider already in state, skipping"
+fi
+
+echo "Checking azurerm_resource_provider_registration.azure_monitor_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_monitor_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_monitor_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Monitor"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_monitor_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_monitor_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_monitor_provider already in state, skipping"
+fi
+
+echo "Checking azurerm_resource_provider_registration.azure_alerts_provider..."
+if ! terraform state show azurerm_resource_provider_registration.azure_alerts_provider >/dev/null 2>&1; then
+  echo "  Importing azurerm_resource_provider_registration.azure_alerts_provider..."
+  PROVIDER_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.AlertsManagement"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_resource_provider_registration.azure_alerts_provider \
+    "${PROVIDER_ID}"
+  echo "  ✓ Imported azurerm_resource_provider_registration.azure_alerts_provider"
+else
+  echo "  ✓ azurerm_resource_provider_registration.azure_alerts_provider already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
 echo "Importing Subscription Budgets"
 echo "=========================================="
 echo ""
@@ -430,6 +472,333 @@ if ! terraform state show azurerm_role_definition.acr_puller >/dev/null 2>&1; th
 else
   echo "  ✓ azurerm_role_definition.acr_puller already in state, skipping"
 fi
+
+# DNS Zones and Records
+echo ""
+echo "=========================================="
+echo "Importing DNS Zones and Records..."
+echo "=========================================="
+
+# Read DNS zone name from VAR_PARAMS
+DNS_ZONE_NAME=$(grep "^dns_zone_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "")
+PSQL_DNS_ZONE_NAME=$(grep "^psql_private_dns_zone_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "psql.postgres.database.azure.com")
+SPEECH_DNS_ZONE_NAME=$(grep "^speech_service_private_dns_zone_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "")
+
+RESOURCE_GROUP_VNET_NAME=$(grep "^resource_group_vnet_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "rg-vnet-002")
+
+echo "Checking azurerm_dns_zone.dns_zone..."
+if ! terraform state show azurerm_dns_zone.dns_zone >/dev/null 2>&1; then
+  echo "  Importing azurerm_dns_zone.dns_zone..."
+  # TODO: Replace with actual DNS zone resource ID
+  # Get with: az network dns zone show --name <zone-name> --resource-group <rg-name> --query id -o tsv
+  DNS_ZONE_ID="${DNS_ZONE_ID:-/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/dnsZones/${DNS_ZONE_NAME}}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_dns_zone.dns_zone \
+    "${DNS_ZONE_ID}"
+  echo "  ✓ Imported azurerm_dns_zone.dns_zone"
+else
+  echo "  ✓ azurerm_dns_zone.dns_zone already in state, skipping"
+fi
+
+echo "Checking azurerm_private_dns_zone.psql_private_dns_zone..."
+if ! terraform state show azurerm_private_dns_zone.psql_private_dns_zone >/dev/null 2>&1; then
+  echo "  Importing azurerm_private_dns_zone.psql_private_dns_zone..."
+  # TODO: Replace with actual private DNS zone resource ID
+  # Get with: az network private-dns zone show --name <zone-name> --resource-group <rg-name> --query id -o tsv
+  PSQL_DNS_ZONE_ID="${PSQL_DNS_ZONE_ID:-/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/privateDnsZones/${PSQL_DNS_ZONE_NAME}}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_private_dns_zone.psql_private_dns_zone \
+    "${PSQL_DNS_ZONE_ID}"
+  echo "  ✓ Imported azurerm_private_dns_zone.psql_private_dns_zone"
+else
+  echo "  ✓ azurerm_private_dns_zone.psql_private_dns_zone already in state, skipping"
+fi
+
+echo "Checking azurerm_private_dns_zone.speech_service_private_dns_zone..."
+if ! terraform state show azurerm_private_dns_zone.speech_service_private_dns_zone >/dev/null 2>&1; then
+  echo "  Importing azurerm_private_dns_zone.speech_service_private_dns_zone..."
+  # TODO: Replace with actual private DNS zone resource ID
+  # Get with: az network private-dns zone show --name <zone-name> --resource-group <rg-name> --query id -o tsv
+  SPEECH_DNS_ZONE_ID="${SPEECH_DNS_ZONE_ID:-/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/privateDnsZones/${SPEECH_DNS_ZONE_NAME}}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_private_dns_zone.speech_service_private_dns_zone \
+    "${SPEECH_DNS_ZONE_ID}"
+  echo "  ✓ Imported azurerm_private_dns_zone.speech_service_private_dns_zone"
+else
+  echo "  ✓ azurerm_private_dns_zone.speech_service_private_dns_zone already in state, skipping"
+fi
+
+# DNS A Records
+echo ""
+echo "Importing DNS A Records..."
+echo "Checking azurerm_dns_a_record.adnsar_root..."
+if ! terraform state show azurerm_dns_a_record.adnsar_root >/dev/null 2>&1; then
+  echo "  Importing azurerm_dns_a_record.adnsar_root..."
+  # DNS A record ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/dnsZones/{zone}/A/{name}
+  # From terraform.tfstate: /subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/rg-vnet-002/providers/Microsoft.Network/dnsZones/test-hello.azure.unique.dev/A/@
+  DNS_A_ROOT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/dnsZones/${DNS_ZONE_NAME}/A/@"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_dns_a_record.adnsar_root \
+    "${DNS_A_ROOT_ID}"
+  echo "  ✓ Imported azurerm_dns_a_record.adnsar_root"
+else
+  echo "  ✓ azurerm_dns_a_record.adnsar_root already in state, skipping"
+fi
+
+# Import subdomain A records
+echo "Checking azurerm_dns_a_record.adnsar_sub_domains..."
+# The keys in the original state are: api, argo, zitadel
+# Note: zitadel has name "id" but key "zitadel"
+declare -A SUBDOMAIN_NAMES=(
+  ["api"]="api"
+  ["argo"]="argo"
+  ["zitadel"]="id"
+)
+
+for subdomain_key in api argo zitadel; do
+  echo "Checking azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]..."
+  if ! terraform state show "azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]" >/dev/null 2>&1; then
+    echo "  Importing azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]..."
+    # Get the actual subdomain name (DNS record name, not the key)
+    # Try to get from variable first, otherwise use the mapping
+    SUBDOMAIN_NAME=$(grep -A 10 "dns_zone_sub_domain_records\|dns_subdomain_records" "${VAR_PARAMS}" 2>/dev/null | grep -A 5 "${subdomain_key}" | grep "name" | cut -d'"' -f2 | head -1)
+    if [ -z "${SUBDOMAIN_NAME}" ]; then
+      SUBDOMAIN_NAME="${SUBDOMAIN_NAMES[${subdomain_key}]}"
+    fi
+    # DNS A record ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/dnsZones/{zone}/A/{name}
+    DNS_A_SUBDOMAIN_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/dnsZones/${DNS_ZONE_NAME}/A/${SUBDOMAIN_NAME}"
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      "azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]" \
+      "${DNS_A_SUBDOMAIN_ID}"
+    echo "  ✓ Imported azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]"
+  else
+    echo "  ✓ azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"] already in state, skipping"
+  fi
+done
+
+# Private DNS Zone Virtual Network Links
+echo ""
+echo "Importing Private DNS Zone Virtual Network Links..."
+echo "Checking azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link..."
+if ! terraform state show azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link >/dev/null 2>&1; then
+  echo "  Importing azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link..."
+  # Private DNS zone VNet link ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/privateDnsZones/{zone}/virtualNetworkLinks/{link-name}
+  # From terraform.tfstate: /subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/rg-vnet-002/providers/Microsoft.Network/privateDnsZones/psql.postgres.database.azure.com/virtualNetworkLinks/PsqlVnetZone.com
+  PSQL_VNET_LINK_NAME=$(grep "^azurerm_private_dns_zone_virtual_network_link_name\|^azurerm_private_dns_zone_virtual_network_link_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 | head -1 || echo "PsqlVnetZone.com")
+  PSQL_VNET_LINK_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/privateDnsZones/${PSQL_DNS_ZONE_NAME}/virtualNetworkLinks/${PSQL_VNET_LINK_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link \
+    "${PSQL_VNET_LINK_ID}"
+  echo "  ✓ Imported azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link"
+else
+  echo "  ✓ azurerm_private_dns_zone_virtual_network_link.psql-private-dns-zone-vnet-link already in state, skipping"
+fi
+
+echo "Checking azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link..."
+if ! terraform state show azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link >/dev/null 2>&1; then
+  echo "  Importing azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link..."
+  # Private DNS zone VNet link ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/privateDnsZones/{zone}/virtualNetworkLinks/{link-name}
+  # From terraform.tfstate: /subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/rg-vnet-002/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com/virtualNetworkLinks/speech-service-private-dns-zone-vnet-link-test
+  SPEECH_VNET_LINK_NAME=$(grep "^speech_service_private_dns_zone_virtual_network_link_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 | head -1 || echo "")
+  SPEECH_VNET_LINK_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/privateDnsZones/${SPEECH_DNS_ZONE_NAME}/virtualNetworkLinks/${SPEECH_VNET_LINK_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link \
+    "${SPEECH_VNET_LINK_ID}"
+  echo "  ✓ Imported azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link"
+else
+  echo "  ✓ azurerm_private_dns_zone_virtual_network_link.speech_service_private_dns_zone_vnet_link already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
+echo "Importing Key Vaults"
+echo "=========================================="
+echo ""
+
+# Read Key Vault names from VAR_PARAMS or use defaults
+MAIN_KV_NAME_PREFIX=$(grep "^main_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "hakv1")
+SENSITIVE_KV_NAME_PREFIX=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "hakv2")
+
+# Compute full Key Vault names (matching local.main_kv_name and local.sensitive_kv_name pattern)
+# Pattern: ${var.main_kv_name}${var.env}v2
+# We need to get env from VAR_CONFIG or VAR_PARAMS
+ENV_VALUE=$(grep "^env" "${VAR_CONFIG}" "${VAR_PARAMS}" 2>/dev/null | head -1 | cut -d'"' -f2 || echo "${ENV}")
+MAIN_KV_NAME="${MAIN_KV_NAME_PREFIX}${ENV_VALUE}v2"
+SENSITIVE_KV_NAME="${SENSITIVE_KV_NAME_PREFIX}${ENV_VALUE}v2"
+
+echo "Checking azurerm_key_vault.main_kv..."
+if ! terraform state show azurerm_key_vault.main_kv >/dev/null 2>&1; then
+  echo "  Importing azurerm_key_vault.main_kv..."
+  echo "  Key Vault name: ${MAIN_KV_NAME}"
+  echo "  Resource Group: ${RESOURCE_GROUP_CORE_NAME}"
+  # Get with: az keyvault show --name ${MAIN_KV_NAME} --resource-group ${RESOURCE_GROUP_CORE_NAME} --query id -o tsv
+  MAIN_KV_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.KeyVault/vaults/${MAIN_KV_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_key_vault.main_kv \
+    "${MAIN_KV_ID}"
+  echo "  ✓ Imported azurerm_key_vault.main_kv"
+else
+  echo "  ✓ azurerm_key_vault.main_kv already in state, skipping"
+fi
+
+echo "Checking azurerm_key_vault.sensitive_kv..."
+if ! terraform state show azurerm_key_vault.sensitive_kv >/dev/null 2>&1; then
+  echo "  Importing azurerm_key_vault.sensitive_kv..."
+  echo "  Key Vault name: ${SENSITIVE_KV_NAME}"
+  echo "  Resource Group: ${RESOURCE_GROUP_SENSITIVE_NAME}"
+  # Get with: az keyvault show --name ${SENSITIVE_KV_NAME} --resource-group ${RESOURCE_GROUP_SENSITIVE_NAME} --query id -o tsv
+  SENSITIVE_KV_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.KeyVault/vaults/${SENSITIVE_KV_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_key_vault.sensitive_kv \
+    "${SENSITIVE_KV_ID}"
+  echo "  ✓ Imported azurerm_key_vault.sensitive_kv"
+else
+  echo "  ✓ azurerm_key_vault.sensitive_kv already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
+echo "Importing Log Analytics Workspace"
+echo "=========================================="
+echo ""
+
+echo "Checking azurerm_log_analytics_workspace.this..."
+if ! terraform state show azurerm_log_analytics_workspace.this >/dev/null 2>&1; then
+  echo "  Importing azurerm_log_analytics_workspace.this..."
+  # Read log_analytics_workspace_name from VAR_PARAMS and construct the full name with env suffix
+  # The actual workspace name in Azure includes the environment suffix (e.g., "la-test")
+  LOG_ANALYTICS_WORKSPACE_BASE_NAME=$(grep "^log_analytics_workspace_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "la")
+  LOG_ANALYTICS_WORKSPACE_NAME="${LOG_ANALYTICS_WORKSPACE_BASE_NAME}-${ENV}"
+  # Get with: az monitor log-analytics workspace show --resource-group <resource_group_core_name> --workspace-name <log_analytics_workspace_name> --query id -o tsv
+  LOG_ANALYTICS_WORKSPACE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.OperationalInsights/workspaces/${LOG_ANALYTICS_WORKSPACE_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_log_analytics_workspace.this \
+    "${LOG_ANALYTICS_WORKSPACE_ID}"
+  echo "  ✓ Imported azurerm_log_analytics_workspace.this"
+else
+  echo "  ✓ azurerm_log_analytics_workspace.this already in state, skipping"
+fi
+
+
+echo ""
+echo "=========================================="
+echo "Importing Defender Module Resources"
+echo "=========================================="
+echo ""
+
+# Security Contact
+echo "Checking module.defender.azapi_resource.security_contact..."
+if ! terraform state show module.defender.azapi_resource.security_contact >/dev/null 2>&1; then
+  echo "  Importing module.defender.azapi_resource.security_contact..."
+  # Import format: /subscriptions/{subscription-id}/providers/Microsoft.Security/securityContacts/default
+  # Note: The name is "default" (not "default1")
+  SECURITY_CONTACT_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/securityContacts/default"
+  set +e  # Temporarily disable exit on error for this import attempt
+  IMPORT_OUTPUT=$(terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    module.defender.azapi_resource.security_contact \
+    "${SECURITY_CONTACT_ID}" 2>&1)
+  IMPORT_EXIT_CODE=$?
+  set -e  # Re-enable exit on error
+  
+  if [ ${IMPORT_EXIT_CODE} -eq 0 ]; then
+    echo "  ✓ Imported module.defender.azapi_resource.security_contact"
+  else
+    echo "  ⚠️  Import failed for module.defender.azapi_resource.security_contact (exit code: ${IMPORT_EXIT_CODE})"
+    echo "     This may be expected if the resource doesn't exist yet."
+    echo "     Error: ${IMPORT_OUTPUT}"
+  fi
+else
+  echo "  ✓ module.defender.azapi_resource.security_contact already in state, skipping"
+fi
+
+# Security Center Subscription Pricing Resources
+# Import format: /subscriptions/{subscription-id}/providers/Microsoft.Security/pricings/{resource-type}
+declare -a DEFENDER_PRICING_TYPES=(
+  "AI"
+  "Arm"
+  "CloudPosture"
+  "Containers"
+  "KeyVaults"
+  "OpenSourceRelationalDatabases"
+  "StorageAccounts"
+  "VirtualMachines"
+)
+
+for pricing_type in "${DEFENDER_PRICING_TYPES[@]}"; do
+  RESOURCE_ADDRESS="module.defender.azurerm_security_center_subscription_pricing.standard_plan[\"${pricing_type}\"]"
+  if ! terraform state show "${RESOURCE_ADDRESS}" >/dev/null 2>&1; then
+    echo "  Attempting to import ${RESOURCE_ADDRESS}..."
+    PRICING_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/pricings/${pricing_type}"
+    set +e  # Temporarily disable exit on error for this import attempt
+    IMPORT_OUTPUT=$(terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      "${RESOURCE_ADDRESS}" \
+      "${PRICING_ID}" 2>&1)
+    IMPORT_EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    
+    if [ ${IMPORT_EXIT_CODE} -eq 0 ]; then
+      echo "  ✓ Imported ${RESOURCE_ADDRESS}"
+    else
+      echo "  ⚠️  Import failed for ${RESOURCE_ADDRESS} (exit code: ${IMPORT_EXIT_CODE})"
+      echo "     This may be expected if the resource doesn't exist yet."
+      echo "     Error: ${IMPORT_OUTPUT}"
+    fi
+  else
+    echo "  ✓ ${RESOURCE_ADDRESS} already in state, skipping"
+  fi
+done
+
+echo ""
+
+echo ""
+echo "=========================================="
+echo "Expected Drifts After Import"
+echo "=========================================="
+echo ""
+echo "⚠️  The following drifts are EXPECTED and can be safely ignored:"
+echo ""
+echo "1. Defender Module - schema_validation_enabled:"
+echo "   - Resource: module.defender.azapi_resource.security_contact"
+echo "   - Drift: schema_validation_enabled shows as true -> false"
+echo "   - Reason: Azure API returns this as true, but the module explicitly sets it to false."
+echo "            This is a known azapi provider behavior where Azure returns a different"
+echo "            value than what Terraform sets. This is a validation setting that doesn't"
+echo "            affect resource functionality."
+echo "   - Action: Safe to ignore - this drift will appear in terraform plan but can be"
+echo "            safely ignored during apply."
+echo ""
+echo "2. General Cosmetic Drifts:"
+echo "   - API versions may differ between what's in state and what Terraform wants to set"
+echo "   - Read-only fields that Azure populates automatically"
+echo "   - These are cosmetic and don't affect functionality"
+echo ""
+echo "3. Budget Resource - time_period.start_date:"
+echo "   - Resource: azurerm_consumption_budget_subscription.subscription_budget"
+echo "   - Drift: time_period[0].start_date may show changes"
+echo "   - Reason: The budget uses timestamp() which changes on each plan"
+echo "   - Action: Already handled with lifecycle.ignore_changes in the resource definition"
+echo ""
+echo "=========================================="
+echo "Import script completed!"
+echo "=========================================="
+echo ""
+echo "⚠️  IMPORTANT: If Defender resources still show as 'to create' in terraform plan:"
+echo "   1. Verify the resources exist in Azure:"
+echo "      - Security Contact: az security contact show --name default --query id -o tsv"
+echo "      - Pricing: az security pricing show --name <resource-type> --query id -o tsv"
+echo "   2. If resources exist but imports failed, check the error messages above"
+echo "   3. For azapi_resource, you may need to use: terraform import -target=module.defender.azapi_resource.security_contact <resource-id>"
+echo ""
+echo "Next steps:"
+echo "   - Review and update all TODO placeholders with actual resource IDs"
+echo "   - Run 'terraform plan' to verify imports and identify any missing resources"
+echo "   - Review the 'Expected Drifts' section above for drifts that can be safely ignored"
+echo "   - If Defender resources still show drift, run the imports manually:"
+echo "     terraform import -target=module.defender.azapi_resource.security_contact /subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/securityContacts/default"
+echo "     terraform import -target=module.defender.azurerm_security_center_subscription_pricing.standard_plan[\"AI\"] /subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/pricings/AI"
+echo "     (repeat for each pricing resource type)"
+echo ""
+
 
 echo ""
 echo "=========================================="
