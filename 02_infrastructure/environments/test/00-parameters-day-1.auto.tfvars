@@ -91,8 +91,11 @@ telemetry_observer_user_ids = [
   "3b48f167-cb68-4655-b45b-878e170af84d",
 ]
 
+dns_zone_name = "test-hello.azure.unique.dev"
+
 # Speech Service configuration (private DNS zone name is not environment-specific)
-speech_service_private_dns_zone_name = "privatelink.cognitiveservices.azure.com"
+speech_service_private_dns_zone_virtual_network_link_name = "speech-service-private-dns-zone-vnet-link-test"
+azurerm_private_dns_zone_virtual_network_link_name = "PsqlVnetZone.com"
 
 # Application Registration
 application_registration_gitops_display_name = "GitOps"

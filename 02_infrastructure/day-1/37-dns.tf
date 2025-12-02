@@ -40,13 +40,13 @@ resource "azurerm_dns_a_record" "adnsar_sub_domains" {
 }
 
 resource "azurerm_private_dns_zone" "speech_service_private_dns_zone" {
-  name                = local.dns_zones_and_records.speech_service_private_dns_zone.name
+  name                = var.speech_service_private_dns_zone_name
   resource_group_name = azurerm_resource_group.vnet.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "speech_service_private_dns_zone_vnet_link" {
-  name                  = local.azurerm_private_dns_zone_virtual_network_link_name
-  private_dns_zone_name = azurerm_private_dns_zone.speech_service_private_dns_zone.name
+  name                  = var.speech_service_private_dns_zone_virtual_network_link_name
+  private_dns_zone_name = var.speech_service_private_dns_zone_name
   virtual_network_id    = module.vnet.resource_id
   resource_group_name   = azurerm_resource_group.vnet.name
   depends_on            = [module.vnet]
