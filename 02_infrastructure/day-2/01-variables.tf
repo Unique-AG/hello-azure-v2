@@ -138,9 +138,29 @@ variable "log_analytics_workspace_name" {
   default     = "la"
 }
 
+# Application Gateway Configuration
+variable "ip_name" {
+  description = "Name of the public IP for the Application Gateway"
+  type        = string
+  default     = "default-public-ip-name"
+}
+
 variable "budget_contact_emails" {
   description = "List of email addresses for budget notifications"
   type        = list(string)
+}
+
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
 }
 
 variable "cluster_name" {
