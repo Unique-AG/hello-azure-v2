@@ -252,6 +252,303 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing Kubernetes Cluster"
+echo "=========================================="
+echo ""
+
+# Kubernetes Cluster (AKS)
+# Note: The local.cluster_name adds -${env} suffix, so if tfvars has "aks-test" and env is "test",
+# the Terraform resource name would be "aks-test-test", but the actual Azure cluster is "aks-test"
+# For import, we need to use the actual Azure cluster name
+# Format: /subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.ContainerService/managedClusters/{cluster-name}
+RESOURCE_GROUP_CORE_NAME=$(grep "^resource_group_core_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "resource-group-core")
+SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || echo "")
+
+# Get the actual cluster name from Azure (this is what exists, not what Terraform thinks it should be)
+CLUSTER_NAME_FROM_TFVARS=$(grep "^cluster_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "aks")
+if [ -n "${RESOURCE_GROUP_CORE_NAME}" ]; then
+  ACTUAL_CLUSTER_NAME=$(az aks list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[0].name" -o tsv 2>/dev/null || echo "")
+  if [ -n "${ACTUAL_CLUSTER_NAME}" ]; then
+    CLUSTER_NAME="${ACTUAL_CLUSTER_NAME}"
+    echo "  ℹ️  Found actual cluster name in Azure: ${CLUSTER_NAME}"
+    # Check if there's a mismatch with Terraform's expected name
+    TERRAFORM_CLUSTER_NAME="${CLUSTER_NAME_FROM_TFVARS}-${ENV}"
+    if [ "${CLUSTER_NAME}" != "${TERRAFORM_CLUSTER_NAME}" ]; then
+      echo "  ⚠️  WARNING: Mismatch detected!"
+      echo "      Azure cluster name: ${CLUSTER_NAME}"
+      echo "      Terraform expects (local.cluster_name): ${TERRAFORM_CLUSTER_NAME}"
+      echo "      This will cause drift. Consider changing cluster_name in tfvars to:"
+      echo "      cluster_name = \"$(echo ${CLUSTER_NAME} | sed "s/-${ENV}$//")\""
+    fi
+  else
+    # Fallback: construct from tfvars + env (this is what Terraform will use via local.cluster_name)
+    CLUSTER_NAME="${CLUSTER_NAME_FROM_TFVARS}-${ENV}"
+    echo "  ⚠️  Could not determine actual cluster name from Azure. Using constructed name: ${CLUSTER_NAME}"
+    echo "  ⚠️  Note: If cluster_name in tfvars is 'aks-test', local.cluster_name becomes 'aks-test-test'"
+    echo "  ⚠️  Consider changing cluster_name in tfvars to just 'aks' (base name) so local makes it 'aks-test'"
+  fi
+else
+  CLUSTER_NAME="${CLUSTER_NAME_FROM_TFVARS}-${ENV}"
+fi
+
+if [ -z "${SUBSCRIPTION_ID}" ]; then
+  echo "  ⚠️  Could not determine subscription ID. Please set SUBSCRIPTION_ID environment variable or ensure az CLI is logged in."
+  echo "  Skipping Kubernetes cluster import."
+else
+  CLUSTER_RESOURCE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"
+  
+  # Get the actual node resource group name from Azure
+  echo "  ℹ️  Determining node resource group name from existing cluster..."
+  NODE_RG_NAME=$(az aks show --name "${CLUSTER_NAME}" --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query nodeResourceGroup -o tsv 2>/dev/null || echo "")
+  if [ -n "${NODE_RG_NAME}" ]; then
+    echo "  ℹ️  Found node resource group: ${NODE_RG_NAME}"
+    echo "  ℹ️  IMPORTANT: Add this to your tfvars file:"
+    echo "      node_resource_group_name = \"${NODE_RG_NAME}\""
+  else
+    echo "  ⚠️  Could not determine node resource group. Cluster may not exist yet."
+    echo "  ℹ️  Node resource group is typically: <resource-group>-<cluster-name>-nodes"
+    echo "      or: MC_<resource-group>_<cluster-name>_<location>"
+  fi
+  
+  echo "Checking module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster..."
+  if ! terraform state show module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster >/dev/null 2>&1; then
+    echo "  Importing module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster \
+      "${CLUSTER_RESOURCE_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster"
+    else
+      echo "  ⚠️  Failed to import cluster. Please verify the cluster exists and the resource ID is correct:"
+      echo "      ${CLUSTER_RESOURCE_ID}"
+      echo "      Get the correct ID with: az aks show --name ${CLUSTER_NAME} --resource-group ${RESOURCE_GROUP_CORE_NAME} --query id -o tsv"
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster already in state, skipping"
+  fi
+
+  # Import node pools
+  echo "Checking module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"rapid\"]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool["rapid"]' >/dev/null 2>&1; then
+    NODE_POOL_RAPID_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}/agentPools/rapid"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool["rapid"]' \
+      "${NODE_POOL_RAPID_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"rapid\"]"
+    else
+      echo "  ⚠️  Failed to import rapid node pool. It may not exist yet or have a different name."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"rapid\"] already in state, skipping"
+  fi
+
+  echo "Checking module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"steady\"]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool["steady"]' >/dev/null 2>&1; then
+    NODE_POOL_STEADY_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}/agentPools/steady"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool["steady"]' \
+      "${NODE_POOL_STEADY_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"steady\"]"
+    else
+      echo "  ⚠️  Failed to import steady node pool. It may not exist yet or have a different name."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"steady\"] already in state, skipping"
+  fi
+
+  # Import additional resources created by the Kubernetes module
+  echo ""
+  echo "  ℹ️  Checking for additional Kubernetes module resources..."
+  
+  # Grafana Dashboard
+  GRAFANA_NAME="${CLUSTER_NAME}-grafana"
+  echo "Checking module.kubernetes_cluster.azurerm_dashboard_grafana.grafana[0]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_dashboard_grafana.grafana[0]' >/dev/null 2>&1; then
+    GRAFANA_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Dashboard/grafana/${GRAFANA_NAME}"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_dashboard_grafana.grafana[0]' \
+      "${GRAFANA_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_dashboard_grafana.grafana[0]"
+    else
+      echo "  ⚠️  Grafana dashboard may not exist yet or has a different name. It will be created by Terraform."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_dashboard_grafana.grafana[0] already in state, skipping"
+  fi
+  
+  # Monitor Workspace
+  MONITOR_WORKSPACE_NAME="${CLUSTER_NAME}-monitor"
+  echo "Checking module.kubernetes_cluster.azurerm_monitor_workspace.monitor_workspace[0]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_monitor_workspace.monitor_workspace[0]' >/dev/null 2>&1; then
+    # Monitor workspace requires proper casing: resourceGroups (capital G) and Microsoft.Monitor (capital M)
+    MONITOR_WORKSPACE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Monitor/accounts/${MONITOR_WORKSPACE_NAME}"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_monitor_workspace.monitor_workspace[0]' \
+      "${MONITOR_WORKSPACE_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_monitor_workspace.monitor_workspace[0]"
+    else
+      echo "  ⚠️  Monitor workspace may not exist yet. It will be created by Terraform."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_monitor_workspace.monitor_workspace[0] already in state, skipping"
+  fi
+  
+  # Monitor Data Collection Endpoint
+  MONITOR_DCE_NAME="${CLUSTER_NAME}-monitor-dce"
+  echo "Checking module.kubernetes_cluster.azurerm_monitor_data_collection_endpoint.monitor_dce[0]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_monitor_data_collection_endpoint.monitor_dce[0]' >/dev/null 2>&1; then
+    MONITOR_DCE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Insights/dataCollectionEndpoints/${MONITOR_DCE_NAME}"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_monitor_data_collection_endpoint.monitor_dce[0]' \
+      "${MONITOR_DCE_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_monitor_data_collection_endpoint.monitor_dce[0]"
+    else
+      echo "  ⚠️  Monitor DCE may not exist yet. It will be created by Terraform."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_monitor_data_collection_endpoint.monitor_dce[0] already in state, skipping"
+  fi
+  
+  # Monitor Data Collection Rules
+  MONITOR_DCR_CI_NAME="${CLUSTER_NAME}-ci-dcr"
+  echo "Checking module.kubernetes_cluster.azurerm_monitor_data_collection_rule.ci_dcr[0]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_monitor_data_collection_rule.ci_dcr[0]' >/dev/null 2>&1; then
+    MONITOR_DCR_CI_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Insights/dataCollectionRules/${MONITOR_DCR_CI_NAME}"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_monitor_data_collection_rule.ci_dcr[0]' \
+      "${MONITOR_DCR_CI_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_monitor_data_collection_rule.ci_dcr[0]"
+    else
+      echo "  ⚠️  Monitor DCR (CI) may not exist yet. It will be created by Terraform."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_monitor_data_collection_rule.ci_dcr[0] already in state, skipping"
+  fi
+  
+  MONITOR_DCR_PROM_NAME="MSProm-swedencentral-${CLUSTER_NAME}"
+  echo "Checking module.kubernetes_cluster.azurerm_monitor_data_collection_rule.monitor_dcr[0]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_monitor_data_collection_rule.monitor_dcr[0]' >/dev/null 2>&1; then
+    MONITOR_DCR_PROM_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Insights/dataCollectionRules/${MONITOR_DCR_PROM_NAME}"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_monitor_data_collection_rule.monitor_dcr[0]' \
+      "${MONITOR_DCR_PROM_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_monitor_data_collection_rule.monitor_dcr[0]"
+    else
+      echo "  ⚠️  Monitor DCR (Prometheus) may not exist yet. It will be created by Terraform."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_monitor_data_collection_rule.monitor_dcr[0] already in state, skipping"
+  fi
+  
+  # Monitor Data Collection Rule Associations
+  MONITOR_DCR_CI_NAME="${CLUSTER_NAME}-ci-dcr"
+  echo "Checking module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.ci_dcr_asc[0]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.ci_dcr_asc[0]' >/dev/null 2>&1; then
+    MONITOR_DCR_CI_ASC_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}/providers/Microsoft.Insights/dataCollectionRuleAssociations/${MONITOR_DCR_CI_NAME}-asc"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.ci_dcr_asc[0]' \
+      "${MONITOR_DCR_CI_ASC_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.ci_dcr_asc[0]"
+    else
+      echo "  ⚠️  Monitor DCR association (CI) may not exist yet. It will be created by Terraform."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.ci_dcr_asc[0] already in state, skipping"
+  fi
+  
+  MONITOR_DCR_PROM_NAME="MSProm-swedencentral-${CLUSTER_NAME}"
+  echo "Checking module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.monitor_dcr_asc[0]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.monitor_dcr_asc[0]' >/dev/null 2>&1; then
+    MONITOR_DCR_PROM_ASC_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}/providers/Microsoft.Insights/dataCollectionRuleAssociations/${MONITOR_DCR_PROM_NAME}"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.monitor_dcr_asc[0]' \
+      "${MONITOR_DCR_PROM_ASC_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.monitor_dcr_asc[0]"
+    else
+      echo "  ⚠️  Monitor DCR association (Prometheus) may not exist yet. It will be created by Terraform."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_monitor_data_collection_rule_association.monitor_dcr_asc[0] already in state, skipping"
+  fi
+  
+  # Diagnostic Setting
+  echo "Checking module.kubernetes_cluster.azurerm_monitor_diagnostic_setting.aks_diagnostic_logs[0]..."
+  if ! terraform state show 'module.kubernetes_cluster.azurerm_monitor_diagnostic_setting.aks_diagnostic_logs[0]' >/dev/null 2>&1; then
+    # Diagnostic settings require format: {resourceId}|{name}
+    # Use the cluster resource ID (with proper casing) with pipe separator and diagnostic setting name
+    CLUSTER_RESOURCE_ID_CANONICAL="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"
+    DIAGNOSTIC_SETTING_ID="${CLUSTER_RESOURCE_ID_CANONICAL}|aks-diagnostic-logs"
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.kubernetes_cluster.azurerm_monitor_diagnostic_setting.aks_diagnostic_logs[0]' \
+      "${DIAGNOSTIC_SETTING_ID}" 2>&1; then
+      echo "  ✓ Imported module.kubernetes_cluster.azurerm_monitor_diagnostic_setting.aks_diagnostic_logs[0]"
+    else
+      echo "  ⚠️  Diagnostic setting may not exist yet. It will be created by Terraform."
+    fi
+  else
+    echo "  ✓ module.kubernetes_cluster.azurerm_monitor_diagnostic_setting.aks_diagnostic_logs[0] already in state, skipping"
+  fi
+  
+  # Log Analytics Workspace Tables
+  # NOTE: These tables are NOT imported because:
+  # 1. They are auto-created by Azure Monitor/Container Insights
+  # 2. Importing them causes refresh errors ("parsing '': cannot parse an empty string")
+  # 3. They can be safely created fresh by Terraform without affecting existing data
+  echo ""
+  echo "  ℹ️  Skipping Log Analytics workspace tables import..."
+  echo "      These tables (AKSControlPlane, ContainerLogV2) are auto-created by Azure Monitor"
+  echo "      and will be created fresh by Terraform. This is safe and expected behavior."
+fi
+
+echo ""
+echo "=========================================="
+echo "Expected Drifts After Import"
+echo "=========================================="
+echo ""
+echo "⚠️  The following drifts are EXPECTED and can be safely ignored:"
+echo ""
+echo "1. Kubernetes Cluster - Configuration Updates:"
+echo "   - Resource: module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster"
+echo "   - Drifts:"
+echo "     * temporary_name_for_rotation on default_node_pool: 'defaultrepl'"
+echo "     * storage_profile block (blob_driver_enabled, disk_driver_enabled, etc.)"
+echo "     * timeouts block (update = '30m')"
+echo "   - Reason: These are feature additions from the module that enhance cluster"
+echo "            functionality. The temporary_name_for_rotation helps with zero-downtime"
+echo "            node pool upgrades, storage_profile enables additional storage drivers,"
+echo "            and timeouts sets reasonable update timeouts."
+echo "   - Action: Safe to ignore - these are non-breaking feature additions."
+echo ""
+echo "2. Kubernetes Node Pools - temporary_name_for_rotation:"
+echo "   - Resources:"
+echo "     * module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"rapid\"]"
+echo "     * module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"steady\"]"
+echo "   - Drift: temporary_name_for_rotation = 'rapidrepl' / 'steadyrepl'"
+echo "   - Reason: The module sets this automatically for node pool rotation during upgrades."
+echo "            This is a best practice for zero-downtime upgrades."
+echo "   - Action: Safe to ignore - this is a non-breaking configuration enhancement."
+echo ""
+echo "3. Log Analytics Workspace Tables:"
+echo "   - Resources:"
+echo "     * module.kubernetes_cluster.azurerm_log_analytics_workspace_table.basic_log_table[\"AKSControlPlane\"]"
+echo "     * module.kubernetes_cluster.azurerm_log_analytics_workspace_table.basic_log_table[\"ContainerLogV2\"]"
+echo "   - Note: These tables are NOT imported because:"
+echo "     * They are auto-created by Azure Monitor/Container Insights"
+echo "     * Importing them causes refresh errors (empty resource ID parsing)"
+echo "     * They can be safely created fresh by Terraform without affecting existing data"
+echo "   - Action: These will show as 'to be created' in terraform plan - this is expected"
+echo "            and safe. The tables will be created by Terraform on first apply."
+echo ""
+echo "=========================================="
+echo "Import script completed!"
+echo "=========================================="
+echo ""
+echo "Next steps:"
+echo "   - Run 'terraform plan' to verify all imports were successful"
+echo "   - Review the 'Expected Drifts' section above for drifts that can be safely ignored"
+echo "   - All resources should now be in state, with only expected configuration drifts remaining"
+
+echo ""
+echo "=========================================="
 echo "Skipping Key Vault Secrets"
 echo "=========================================="
 echo ""
