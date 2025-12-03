@@ -73,6 +73,18 @@ variable "resource_group_name_vnet" {
   type        = string
 }
 
+variable "virtual_network_name" {
+  description = "Name of the virtual network (created in day-1)"
+  type        = string
+  default     = "vnet-001"
+}
+
+variable "postgresql_subnet_name" {
+  description = "Name of the PostgreSQL subnet (created in day-1)"
+  type        = string
+  default     = "snet-postgres"
+}
+
 # Naming and Tagging
 variable "name_prefix" {
   description = "Prefix used for naming resources"
@@ -184,6 +196,93 @@ variable "psql_user_assigned_identity_name" {
   description = "The name of the PostgreSQL user-assigned identity"
   type        = string
   default     = "psql-id"
+}
+
+variable "psql_private_dns_zone_name" {
+  description = "Name of the PostgreSQL private DNS zone (created in day-1)"
+  type        = string
+  default     = "psql.postgres.database.azure.com"
+}
+
+# PostgreSQL Configuration
+variable "postgresql_server_name" {
+  description = "The name of the PostgreSQL server"
+  type        = string
+}
+
+variable "postgresql_zone" {
+  description = "The availability zone for the PostgreSQL server"
+  type        = string
+  default     = "1"
+}
+
+variable "postgresql_version" {
+  description = "The version of PostgreSQL to use"
+  type        = string
+  default     = "14"
+}
+
+variable "postgresql_sku" {
+  description = "The SKU for the PostgreSQL server"
+  type        = string
+  default     = "GP_Standard_D2ds_v5"
+}
+
+variable "postgresql_storage_mb" {
+  description = "The storage size in MB for the PostgreSQL server"
+  type        = number
+  default     = 32768
+}
+
+variable "postgresql_backup_retention_days" {
+  description = "The number of days to retain backups for the PostgreSQL server"
+  type        = number
+  default     = 7
+}
+
+variable "postgresql_databases" {
+  description = "Map of databases and their properties"
+  type = map(object({
+    name            = string
+    collation       = optional(string, null)
+    charset         = optional(string, null)
+    lifecycle       = optional(bool, false)
+    prevent_destroy = optional(bool, true)
+  }))
+  default = {
+    "chat" = {
+      name            = "chat"
+      prevent_destroy = false
+    }
+    "ingestion" = {
+      name            = "ingestion"
+      prevent_destroy = false
+    }
+    "theme" = {
+      name            = "theme"
+      prevent_destroy = false
+    }
+    "scope-management" = {
+      name            = "scope-management"
+      prevent_destroy = false
+    }
+    "app-repository" = {
+      name            = "app-repository"
+      prevent_destroy = false
+    }
+  }
+}
+
+variable "postgresql_server_tags" {
+  description = "Additional tags that apply only to the PostgreSQL server"
+  type        = map(string)
+  default     = {}
+}
+
+variable "postgresql_metric_alerts_external_action_group_ids" {
+  description = "List of external Action Group IDs to apply to all PostgreSQL metric alerts"
+  type        = list(string)
+  default     = []
 }
 
 variable "csi_identity_name" {
