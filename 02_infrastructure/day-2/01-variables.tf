@@ -143,6 +143,19 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
@@ -217,6 +230,49 @@ variable "keyvault_secret_writer_user_ids" {
 variable "telemetry_observer_user_ids" {
   description = "List of user object IDs that will be granted permissions to view telemetry data"
   type        = list(string)
+}
+
+# Role Names
+variable "key_reader_key_vault_role_name" {
+  description = "Role name for Key Vault key reader permissions"
+  type        = string
+  default     = "Key Vault Crypto Service Encryption User"
+}
+
+variable "secret_reader_key_vault_role_name" {
+  description = "Role name for Key Vault secret reader permissions"
+  type        = string
+  default     = "Key Vault Secrets User"
+}
+
+variable "key_manager_key_vault_role_name" {
+  description = "Role name for Key Vault key manager permissions"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "secret_manager_key_vault_role_name" {
+  description = "Role name for Key Vault secret manager permissions"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "access_manager_key_vault_role_name" {
+  description = "Role name for Key Vault access manager permissions"
+  type        = string
+  default     = "Key Vault Data Access Administrator"
+}
+
+variable "cluster_user_role_name" {
+  description = "Role name for AKS cluster user permissions"
+  type        = string
+  default     = "Azure Kubernetes Service Contributor Role"
+}
+
+variable "cluster_rbac_admin_role_name" {
+  description = "Role name for AKS cluster RBAC admin permissions"
+  type        = string
+  default     = "Azure Kubernetes Service RBAC Cluster Admin"
 }
 
 variable "env" {
