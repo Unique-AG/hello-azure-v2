@@ -230,6 +230,12 @@ variable "container_registry_name" {
   default     = "uqhacr"
 }
 
+variable "registry_diagnostic_name" {
+  description = "Name of the diagnostic setting for the Container Registry"
+  type        = string
+  default     = "log-helloazure"
+}
+
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
