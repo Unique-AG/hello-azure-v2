@@ -7,9 +7,6 @@ subnet_agw_cidr = "10.202.3.0/28"
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
 
-# Key Vault configuration
-kv_sku = "premium"
-
 # GitOps configuration
 gitops_display_name = "GitOps"
 
@@ -76,7 +73,11 @@ main_kv_name      = "hakv1"
 sensitive_kv_name = "hakv2"
 
 # AKS Cluster
-cluster_name = "aks-test"
+# Note: This is the base name. The local adds -${env} suffix, so "aks" becomes "aks-test"
+cluster_name = "aks"
+
+# Node Resource Group (created by AKS, must match what's in Azure)
+node_resource_group_name = "resource-group-core-aks-nodes"
 
 # DNS Zone
 dns_zone_name = "hello.azure.unique.test"

@@ -47,3 +47,49 @@ data "azurerm_resource_group" "sensitive" {
 data "azurerm_resource_group" "vnet" {
   name = var.resource_group_name_vnet
 }
+
+# Log Analytics workspace data source (created in day-1)
+data "azurerm_log_analytics_workspace" "log_analytics" {
+  name                = local.log_analytics_workspace_name
+  resource_group_name = var.resource_group_core_name
+}
+
+# Grafana identity data source (created in day-1)
+data "azurerm_user_assigned_identity" "grafana_identity" {
+  name                = local.grafana_identity_name
+  resource_group_name = var.resource_group_core_name
+}
+
+# Application Gateway data source
+data "azurerm_application_gateway" "application_gateway" {
+  name                = local.application_gateway_name
+  resource_group_name = var.resource_group_core_name
+}
+
+# Azure Client Config for tenant_id
+data "azurerm_client_config" "current" {}
+
+# AKS Public IP data source (created in day-1)
+data "azurerm_public_ip" "aks_public_ip" {
+  name                = var.aks_public_ip_name
+  resource_group_name = var.resource_group_core_name
+}
+
+# Virtual Network data source (created in day-1)
+data "azurerm_virtual_network" "vnet" {
+  name                = "vnet-001"
+  resource_group_name = var.resource_group_name_vnet
+}
+
+# AKS Subnets data sources (created in day-1)
+data "azurerm_subnet" "aks_nodes" {
+  name                 = "snet-aks-nodes"
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
+  resource_group_name  = var.resource_group_name_vnet
+}
+
+data "azurerm_subnet" "aks_pods" {
+  name                 = "snet-aks-pods"
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
+  resource_group_name  = var.resource_group_name_vnet
+}

@@ -104,6 +104,12 @@ variable "custom_subdomain_name" {
   default     = "ha"
 }
 
+variable "application_gateway_name" {
+  description = "Application Gateway name."
+  type        = string
+  default     = "appgw"
+}
+
 variable "document_intelligence_custom_subdomain_name" {
   description = "The custom subdomain name to use for the document intelligence"
   type        = string
@@ -147,6 +153,112 @@ variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
   default     = "aks"
+}
+
+variable "kubernetes_version" {
+  description = "The version of Kubernetes to use for the AKS cluster"
+  type        = string
+  default     = "1.34.0"
+}
+
+variable "kubernetes_default_node_size" {
+  description = "The default node size for the AKS cluster"
+  type        = string
+  default     = "Standard_D2s_v6"
+}
+
+variable "kubernetes_rapid_max_count" {
+  description = "The maximum number of nodes for the rapid node pool"
+  type        = number
+  default     = 3
+}
+
+variable "kubernetes_rapid_min_count" {
+  description = "The minimum number of nodes for the rapid node pool"
+  type        = number
+  default     = 0
+}
+
+variable "kubernetes_rapid_node_count" {
+  description = "The number of nodes for the rapid node pool"
+  type        = number
+  default     = 0
+}
+
+variable "kubernetes_rapid_node_size" {
+  description = "The rapid node pool node size for the AKS cluster"
+  type        = string
+  default     = "Standard_D8s_v4"
+}
+
+variable "kubernetes_steady_max_count" {
+  description = "The maximum number of nodes for the steady node pool"
+  type        = number
+  default     = 4
+}
+
+variable "kubernetes_steady_min_count" {
+  description = "The minimum number of nodes for the steady node pool"
+  type        = number
+  default     = 0
+}
+
+variable "kubernetes_steady_node_count" {
+  description = "The number of nodes for the steady node pool"
+  type        = number
+  default     = 2
+}
+
+variable "kubernetes_steady_node_size" {
+  description = "The steady node pool node size for the AKS cluster"
+  type        = string
+  default     = "Standard_D8as_v5"
+}
+
+variable "node_resource_group_name" {
+  description = "The name of the resource group for AKS nodes"
+  type        = string
+  default = "resource-group-core-aks-nodes"
+}
+
+variable "aks_public_ip_name" {
+  description = "Name of the AKS public IP (created in day-1)"
+  type        = string
+  default     = "aks_public_ip"
+}
+
+
+variable "prometheus_node_recording_rules" {
+  description = "Node level recording rules for Prometheus monitoring"
+  type = list(object({
+    enabled    = optional(bool, true)
+    record     = string
+    expression = string
+    labels     = optional(map(string))
+  }))
+  default = null
+}
+
+variable "prometheus_kubernetes_recording_rules" {
+  description = "Kubernetes level recording rules for Prometheus monitoring"
+  type = list(object({
+    enabled    = optional(bool, true)
+    record     = string
+    expression = string
+    labels     = optional(map(string))
+  }))
+  default = null
+}
+
+variable "prometheus_ux_recording_rules" {
+  description = "UX level recording rules for Prometheus monitoring"
+  type = list(object({
+    enabled    = optional(bool, true)
+    record     = string
+    expression = string
+    labels     = optional(map(string))
+  }))
+  default = null
 }
 
 # Managed Identities
