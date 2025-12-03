@@ -232,6 +232,49 @@ variable "telemetry_observer_user_ids" {
   type        = list(string)
 }
 
+# Role Names
+variable "key_reader_key_vault_role_name" {
+  description = "Role name for Key Vault key reader permissions"
+  type        = string
+  default     = "Key Vault Crypto Service Encryption User"
+}
+
+variable "secret_reader_key_vault_role_name" {
+  description = "Role name for Key Vault secret reader permissions"
+  type        = string
+  default     = "Key Vault Secrets User"
+}
+
+variable "key_manager_key_vault_role_name" {
+  description = "Role name for Key Vault key manager permissions"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "secret_manager_key_vault_role_name" {
+  description = "Role name for Key Vault secret manager permissions"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "access_manager_key_vault_role_name" {
+  description = "Role name for Key Vault access manager permissions"
+  type        = string
+  default     = "Key Vault Data Access Administrator"
+}
+
+variable "cluster_user_role_name" {
+  description = "Role name for AKS cluster user permissions"
+  type        = string
+  default     = "Azure Kubernetes Service Contributor Role"
+}
+
+variable "cluster_rbac_admin_role_name" {
+  description = "Role name for AKS cluster RBAC admin permissions"
+  type        = string
+  default     = "Azure Kubernetes Service RBAC Cluster Admin"
+}
+
 variable "env" {
   description = "Environment name (e.g., dev, test or prod)"
   type        = string

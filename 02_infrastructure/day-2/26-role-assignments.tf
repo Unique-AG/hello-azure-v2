@@ -2,13 +2,13 @@
 # These role assignments grant permissions to various identities and groups
 
 locals {
-  key_reader_key_vault_role_name     = "Key Vault Crypto Service Encryption User"    # todo: use custom role (DevOps)
-  secret_reader_key_vault_role_name  = "Key Vault Secrets User"                      # todo: use custom role (DevOps)
-  key_manager_key_vault_role_name    = "Key Vault Crypto Officer"                    # todo: use custom role (DevOps)
-  secret_manager_key_vault_role_name = "Key Vault Secrets Officer"                   # todo: use custom role (DevOps)
-  access_manager_key_vault_role_name = "Key Vault Data Access Administrator"         # todo: use custom role (DevOps)
-  cluster_user_role_name             = "Azure Kubernetes Service Contributor Role"   # todo: use custom role (DevOps)
-  cluster_rbac_admin_role_name        = "Azure Kubernetes Service RBAC Cluster Admin" # todo: use custom role (Emergency Admin)
+  key_reader_key_vault_role_name     = var.key_reader_key_vault_role_name
+  secret_reader_key_vault_role_name  = var.secret_reader_key_vault_role_name
+  key_manager_key_vault_role_name    = var.key_manager_key_vault_role_name
+  secret_manager_key_vault_role_name = var.secret_manager_key_vault_role_name
+  access_manager_key_vault_role_name = var.access_manager_key_vault_role_name
+  cluster_user_role_name             = var.cluster_user_role_name
+  cluster_rbac_admin_role_name       = var.cluster_rbac_admin_role_name
 }
 
 # CSI Identity Key Vault Secret Reader assignments
