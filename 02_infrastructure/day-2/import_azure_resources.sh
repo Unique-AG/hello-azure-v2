@@ -247,8 +247,11 @@ echo ""
 # Subscription ID - get from config or set here
 SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-782871a0-bcee-44fb-851f-ccd3e69ada2a}"
 
+# Resource Group Names
+RESOURCE_GROUP_CORE_NAME="resource-group-core"
+
 # Resource IDs (constructed from subscription and resource names)
-RESOURCE_GROUP_CORE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/resource-group-core"
+RESOURCE_GROUP_CORE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}"
 KEY_VAULT_MAIN_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/resource-group-core/providers/Microsoft.KeyVault/vaults/hakv1${ENV}v2"
 KEY_VAULT_SENSITIVE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/resource-group-sensitive/providers/Microsoft.KeyVault/vaults/hakv2${ENV}v2"
 
@@ -1092,6 +1095,186 @@ echo ""
 echo "These are configuration updates, not imports. They will be applied on the next"
 echo "terraform apply and are expected behavior."
 echo ""
+
+echo ""
+echo "=========================================="
+echo "Importing Application Gateway Resources"
+echo "=========================================="
+echo ""
+
+# Application Gateway Public IP
+echo "Checking azurerm_public_ip.application_gateway_public_ip..."
+if ! terraform state show azurerm_public_ip.application_gateway_public_ip >/dev/null 2>&1; then
+  # Get public IP name from terraform plan or use default
+  PUBLIC_IP_NAME="default-public-ip-name"
+  PUBLIC_IP_ID=$(az network public-ip show \
+    --name "${PUBLIC_IP_NAME}" \
+    --resource-group "${RESOURCE_GROUP_CORE_NAME}" \
+    --query id -o tsv 2>/dev/null || echo "")
+  
+  if [[ -n "${PUBLIC_IP_ID}" ]]; then
+    echo "  Importing azurerm_public_ip.application_gateway_public_ip..."
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      azurerm_public_ip.application_gateway_public_ip \
+      "${PUBLIC_IP_ID}" 2>&1 | grep -v "^\[0m" || true
+    if terraform state show azurerm_public_ip.application_gateway_public_ip >/dev/null 2>&1; then
+      echo "  ✓ Imported azurerm_public_ip.application_gateway_public_ip"
+    else
+      echo "  ✗ FAILED to import azurerm_public_ip.application_gateway_public_ip"
+      exit 1
+    fi
+  else
+    echo "  ⚠️  Could not retrieve public IP ID from Azure"
+    echo "     Public IP name: ${PUBLIC_IP_NAME}"
+    echo "     Resource group: ${RESOURCE_GROUP_CORE_NAME}"
+    echo "     You may need to import manually using the resource ID"
+  fi
+else
+  echo "  ✓ azurerm_public_ip.application_gateway_public_ip already in state, skipping"
+fi
+
+# Application Gateway
+echo ""
+echo "Checking module.application_gateway.azurerm_application_gateway.appgw..."
+if ! terraform state show 'module.application_gateway.azurerm_application_gateway.appgw' >/dev/null 2>&1; then
+  APPLICATION_GATEWAY_NAME="ha-test-appgw"
+  APPLICATION_GATEWAY_ID=$(az network application-gateway show \
+    --name "${APPLICATION_GATEWAY_NAME}" \
+    --resource-group "${RESOURCE_GROUP_CORE_NAME}" \
+    --query id -o tsv 2>/dev/null || echo "")
+  
+  if [[ -n "${APPLICATION_GATEWAY_ID}" ]]; then
+    echo "  Importing module.application_gateway.azurerm_application_gateway.appgw..."
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.application_gateway.azurerm_application_gateway.appgw' \
+      "${APPLICATION_GATEWAY_ID}" 2>&1 | grep -v "^\[0m" || true
+    if terraform state show 'module.application_gateway.azurerm_application_gateway.appgw' >/dev/null 2>&1; then
+      echo "  ✓ Imported module.application_gateway.azurerm_application_gateway.appgw"
+    else
+      echo "  ✗ FAILED to import module.application_gateway.azurerm_application_gateway.appgw"
+      exit 1
+    fi
+  else
+    echo "  ⚠️  Could not retrieve Application Gateway ID from Azure"
+    echo "     Application Gateway name: ${APPLICATION_GATEWAY_NAME}"
+    echo "     Resource group: ${RESOURCE_GROUP_CORE_NAME}"
+    echo "     You may need to import manually using the resource ID"
+  fi
+else
+  echo "  ✓ module.application_gateway.azurerm_application_gateway.appgw already in state, skipping"
+fi
+
+# Application Gateway WAF Policy
+echo ""
+echo "Checking module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]..."
+if ! terraform state show 'module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]' >/dev/null 2>&1; then
+  WAF_POLICY_NAME="default-waf-policy-name"
+  WAF_POLICY_ID=$(az network application-gateway waf-policy show \
+    --name "${WAF_POLICY_NAME}" \
+    --resource-group "${RESOURCE_GROUP_CORE_NAME}" \
+    --query id -o tsv 2>/dev/null || echo "")
+  
+  if [[ -n "${WAF_POLICY_ID}" ]]; then
+    # Fix casing: Azure CLI returns ApplicationGatewayWebApplicationFirewallPolicies
+    # but Terraform expects applicationGatewayWebApplicationFirewallPolicies
+    WAF_POLICY_ID_FIXED=$(echo "${WAF_POLICY_ID}" | sed 's|/ApplicationGatewayWebApplicationFirewallPolicies/|/applicationGatewayWebApplicationFirewallPolicies/|')
+    echo "  Importing module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]..."
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]' \
+      "${WAF_POLICY_ID_FIXED}" 2>&1 | grep -v "^\[0m" || true
+    if terraform state show 'module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]' >/dev/null 2>&1; then
+      echo "  ✓ Imported module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]"
+    else
+      echo "  ✗ FAILED to import module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]"
+      exit 1
+    fi
+  else
+    echo "  ⚠️  Could not retrieve WAF Policy ID from Azure"
+    echo "     WAF Policy name: ${WAF_POLICY_NAME}"
+    echo "     Resource group: ${RESOURCE_GROUP_CORE_NAME}"
+    echo "     You may need to import manually using the resource ID"
+  fi
+else
+  echo "  ✓ module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0] already in state, skipping"
+fi
+
+# Application Gateway Diagnostic Setting
+echo ""
+echo "Checking module.application_gateway.azurerm_monitor_diagnostic_setting.agw_diagnostic[0]..."
+if ! terraform state show 'module.application_gateway.azurerm_monitor_diagnostic_setting.agw_diagnostic[0]' >/dev/null 2>&1; then
+  # Diagnostic settings use a composite ID: <target-resource-id>|providers/Microsoft.Insights/diagnosticSettings/<diagnostic-setting-name>
+  APPLICATION_GATEWAY_NAME="ha-test-appgw"
+  DIAGNOSTIC_SETTING_NAME="log-ha-test-appgw"
+  APPLICATION_GATEWAY_ID=$(az network application-gateway show \
+    --name "${APPLICATION_GATEWAY_NAME}" \
+    --resource-group "${RESOURCE_GROUP_CORE_NAME}" \
+    --query id -o tsv 2>/dev/null || echo "")
+  
+  if [[ -n "${APPLICATION_GATEWAY_ID}" ]]; then
+    # Check if diagnostic setting exists in Azure
+    DIAGNOSTIC_SETTING_EXISTS=$(az monitor diagnostic-settings list \
+      --resource "${APPLICATION_GATEWAY_ID}" \
+      --query "[?name=='${DIAGNOSTIC_SETTING_NAME}'].name" -o tsv 2>/dev/null || echo "")
+    
+    if [[ -n "${DIAGNOSTIC_SETTING_EXISTS}" ]]; then
+      DIAGNOSTIC_SETTING_ID="${APPLICATION_GATEWAY_ID}|providers/Microsoft.Insights/diagnosticSettings/${DIAGNOSTIC_SETTING_NAME}"
+      echo "  Importing module.application_gateway.azurerm_monitor_diagnostic_setting.agw_diagnostic[0]..."
+      IMPORT_OUTPUT=$(terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.application_gateway.azurerm_monitor_diagnostic_setting.agw_diagnostic[0]' \
+        "${DIAGNOSTIC_SETTING_ID}" 2>&1)
+      IMPORT_EXIT_CODE=$?
+      
+      if [[ ${IMPORT_EXIT_CODE} -eq 0 ]] && terraform state show 'module.application_gateway.azurerm_monitor_diagnostic_setting.agw_diagnostic[0]' >/dev/null 2>&1; then
+        echo "  ✓ Imported module.application_gateway.azurerm_monitor_diagnostic_setting.agw_diagnostic[0]"
+      elif echo "${IMPORT_OUTPUT}" | grep -q "ResourceTypeNotSupported\|does not support diagnostic settings"; then
+        echo "  ⚠️  Diagnostic setting cannot be imported (resource type limitation)"
+        echo "     Terraform will create it on the next apply. This is expected behavior."
+      else
+        echo "  ⚠️  Failed to import diagnostic setting (exit code: ${IMPORT_EXIT_CODE})"
+        echo "     Terraform will create it on the next apply. This is expected behavior."
+      fi
+    else
+      echo "  ⚠️  Diagnostic setting '${DIAGNOSTIC_SETTING_NAME}' does not exist in Azure"
+      echo "     Terraform will create it on the next apply. Skipping import."
+    fi
+  else
+    echo "  ⚠️  Could not retrieve Application Gateway ID from Azure"
+    echo "     Terraform will create the diagnostic setting on the next apply. Skipping import."
+  fi
+else
+  echo "  ✓ module.application_gateway.azurerm_monitor_diagnostic_setting.agw_diagnostic[0] already in state, skipping"
+fi
+
+# Application Gateway Metric Alert
+echo ""
+echo "Checking module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts[\"default_5xx_error_alert\"]..."
+if ! terraform state show 'module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts["default_5xx_error_alert"]' >/dev/null 2>&1; then
+  METRIC_ALERT_NAME="Application Gateway 5xx Error"
+  METRIC_ALERT_ID=$(az monitor metrics alert show \
+    --name "${METRIC_ALERT_NAME}" \
+    --resource-group "${RESOURCE_GROUP_CORE_NAME}" \
+    --query id -o tsv 2>/dev/null || echo "")
+  
+  if [[ -n "${METRIC_ALERT_ID}" ]]; then
+    echo "  Importing module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts[\"default_5xx_error_alert\"]..."
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts["default_5xx_error_alert"]' \
+      "${METRIC_ALERT_ID}" 2>&1 | grep -v "^\[0m" || true
+    if terraform state show 'module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts["default_5xx_error_alert"]' >/dev/null 2>&1; then
+      echo "  ✓ Imported module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts[\"default_5xx_error_alert\"]"
+    else
+      echo "  ✗ FAILED to import module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts[\"default_5xx_error_alert\"]"
+      exit 1
+    fi
+  else
+    echo "  ⚠️  Could not retrieve Metric Alert ID from Azure"
+    echo "     Metric Alert name: ${METRIC_ALERT_NAME}"
+    echo "     Resource group: ${RESOURCE_GROUP_CORE_NAME}"
+    echo "     You may need to import manually using the resource ID"
+  fi
+else
+  echo "  ✓ module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts[\"default_5xx_error_alert\"] already in state, skipping"
+fi
 
 echo ""
 echo "=========================================="

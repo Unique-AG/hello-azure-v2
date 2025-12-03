@@ -138,6 +138,13 @@ variable "log_analytics_workspace_name" {
   default     = "la"
 }
 
+# Application Gateway Configuration
+variable "ip_name" {
+  description = "Name of the public IP for the Application Gateway"
+  type        = string
+  default     = "default-public-ip-name"
+}
+
 variable "budget_contact_emails" {
   description = "List of email addresses for budget notifications"
   type        = list(string)
