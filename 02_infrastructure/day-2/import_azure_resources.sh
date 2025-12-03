@@ -257,9 +257,6 @@ echo "=========================================="
 echo ""
 
 # Kubernetes Cluster (AKS)
-# Note: The local.cluster_name adds -${env} suffix, so if tfvars has "aks-test" and env is "test",
-# the Terraform resource name would be "aks-test-test", but the actual Azure cluster is "aks-test"
-# For import, we need to use the actual Azure cluster name
 # Format: /subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.ContainerService/managedClusters/{cluster-name}
 RESOURCE_GROUP_CORE_NAME=$(grep "^resource_group_core_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "resource-group-core")
 SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || echo "")
@@ -270,7 +267,6 @@ if [ -n "${RESOURCE_GROUP_CORE_NAME}" ]; then
   ACTUAL_CLUSTER_NAME=$(az aks list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[0].name" -o tsv 2>/dev/null || echo "")
   if [ -n "${ACTUAL_CLUSTER_NAME}" ]; then
     CLUSTER_NAME="${ACTUAL_CLUSTER_NAME}"
-    echo "  ℹ️  Found actual cluster name in Azure: ${CLUSTER_NAME}"
     # Check if there's a mismatch with Terraform's expected name
     TERRAFORM_CLUSTER_NAME="${CLUSTER_NAME_FROM_TFVARS}-${ENV}"
     if [ "${CLUSTER_NAME}" != "${TERRAFORM_CLUSTER_NAME}" ]; then
