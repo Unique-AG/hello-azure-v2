@@ -10,6 +10,9 @@ VAR_CONFIG="../environments/${ENV}/00-config-day-2.auto.tfvars"
 VAR_PARAMS="../environments/${ENV}/00-parameters-day-2.auto.tfvars"
 SERVICE_PRINCIPAL_ID="5dbf19b3-6943-4696-9334-55b8c5566010"
 
+# Resource Group Names
+RESOURCE_GROUP_CORE_NAME="resource-group-core"
+
 echo "=========================================="
 echo "Day-2 Resource Import Script"
 echo "Environment: ${ENV}"
@@ -248,6 +251,46 @@ if ! terraform state show 'module.application_registration.azuread_app_role_assi
   terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
     'module.application_registration.azuread_app_role_assignment.managed_roles["user:4ee4611f-b24c-444b-8d34-edab333bf868"]' \
     "/servicePrincipals/${SERVICE_PRINCIPAL_ID}/appRoleAssignedTo/H2HkTkyyS0SNNO2rMzv4aHU7MVR2up9KnsngViZrQVQ"
+fi
+
+echo ""
+echo "=========================================="
+echo "Importing Container Registry Resources"
+echo "=========================================="
+echo ""
+
+# Container Registry
+echo "Checking azurerm_container_registry.acr..."
+if ! terraform state show azurerm_container_registry.acr >/dev/null 2>&1; then
+  # Container registry name is constructed as "${var.container_registry_name}${var.env}"
+  # Default: "uqhacr" + env (e.g., "uqhacrtest")
+  CONTAINER_REGISTRY_NAME_BASE="${CONTAINER_REGISTRY_NAME_BASE:-uqhacr}"
+  CONTAINER_REGISTRY_NAME="${CONTAINER_REGISTRY_NAME_BASE}${ENV}"
+  
+  CONTAINER_REGISTRY_ID=$(az acr show \
+    --name "${CONTAINER_REGISTRY_NAME}" \
+    --resource-group "${RESOURCE_GROUP_CORE_NAME}" \
+    --query id -o tsv 2>/dev/null || echo "")
+  
+  if [[ -n "${CONTAINER_REGISTRY_ID}" ]]; then
+    echo "  Importing azurerm_container_registry.acr..."
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      azurerm_container_registry.acr \
+      "${CONTAINER_REGISTRY_ID}" 2>&1 | grep -v "^\[0m" || true
+    if terraform state show azurerm_container_registry.acr >/dev/null 2>&1; then
+      echo "  ✓ Imported azurerm_container_registry.acr"
+    else
+      echo "  ✗ FAILED to import azurerm_container_registry.acr"
+      exit 1
+    fi
+  else
+    echo "  ⚠️  Could not retrieve Container Registry ID from Azure"
+    echo "     Container Registry name: ${CONTAINER_REGISTRY_NAME}"
+    echo "     Resource group: ${RESOURCE_GROUP_CORE_NAME}"
+    echo "     You may need to import manually using the resource ID"
+  fi
+else
+  echo "  ✓ azurerm_container_registry.acr already in state, skipping"
 fi
 
 echo ""

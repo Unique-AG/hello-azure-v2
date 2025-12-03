@@ -47,3 +47,9 @@ data "azurerm_resource_group" "sensitive" {
 data "azurerm_resource_group" "vnet" {
   name = var.resource_group_name_vnet
 }
+
+# Log Analytics Workspace data source (created in day-1)
+data "azurerm_log_analytics_workspace" "log_analytics" {
+  name                = local.log_analytics_workspace_name
+  resource_group_name = data.azurerm_resource_group.core.name
+}

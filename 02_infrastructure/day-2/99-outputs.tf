@@ -79,18 +79,20 @@
 #   description = "The secret name for ingestion storage connection string 2."
 # }
 
-# output "acr_id" {
-#   value       = module.workloads.acr_id
-#   description = "The ID of the Azure Container Registry."
-# }
-# output "acr_login_server" {
-#   value       = module.workloads.acr_login_server
-#   description = "The login server of the Azure Container Registry."
-# }
-# output "acr_name" {
-#   value       = module.workloads.acr_name
-#   description = "The name of the Azure Container Registry."
-# }
+output "acr_id" {
+  value       = azurerm_container_registry.acr.id
+  description = "The ID of the Azure Container Registry."
+}
+
+output "acr_login_server" {
+  value       = azurerm_container_registry.acr.login_server
+  description = "The login server of the Azure Container Registry."
+}
+
+output "acr_name" {
+  value       = azurerm_container_registry.acr.name
+  description = "The name of the Azure Container Registry."
+}
 # output "identity_principal_id" {
 #   value       = module.workloads.identity_principal_id
 #   description = "The principal ID of the identity."
@@ -125,10 +127,15 @@
 #   value       = module.perimeter.key_vault_main_name
 #   description = "The name of the main Key Vault."
 # }
-# output "container_registry_url" {
-#   value       = module.workloads.container_registry_url
-#   description = "The URL of the container registry."
-# }
+output "container_registry_url" {
+  value       = azurerm_container_registry.acr.login_server
+  description = "The URL of the container registry."
+}
+
+output "acr_identity_principal_id" {
+  value       = azurerm_container_registry.acr.identity[0].principal_id
+  description = "The principal ID of the Azure Container Registry's managed identity."
+}
 # output "zitadel_master_key_secret_name" {
 #   value       = module.workloads.zitadel_master_key_secret_name
 #   description = "The secret name for the Zitadel master key."
