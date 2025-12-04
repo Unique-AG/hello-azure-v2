@@ -380,7 +380,7 @@ variable "encryption_key_app_repository_secret_name" {
 variable "encryption_key_node_chat_lxm_secret_name" {
   description = "The name of the secret containing the node chat LXM encryption key"
   type        = string
-  default     = "encryption-key-node-chat-lxm"
+  default     = "encryption-key-chat-lxm"
 }
 
 variable "encryption_key_ingestion_secret_name" {

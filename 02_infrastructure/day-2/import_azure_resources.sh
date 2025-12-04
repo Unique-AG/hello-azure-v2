@@ -322,11 +322,6 @@ import_key_vault_secret \
   "encryption-key-app-repository"
 
 import_key_vault_secret \
-  "azurerm_key_vault_secret.encryption_key_node_chat_lxm" \
-  "${SENSITIVE_KV_NAME}" \
-  "encryption-key-node-chat-lxm"
-
-import_key_vault_secret \
   "azurerm_key_vault_secret.encryption_key_ingestion" \
   "${SENSITIVE_KV_NAME}" \
   "encryption-key-ingestion"
@@ -336,6 +331,11 @@ import_key_vault_secret \
   "azurerm_key_vault_secret.zitadel_pat" \
   "${CORE_KV_NAME}" \
   "manual-zitadel-scope-mgmt-pat"
+
+import_key_vault_secret \
+  "azurerm_key_vault_secret.encryption_key_node_chat_lxm" \
+  "${SENSITIVE_KV_NAME}" \
+  "encryption-key-chat-lxm"
 
 echo ""
 echo "=========================================="
