@@ -252,27 +252,121 @@ fi
 
 echo ""
 echo "=========================================="
-echo "Skipping Key Vault Secrets"
+echo "Importing Redis Cache"
 echo "=========================================="
 echo ""
-echo "⚠️  Key Vault secrets are NOT imported by this script."
+
+# Get Redis cache name from locals (redis_name with env suffix)
+REDIS_NAME=$(grep "^redis_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "uqharedis")
+REDIS_FULL_NAME="${REDIS_NAME}-${ENV}"
+RESOURCE_GROUP_SENSITIVE_NAME=$(grep "^resource_group_sensitive_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "resource-group-sensitive")
+
+echo "Checking module.redis.azurerm_redis_cache.arc..."
+if ! terraform state show module.redis.azurerm_redis_cache.arc >/dev/null 2>&1; then
+  # Get Redis cache ID from Azure
+  REDIS_ID=$(az redis show --name "${REDIS_FULL_NAME}" --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --query id -o tsv 2>/dev/null || echo "")
+  
+  if [ -n "${REDIS_ID}" ]; then
+    # Terraform expects lowercase "redis" in the resource ID, but Azure returns "Redis"
+    # Convert the resource ID to use lowercase "redis"
+    REDIS_ID_FIXED=$(echo "${REDIS_ID}" | sed 's|/Redis/|/redis/|')
+    
+    echo "  Importing module.redis.azurerm_redis_cache.arc..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      module.redis.azurerm_redis_cache.arc \
+      "${REDIS_ID_FIXED}" 2>&1; then
+      echo "  ✓ Imported module.redis.azurerm_redis_cache.arc"
+    else
+      echo "  ⚠️  Failed to import Redis cache. It may not exist yet."
+    fi
+  else
+    echo "  ⚠️  Redis cache '${REDIS_FULL_NAME}' not found in Azure."
+    echo "      Available Redis caches in ${RESOURCE_GROUP_SENSITIVE_NAME}:"
+    az redis list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --query "[].name" -o tsv 2>/dev/null | sed 's/^/        - /' || echo "        (none found)"
+    echo "  Skipping Redis import."
+  fi
+else
+  echo "  ✓ module.redis.azurerm_redis_cache.arc already in state, skipping"
+fi
+
 echo ""
-echo "Reason: Terraform requires versioned secret IDs for import."
-echo "        Format: https://{vault}.vault.azure.net/secrets/{name}/{version-id}"
-echo "        Getting the version ID programmatically is complex and error-prone."
+echo "=========================================="
+echo "Importing Redis Key Vault Secrets"
+echo "=========================================="
 echo ""
-echo "Expected behavior:"
-echo "  - terraform plan will show these as 'to be created':"
-echo "    * module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]"
-echo "    * module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]"
+
+# Get Key Vault name from variables (constructed as ${sensitive_kv_name}${env}v2)
+SENSITIVE_KV_NAME=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "hakv")
+KEY_VAULT_SENSITIVE_NAME="${SENSITIVE_KV_NAME}${ENV}v2"
+
+# Redis Key Vault secrets
+echo "Checking module.redis.azurerm_key_vault_secret.redis-cache-host[0]..."
+if ! terraform state show 'module.redis.azurerm_key_vault_secret.redis-cache-host[0]' >/dev/null 2>&1; then
+  SECRET_NAME="${REDIS_FULL_NAME}-host"
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+  
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Importing module.redis.azurerm_key_vault_secret.redis-cache-host[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.redis.azurerm_key_vault_secret.redis-cache-host[0]' \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported module.redis.azurerm_key_vault_secret.redis-cache-host[0]"
+    else
+      echo "  ⚠️  Failed to import redis-cache-host secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault '${KEY_VAULT_SENSITIVE_NAME}'"
+  fi
+else
+  echo "  ✓ module.redis.azurerm_key_vault_secret.redis-cache-host[0] already in state, skipping"
+fi
+
+echo "Checking module.redis.azurerm_key_vault_secret.redis-cache-password[0]..."
+if ! terraform state show 'module.redis.azurerm_key_vault_secret.redis-cache-password[0]' >/dev/null 2>&1; then
+  SECRET_NAME="${REDIS_FULL_NAME}-password"
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+  
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Importing module.redis.azurerm_key_vault_secret.redis-cache-password[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.redis.azurerm_key_vault_secret.redis-cache-password[0]' \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported module.redis.azurerm_key_vault_secret.redis-cache-password[0]"
+    else
+      echo "  ⚠️  Failed to import redis-cache-password secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault '${KEY_VAULT_SENSITIVE_NAME}'"
+  fi
+else
+  echo "  ✓ module.redis.azurerm_key_vault_secret.redis-cache-password[0] already in state, skipping"
+fi
+
+echo "Checking module.redis.azurerm_key_vault_secret.redis-cache-port[0]..."
+if ! terraform state show 'module.redis.azurerm_key_vault_secret.redis-cache-port[0]' >/dev/null 2>&1; then
+  SECRET_NAME="${REDIS_FULL_NAME}-port"
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+  
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Importing module.redis.azurerm_key_vault_secret.redis-cache-port[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.redis.azurerm_key_vault_secret.redis-cache-port[0]' \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported module.redis.azurerm_key_vault_secret.redis-cache-port[0]"
+    else
+      echo "  ⚠️  Failed to import redis-cache-port secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault '${KEY_VAULT_SENSITIVE_NAME}'"
+  fi
+else
+  echo "  ✓ module.redis.azurerm_key_vault_secret.redis-cache-port[0] already in state, skipping"
+fi
+
 echo ""
-echo "Resolution:"
-echo "  1. Let Terraform create them fresh (recommended if values can be regenerated)"
-echo "  2. Manually import with version ID (get version from Azure Portal or CLI):"
-echo "     az keyvault secret show --vault-name hakv2testv2 --name aad-app-ha-test-gitops-client-id --query id -o tsv"
-echo "     terraform import -var-file=\"${VAR_CONFIG}\" -var-file=\"${VAR_PARAMS}\" \\"
-echo "       'module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]' \\"
-echo "       '<versioned-id-from-az-command>'"
+echo "Note: Application Registration Key Vault secrets are not imported by this script."
+echo "      If needed, import them manually using:"
+echo "      az keyvault secret show --vault-name <vault-name> --name <secret-name> --query id -o tsv"
 echo ""
 echo "=========================================="
 echo "Import script completed!"
