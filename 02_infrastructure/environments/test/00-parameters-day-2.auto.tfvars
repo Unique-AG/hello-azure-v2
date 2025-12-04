@@ -7,9 +7,6 @@ subnet_agw_cidr = "10.202.3.0/28"
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
 
-# Key Vault configuration
-kv_sku = "premium"
-
 # GitOps configuration
 gitops_display_name = "GitOps"
 
@@ -77,6 +74,11 @@ sensitive_kv_name = "hakv2"
 
 # AKS Cluster
 cluster_name = "aks-test"
+
+# PostgreSQL Configuration
+# Note: This must match the actual server name in Azure for import to work
+# Check with: az postgres flexible-server list --resource-group resource-group-sensitive --query "[].name" -o tsv
+postgresql_server_name = "psql-s5xqjn64"
 
 # DNS Zone
 dns_zone_name = "hello.azure.unique.test"
