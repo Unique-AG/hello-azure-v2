@@ -161,3 +161,39 @@
 #   description = "Name of the resource group for the vnet"
 #   value       = azurerm_resource_group.vnet.name
 # }
+
+# Redis Cache outputs
+output "redis_cache_id" {
+  value       = module.redis.id
+  description = "The ID of the Redis Cache instance"
+}
+
+output "redis_cache_hostname" {
+  value       = module.redis.hostname
+  description = "The hostname of the Redis Cache instance"
+}
+
+output "redis_cache_ssl_port" {
+  value       = module.redis.ssl_port
+  description = "The SSL port of the Redis Cache instance"
+}
+
+output "redis_cache_non_ssl_port" {
+  value       = module.redis.non_ssl_port
+  description = "The non-SSL port of the Redis Cache instance"
+}
+
+output "redis_cache_password_secret_name" {
+  value       = module.redis.password_secret_name
+  description = "The secret name for Redis cache password"
+}
+
+output "redis_cache_host_secret_name" {
+  value       = module.redis.host_secret_name
+  description = "The secret name for Redis cache host"
+}
+
+output "redis_cache_port_secret_name" {
+  value       = module.redis.port_secret_name
+  description = "The secret name for Redis cache port"
+}

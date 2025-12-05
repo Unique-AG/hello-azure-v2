@@ -7,9 +7,6 @@ subnet_agw_cidr = "10.202.3.0/28"
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
 
-# Key Vault configuration
-kv_sku = "premium"
-
 # GitOps configuration
 gitops_display_name = "GitOps"
 
