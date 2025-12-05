@@ -49,7 +49,7 @@ module "speech_service" {
 
   key_vault_id        = data.azurerm_key_vault.key_vault_sensitive.id
   resource_group_name = data.azurerm_resource_group.core.name
-  speech_service_name = var.speech_service_name
+  speech_service_name = local.speech_service_name
 
   accounts = {
     for k, v in var.speech_service_accounts : k => {
