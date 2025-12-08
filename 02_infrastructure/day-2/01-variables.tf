@@ -167,6 +167,12 @@ variable "kubernetes_default_node_size" {
   default     = "Standard_D2s_v6"
 }
 
+variable "kubernetes_default_node_zones" {
+  description = "The default node zones for the AKS cluster"
+  type        = list(string)
+  default     = ["1", "3"]
+}
+
 variable "kubernetes_rapid_max_count" {
   description = "The maximum number of nodes for the rapid node pool"
   type        = number
@@ -215,16 +221,138 @@ variable "kubernetes_steady_node_size" {
   default     = "Standard_D8as_v5"
 }
 
+variable "kubernetes_node_pool_settings_rapid_autoscaling_enabled" {
+  description = "Whether to enable autoscaling for the rapid node pool"
+  type        = bool
+  default     = true
+}
+
+variable "kubernetes_node_pool_settings_rapid_mode" {
+  description = "The mode for the rapid node pool"
+  type        = string
+  default     = "User"
+}
+
+variable "kubernetes_node_pool_settings_rapid_node_labels" {
+  description = "The labels for the rapid node pool"
+  type        = map(string)
+  default = {
+    lifecycle   = "ephemeral"
+    scalability = "rapid"
+  }
+}
+
+variable "kubernetes_node_pool_settings_rapid_node_taints" {
+  description = "The taints for the rapid node pool"
+  type        = list(string)
+  default     = ["scalability=rapid:NoSchedule", "lifecycle=ephemeral:NoSchedule"]
+}
+
+variable "kubernetes_node_pool_settings_rapid_os_disk_size_gb" {
+  description = "The size of the OS disk for the rapid node pool"
+  type        = number
+  default     = 100
+}
+
+variable "kubernetes_node_pool_settings_rapid_upgrade_settings" {
+  description = "The upgrade settings for the rapid node pool"
+  type = object({
+    max_surge = string
+  })
+  default = {
+    max_surge = "10%"
+  }
+}
+
+variable "kubernetes_node_pool_settings_rapid_zones" {
+  description = "The zones for the rapid node pool"
+  type        = list(string)
+  default     = ["1", "3"]
+}
+
+variable "kubernetes_node_pool_settings_steady_autoscaling_enabled" {
+  description = "The autoscaling settings for the steady node pool"
+  type        = bool
+  default     = true
+}
+
+variable "kubernetes_node_pool_settings_steady_mode" {
+  description = "The mode for the steady node pool"
+  type        = string
+  default     = "User"
+}
+
+variable "kubernetes_node_pool_settings_steady_node_labels" {
+  description = "The labels for the steady node pool"
+  type        = map(string)
+  default = {
+    lifecycle   = "persistent"
+    scalability = "steady"
+  }
+}
+
+variable "kubernetes_node_pool_settings_steady_node_taints" {
+  description = "The taints for the steady node pool"
+  type        = list(string)
+  default     = []
+}
+
+variable "kubernetes_node_pool_settings_steady_os_disk_size_gb" {
+  description = "The size of the OS disk for the steady node pool"
+  type        = number
+  default     = 100
+}
+
+variable "kubernetes_node_pool_settings_steady_os_sku" {
+  description = "The SKU of the OS for the steady node pool"
+  type        = string
+  default     = "AzureLinux"
+}
+
+variable "kubernetes_node_pool_settings_steady_upgrade_settings" {
+  description = "The upgrade settings for the steady node pool"
+  type = object({
+    max_surge = string
+  })
+  default = {
+    max_surge = "30%"
+  }
+}
+
+variable "kubernetes_node_pool_settings_steady_zones" {
+  description = "The zones for the steady node pool"
+  type        = list(string)
+  default     = ["1", "3"]
+}
+
+variable "kubernetes_node_pool_settings_rapid_os_sku" {
+  description = "The SKU of the OS for the rapid node pool"
+  type        = string
+  default     = "AzureLinux"
+}
+
 variable "node_resource_group_name" {
   description = "The name of the resource group for AKS nodes"
   type        = string
-  default = "resource-group-core-aks-nodes"
+  default     = "resource-group-core-aks-nodes"
 }
 
 variable "aks_public_ip_name" {
   description = "Name of the AKS public IP (created in day-1)"
   type        = string
   default     = "aks_public_ip"
+}
+
+variable "aks_segregated_node_and_pod_subnets_enabled" {
+  description = "Whether to enable segregated node and pod subnets for the AKS cluster"
+  type        = bool
+  default     = true
+}
+
+variable "aks_network_profile_idle_timeout_in_minutes" {
+  description = "The idle timeout in minutes for the AKS network profile"
+  type        = number
+  default     = 100
 }
 
 
@@ -290,6 +418,24 @@ variable "grafana_identity_name" {
   description = "The name of the Grafana user-assigned identity"
   type        = string
   default     = "grafana-id"
+}
+
+variable "grafana_identity_type" {
+  description = "The type of the Grafana user-assigned identity"
+  type        = string
+  default     = "UserAssigned"
+}
+
+variable "grafana_monitor_enabled" {
+  description = "Whether to enable Grafana for the AKS cluster"
+  type        = bool
+  default     = true
+}
+
+variable "grafana_major_version" {
+  description = "The major version of Grafana to use for the AKS cluster"
+  type        = string
+  default     = "11"
 }
 
 variable "psql_user_assigned_identity_name" {
@@ -358,6 +504,30 @@ variable "ingestion_storage_sa_name" {
   description = "Name of the storage account used for ingestion storage"
   type        = string
   default     = "uqhastorage"
+}
+
+variable "ingestion_cache_connection_string_1_secret_name" {
+  description = "Secret name for ingestion cache connection string 1"
+  type        = string
+  default     = "ingestion-cache-connection-string-1"
+}
+
+variable "ingestion_cache_connection_string_2_secret_name" {
+  description = "Secret name for ingestion cache connection string 2"
+  type        = string
+  default     = "ingestion-cache-connection-string-2"
+}
+
+variable "ingestion_storage_connection_string_1_secret_name" {
+  description = "Secret name for ingestion storage connection string 1"
+  type        = string
+  default     = "ingestion-storage-connection-string-1"
+}
+
+variable "ingestion_storage_connection_string_2_secret_name" {
+  description = "Secret name for ingestion storage connection string 2"
+  type        = string
+  default     = "ingestion-storage-connection-string-2"
 }
 
 variable "speech_service_private_dns_zone_name" {
@@ -459,4 +629,146 @@ variable "cluster_workload_identities" {
       namespace = "unique"
     }
   }
+}
+
+variable "ingestion_cache_access_tier" {
+  description = "Access tier for the ingestion cache account"
+  type        = string
+  default     = "Hot"
+}
+
+variable "ingestion_cache_account_replication_type" {
+  description = "Account replication type for the ingestion cache account"
+  type        = string
+  default     = "LRS"
+}
+
+variable "ingestion_cache_backup_vault" {
+  description = "Backup vault for the ingestion cache account. Set to null to disable backup."
+  type = object({
+    name = string
+  })
+  default  = null
+  nullable = true
+}
+
+variable "ingestion_cache_public_network_access_enabled" {
+  description = "Public network access enabled for the ingestion cache account"
+  type        = bool
+  default     = true
+}
+
+variable "ingestion_cache_data_protection_settings" {
+  description = "Data protection settings for the ingestion cache account"
+  type = object({
+    change_feed_enabled                  = bool
+    change_feed_retention_days           = number
+    versioning_enabled                   = bool
+    container_soft_delete_retention_days = number
+    blob_soft_delete_retention_days      = number
+    point_in_time_restore_days           = number
+  })
+  default = {
+    change_feed_enabled                  = false
+    change_feed_retention_days           = 0
+    versioning_enabled                   = false
+    container_soft_delete_retention_days = 7
+    blob_soft_delete_retention_days      = 7
+    point_in_time_restore_days           = -1
+  }
+}
+
+variable "ingestion_cache_storage_management_policy_default" {
+  description = "Storage management policy default for the ingestion cache account"
+  type = object({
+    enabled                                  = bool
+    blob_to_cool_after_last_modified_days    = number
+    blob_to_cold_after_last_modified_days    = number
+    blob_to_archive_after_last_modified_days = number
+    blob_to_deleted_after_last_modified_days = number
+  })
+  default = {
+    enabled                                  = true
+    blob_to_cool_after_last_modified_days    = 1
+    blob_to_cold_after_last_modified_days    = 2
+    blob_to_archive_after_last_modified_days = 3
+    blob_to_deleted_after_last_modified_days = 5
+  }
+}
+
+variable "ingestion_cache_self_cmk_key_name" {
+  description = "Self CMK for the ingestion cache account"
+  type        = string
+  default     = "ingestion-cache-cmk"
+}
+
+variable "ingestion_storage_access_tier" {
+  description = "Access tier for the ingestion storage account"
+  type        = string
+  default     = "Hot"
+}
+
+variable "ingestion_storage_account_replication_type" {
+  description = "Account replication type for the ingestion storage account"
+  type        = string
+  default     = "LRS"
+}
+
+variable "ingestion_storage_backup_vault" {
+  description = "Backup vault for the ingestion storage account. Set to null to disable backup."
+  type = object({
+    name = string
+  })
+  default  = null
+  nullable = true
+}
+
+variable "ingestion_storage_public_network_access_enabled" {
+  description = "Public network access enabled for the ingestion storage account"
+  type        = bool
+  default     = true
+}
+
+variable "ingestion_storage_data_protection_settings" {
+  description = "Data protection settings for the ingestion storage account"
+  type = object({
+    change_feed_enabled                  = bool
+    change_feed_retention_days           = number
+    versioning_enabled                   = bool
+    container_soft_delete_retention_days = number
+    blob_soft_delete_retention_days      = number
+    point_in_time_restore_days           = number
+  })
+  default = {
+    change_feed_enabled                  = false
+    change_feed_retention_days           = 0
+    versioning_enabled                   = false
+    container_soft_delete_retention_days = 7
+    blob_soft_delete_retention_days      = 7
+    point_in_time_restore_days           = -1
+  }
+}
+
+variable "ingestion_storage_storage_management_policy_default" {
+  description = "Storage management policy default for the ingestion storage account"
+  type = object({
+    enabled                                  = bool
+    blob_to_cool_after_last_modified_days    = number
+    blob_to_cold_after_last_modified_days    = number
+    blob_to_archive_after_last_modified_days = number
+    blob_to_deleted_after_last_modified_days = number
+  })
+  default = {
+    enabled                                  = true
+    blob_to_cool_after_last_modified_days    = 7
+    blob_to_cold_after_last_modified_days    = 14
+    blob_to_archive_after_last_modified_days = 30
+    blob_to_deleted_after_last_modified_days = 5 * 365
+  }
+}
+
+variable "ingestion_storage_self_cmk_key_name" {
+  description = "Self CMK for the ingestion storage account"
+  type        = string
+  default     = "ingestion-storage-cmk"
 }
