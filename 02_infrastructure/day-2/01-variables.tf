@@ -362,12 +362,7 @@ variable "speech_service_accounts" {
     account_kind          = string
     account_sku_name      = string
     custom_subdomain_name = optional(string)
-    private_endpoint = optional(object({
-      subnet_id           = string
-      vnet_id             = string
-      vnet_location       = string
-      private_dns_zone_id = string
-    }))
+    private_endpoint      = optional(bool)
     diagnostic_settings = optional(object({
       log_analytics_workspace_id = string
       enabled_log_categories     = list(string)
@@ -379,28 +374,22 @@ variable "speech_service_accounts" {
       account_kind          = "SpeechServices"
       account_sku_name      = "S0"
       custom_subdomain_name = null
-      private_endpoint      = null
+      private_endpoint      = true
       diagnostic_settings   = null
     }
   }
 }
 
 variable "subnet_cognitive_services_id" {
-  description = "Subnet ID for cognitive services private endpoints"
+  description = "Subnet name for cognitive services private endpoints"
   type        = string
   default     = "snet-cognitive-services"
 }
 
 variable "vnet_id" {
-  description = "Virtual network ID for cognitive services private endpoints"
+  description = "Virtual network name for cognitive services private endpoints"
   type        = string
   default     = "vnet-001"
-}
-
-variable "private_dns_zone_speech_service_id" {
-  description = "Private DNS zone ID for speech service"
-  type        = string
-  default     = ""
 }
 
 variable "log_analytics_workspace_id" {

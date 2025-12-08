@@ -59,14 +59,15 @@ module "speech_service" {
       custom_subdomain_name = v.custom_subdomain_name
 
       # Configure private endpoint if provided
-      private_endpoint = v.private_endpoint != null ? {
-        subnet_id           = v.private_endpoint.subnet_id
-        vnet_id             = v.private_endpoint.vnet_id
-        vnet_location       = v.private_endpoint.vnet_location
-        private_dns_zone_id = v.private_endpoint.private_dns_zone_id
+      private_endpoint = v.private_endpoint != false ? {
+        subnet_id           = data.azurerm_subnet.subnet_cognitive_services_day_1.id
+        vnet_id             = data.azurerm_virtual_network.vnet_day_1.id
+        vnet_location       = data.azurerm_virtual_network.vnet_day_1.location
+        private_dns_zone_id = data.azurerm_private_dns_zone.speech_service_day_1.id
       } : null
 
       # Configure diagnostic settings if provided
+      # FIXME: To be changed to data block for workspace_id
       diagnostic_settings = v.diagnostic_settings != null ? {
         log_analytics_workspace_id = v.diagnostic_settings.log_analytics_workspace_id
         enabled_log_categories     = v.diagnostic_settings.enabled_log_categories

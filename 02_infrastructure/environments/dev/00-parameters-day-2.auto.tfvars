@@ -116,11 +116,6 @@ speech_service_accounts = {
     account_kind          = "SpeechServices"
     account_sku_name      = "S0"
     custom_subdomain_name = "ss-hello-azure-unique"
-    private_endpoint = {
-      subnet_id           = "snet-cognitive-services"
-      vnet_id             = "vnet-001"
-      vnet_location       = "swedencentral"
-      private_dns_zone_id = "private-dns-zone-speech-service"
-    }
+    private_endpoint      = true
   }
 }

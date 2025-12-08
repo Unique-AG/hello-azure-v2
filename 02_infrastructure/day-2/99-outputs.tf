@@ -161,3 +161,31 @@
 #   description = "Name of the resource group for the vnet"
 #   value       = azurerm_resource_group.vnet.name
 # }
+
+# OpenAI Module Outputs
+output "openai_cognitive_account_endpoints" {
+  description = "Object containing list of endpoints"
+  value       = module.openai.cognitive_account_endpoints
+}
+
+# Document Intelligence Module Outputs
+output "document_intelligence_azure_document_intelligence_endpoints" {
+  description = "Object containing list of endpoints"
+  value       = module.document_intelligence.azure_document_intelligence_endpoints
+}
+
+output "document_intelligence_endpoint_definitions_secret_name" {
+  description = "Name of the secret containing the list of objects containing endpoint definitions with name, endpoint and location."
+  value       = module.document_intelligence.endpoint_definitions_secret_name
+}
+
+# Speech Service Module Outputs
+output "speech_service_azure_speech_service_endpoint_definitions" {
+  description = "Object containing list of objects containing endpoint definitions with name, endpoint and location."
+  value       = module.speech_service.azure_speech_service_endpoint_definitions
+}
+
+output "speech_service_azure_speech_service_endpoints" {
+  description = "Object containing list of endpoints."
+  value       = module.speech_service.azure_speech_service_endpoints
+}
