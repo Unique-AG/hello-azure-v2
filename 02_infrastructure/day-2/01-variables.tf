@@ -232,49 +232,6 @@ variable "telemetry_observer_user_ids" {
   type        = list(string)
 }
 
-# Role Names
-variable "key_reader_key_vault_role_name" {
-  description = "Role name for Key Vault key reader permissions"
-  type        = string
-  default     = "Key Vault Crypto Service Encryption User"
-}
-
-variable "secret_reader_key_vault_role_name" {
-  description = "Role name for Key Vault secret reader permissions"
-  type        = string
-  default     = "Key Vault Secrets User"
-}
-
-variable "key_manager_key_vault_role_name" {
-  description = "Role name for Key Vault key manager permissions"
-  type        = string
-  default     = "Key Vault Crypto Officer"
-}
-
-variable "secret_manager_key_vault_role_name" {
-  description = "Role name for Key Vault secret manager permissions"
-  type        = string
-  default     = "Key Vault Secrets Officer"
-}
-
-variable "access_manager_key_vault_role_name" {
-  description = "Role name for Key Vault access manager permissions"
-  type        = string
-  default     = "Key Vault Data Access Administrator"
-}
-
-variable "cluster_user_role_name" {
-  description = "Role name for AKS cluster user permissions"
-  type        = string
-  default     = "Azure Kubernetes Service Contributor Role"
-}
-
-variable "cluster_rbac_admin_role_name" {
-  description = "Role name for AKS cluster RBAC admin permissions"
-  type        = string
-  default     = "Azure Kubernetes Service RBAC Cluster Admin"
-}
-
 variable "env" {
   description = "Environment name (e.g., dev, test or prod)"
   type        = string
@@ -302,6 +259,30 @@ variable "ingestion_storage_sa_name" {
   description = "Name of the storage account used for ingestion storage"
   type        = string
   default     = "uqhastorage"
+}
+
+variable "ingestion_cache_connection_string_1_secret_name" {
+  description = "Secret name for ingestion cache connection string 1"
+  type        = string
+  default     = "ingestion-cache-connection-string-1"
+}
+
+variable "ingestion_cache_connection_string_2_secret_name" {
+  description = "Secret name for ingestion cache connection string 2"
+  type        = string
+  default     = "ingestion-cache-connection-string-2"
+}
+
+variable "ingestion_storage_connection_string_1_secret_name" {
+  description = "Secret name for ingestion storage connection string 1"
+  type        = string
+  default     = "ingestion-storage-connection-string-1"
+}
+
+variable "ingestion_storage_connection_string_2_secret_name" {
+  description = "Secret name for ingestion storage connection string 2"
+  type        = string
+  default     = "ingestion-storage-connection-string-2"
 }
 
 variable "speech_service_private_dns_zone_name" {
@@ -415,4 +396,146 @@ variable "monitor_metrics_reader_role_definition_name" {
   description = "Role definition name for the monitor metrics reader"
   type        = string
   default     = "Monitoring Data Reader"
+}
+
+variable "ingestion_cache_access_tier" {
+  description = "Access tier for the ingestion cache account"
+  type        = string
+  default     = "Hot"
+}
+
+variable "ingestion_cache_account_replication_type" {
+  description = "Account replication type for the ingestion cache account"
+  type        = string
+  default     = "LRS"
+}
+
+variable "ingestion_cache_backup_vault" {
+  description = "Backup vault for the ingestion cache account. Set to null to disable backup."
+  type = object({
+    name = string
+  })
+  default     = null
+  nullable    = true
+}
+
+variable "ingestion_cache_public_network_access_enabled" {
+  description = "Public network access enabled for the ingestion cache account"
+  type        = bool
+  default     = true
+}
+
+variable "ingestion_cache_data_protection_settings" {
+  description = "Data protection settings for the ingestion cache account"
+  type = object({
+    change_feed_enabled                  = bool
+    change_feed_retention_days           = number
+    versioning_enabled                   = bool
+    container_soft_delete_retention_days = number
+    blob_soft_delete_retention_days      = number
+    point_in_time_restore_days           = number
+  })
+  default = {
+    change_feed_enabled                  = false
+    change_feed_retention_days           = 0
+    versioning_enabled                   = false
+    container_soft_delete_retention_days = 7
+    blob_soft_delete_retention_days      = 7
+    point_in_time_restore_days           = -1
+  }
+}
+
+variable "ingestion_cache_storage_management_policy_default" {
+  description = "Storage management policy default for the ingestion cache account"
+  type = object({
+    enabled                                  = bool
+    blob_to_cool_after_last_modified_days    = number
+    blob_to_cold_after_last_modified_days    = number
+    blob_to_archive_after_last_modified_days = number
+    blob_to_deleted_after_last_modified_days = number
+  })
+  default = {
+    enabled                                  = true
+    blob_to_cool_after_last_modified_days    = 1
+    blob_to_cold_after_last_modified_days    = 2
+    blob_to_archive_after_last_modified_days = 3
+    blob_to_deleted_after_last_modified_days = 5
+  }
+}
+
+variable "ingestion_cache_self_cmk_key_name" {
+  description = "Self CMK for the ingestion cache account"
+  type        = string
+  default     = "ingestion-cache-cmk"
+}
+
+variable "ingestion_storage_access_tier" {
+  description = "Access tier for the ingestion storage account"
+  type        = string
+  default     = "Hot"
+}
+
+variable "ingestion_storage_account_replication_type" {
+  description = "Account replication type for the ingestion storage account"
+  type        = string
+  default     = "LRS"
+}
+
+variable "ingestion_storage_backup_vault" {
+  description = "Backup vault for the ingestion storage account. Set to null to disable backup."
+  type = object({
+    name = string
+  })
+  default     = null
+  nullable    = true
+}
+
+variable "ingestion_storage_public_network_access_enabled" {
+  description = "Public network access enabled for the ingestion storage account"
+  type        = bool
+  default     = true
+}
+
+variable "ingestion_storage_data_protection_settings" {
+  description = "Data protection settings for the ingestion storage account"
+  type = object({
+    change_feed_enabled                  = bool
+    change_feed_retention_days           = number
+    versioning_enabled                   = bool
+    container_soft_delete_retention_days = number
+    blob_soft_delete_retention_days      = number
+    point_in_time_restore_days           = number
+  })
+  default = {
+    change_feed_enabled                  = false
+    change_feed_retention_days           = 0
+    versioning_enabled                   = false
+    container_soft_delete_retention_days = 7
+    blob_soft_delete_retention_days      = 7
+    point_in_time_restore_days           = -1
+  }
+}
+
+variable "ingestion_storage_storage_management_policy_default" {
+  description = "Storage management policy default for the ingestion storage account"
+  type = object({
+    enabled                                  = bool
+    blob_to_cool_after_last_modified_days    = number
+    blob_to_cold_after_last_modified_days    = number
+    blob_to_archive_after_last_modified_days = number
+    blob_to_deleted_after_last_modified_days = number
+  })
+  default = {
+    enabled                                  = true
+    blob_to_cool_after_last_modified_days    = 7
+    blob_to_cold_after_last_modified_days    = 14
+    blob_to_archive_after_last_modified_days = 30
+    blob_to_deleted_after_last_modified_days = 5 * 365
+  }
+}
+
+variable "ingestion_storage_self_cmk_key_name" {
+  description = "Self CMK for the ingestion storage account"
+  type        = string
+  default     = "ingestion-storage-cmk"
 }

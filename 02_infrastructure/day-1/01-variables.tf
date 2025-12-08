@@ -388,12 +388,13 @@ variable "ingestion_storage_sa_name" {
 variable "speech_service_private_dns_zone_name" {
   description = "The name of the private DNS zone for the speech service."
   type        = string
+  default     = "privatelink.cognitiveservices.azure.com"
 }
 
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
   description = "The name of the virtual network link for the speech service private DNS zone"
   type        = string
-  default     = "privatelink.cognitiveservices.azure.com"
+  default     = "speech-service-private-dns-zone-vnet-link-test"
 }
 
 variable "speech_service_custom_subdomain_name" {

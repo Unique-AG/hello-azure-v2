@@ -47,15 +47,12 @@ locals {
   dns_zones_and_records = {
     dns_zone = {
       name                = var.dns_zone_name
-      resource_group_name = azurerm_resource_group.vnet.name
     }
     psql_private_dns_zone = {
       name                = var.psql_private_dns_zone_name
-      resource_group_name = azurerm_resource_group.vnet.name
     }
     speech_service_private_dns_zone = {
       name                = var.speech_service_private_dns_zone_name
-      resource_group_name = azurerm_resource_group.vnet.name
     }
     dns_zone_sub_domain_records = var.dns_zone_sub_domain_records
 
