@@ -236,6 +236,12 @@ variable "redis_name" {
   default     = "uqharedis"
 }
 
+variable "public_network_access_enabled" {
+  description = "Whether public network access is enabled for the Redis Cache"
+  type        = bool
+  default     = true
+}
+
 variable "ingestion_cache_sa_name" {
   description = "Name of the storage account used for ingestion cache"
   type        = string
@@ -390,8 +396,8 @@ variable "ingestion_cache_backup_vault" {
   type = object({
     name = string
   })
-  default     = null
-  nullable    = true
+  default  = null
+  nullable = true
 }
 
 variable "ingestion_cache_public_network_access_enabled" {
@@ -461,8 +467,8 @@ variable "ingestion_storage_backup_vault" {
   type = object({
     name = string
   })
-  default     = null
-  nullable    = true
+  default  = null
+  nullable = true
 }
 
 variable "ingestion_storage_public_network_access_enabled" {
