@@ -8,7 +8,7 @@ locals {
   secret_manager_key_vault_role_name = "Key Vault Secrets Officer"                   # todo: use custom role (DevOps)
   access_manager_key_vault_role_name = "Key Vault Data Access Administrator"         # todo: use custom role (DevOps)
   cluster_user_role_name             = "Azure Kubernetes Service Contributor Role"   # todo: use custom role (DevOps)
-  cluster_rbac_admin_role_name        = "Azure Kubernetes Service RBAC Cluster Admin" # todo: use custom role (Emergency Admin)
+  cluster_rbac_admin_role_name       = "Azure Kubernetes Service RBAC Cluster Admin" # todo: use custom role (Emergency Admin)
 }
 
 # CSI Identity Key Vault Secret Reader assignments
@@ -231,7 +231,7 @@ resource "azurerm_role_assignment" "telemetry_observer_users" {
 # Monitoring Data Reader assignment for Grafana Identity
 resource "azurerm_role_assignment" "monitor_metrics_reader" {
   scope                = data.azurerm_resource_group.core.id
-  role_definition_name = "Monitoring Data Reader"
+  role_definition_name = var.monitor_metrics_reader_role_definition_name
   principal_id         = data.azurerm_user_assigned_identity.grafana_identity.principal_id
 }
 

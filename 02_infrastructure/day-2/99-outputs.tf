@@ -62,22 +62,25 @@
 #   description = "The secret name for Redis cache password."
 # }
 
-# output "ingestion_cache_connection_string_1_secret_name" {
-#   value       = module.workloads.ingestion_cache_connection_string_1_secret_name
-#   description = "The secret name for ingestion cache connection string 1."
-# }
-# output "ingestion_cache_connection_string_2_secret_name" {
-#   value       = module.workloads.ingestion_cache_connection_string_2_secret_name
-#   description = "The secret name for ingestion cache connection string 2."
-# }
-# output "ingestion_storage_connection_string_1_secret_name" {
-#   value       = module.workloads.ingestion_storage_connection_string_1_secret_name
-#   description = "The secret name for ingestion storage connection string 1."
-# }
-# output "ingestion_storage_connection_string_2_secret_name" {
-#   value       = module.workloads.ingestion_storage_connection_string_2_secret_name
-#   description = "The secret name for ingestion storage connection string 2."
-# }
+output "ingestion_cache_connection_string_1_secret_name" {
+  value       = var.ingestion_cache_connection_string_1_secret_name
+  description = "The secret name for ingestion cache connection string 1."
+}
+
+output "ingestion_cache_connection_string_2_secret_name" {
+  value       = var.ingestion_cache_connection_string_2_secret_name
+  description = "The secret name for ingestion cache connection string 2."
+}
+
+output "ingestion_storage_connection_string_1_secret_name" {
+  value       = var.ingestion_storage_connection_string_1_secret_name
+  description = "The secret name for ingestion storage connection string 1."
+}
+
+output "ingestion_storage_connection_string_2_secret_name" {
+  value       = var.ingestion_storage_connection_string_2_secret_name
+  description = "The secret name for ingestion storage connection string 2."
+}
 
 # output "acr_id" {
 #   value       = module.workloads.acr_id

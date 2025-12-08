@@ -238,6 +238,433 @@ if ! terraform state show 'module.application_registration.azuread_app_role_assi
     "/servicePrincipals/${SERVICE_PRINCIPAL_ID}/appRoleAssignedTo/H2HkTkyyS0SNNO2rMzv4aHU7MVR2up9KnsngViZrQVQ"
 fi
 
+# Storage Accounts
+echo ""
+echo "=========================================="
+echo "Storage Accounts"
+echo "=========================================="
+echo ""
+
+# Extract storage account names and key vault name from variables
+# Try to get from tfvars, otherwise use defaults
+INGESTION_CACHE_SA_BASE=$(grep "^ingestion_cache_sa_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 || echo "uqhacache")
+INGESTION_STORAGE_SA_BASE=$(grep "^ingestion_storage_sa_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 || echo "uqhastorage")
+RESOURCE_GROUP_SENSITIVE=$(grep "^resource_group_sensitive_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 || echo "")
+SENSITIVE_KV_NAME=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 || echo "")
+ENV_NAME=$(grep "^env" "${VAR_PARAMS}" 2>/dev/null | head -1 | sed -E 's/^env\s*=\s*"?([^"]+)"?.*/\1/' | tr -d ' ' || echo "")
+
+# Construct full storage account names (base + env)
+INGESTION_CACHE_SA_NAME="${INGESTION_CACHE_SA_BASE}${ENV_NAME}"
+INGESTION_STORAGE_SA_NAME="${INGESTION_STORAGE_SA_BASE}${ENV_NAME}"
+
+if [ -z "${RESOURCE_GROUP_SENSITIVE}" ] || [ -z "${SENSITIVE_KV_NAME}" ] || [ -z "${ENV_NAME}" ]; then
+  echo "⚠️  Key vault name, resource group, or environment not found in config files, skipping storage account imports"
+  echo "   RESOURCE_GROUP_SENSITIVE: ${RESOURCE_GROUP_SENSITIVE:-<empty>}"
+  echo "   SENSITIVE_KV_NAME: ${SENSITIVE_KV_NAME:-<empty>}"
+  echo "   ENV_NAME: ${ENV_NAME:-<empty>}"
+else
+  SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || echo "")
+  if [ -z "${SUBSCRIPTION_ID}" ]; then
+    echo "⚠️  Could not get Azure subscription ID, skipping storage account imports"
+  else
+    KEY_VAULT_NAME="${SENSITIVE_KV_NAME}${ENV_NAME}v2"
+    
+    # Import ingestion_cache storage account
+    echo "Checking module.ingestion_cache.azurerm_storage_account.storage_account..."
+    if ! terraform state show 'module.ingestion_cache.azurerm_storage_account.storage_account' >/dev/null 2>&1; then
+      echo "  Importing module.ingestion_cache.azurerm_storage_account.storage_account..."
+      terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.ingestion_cache.azurerm_storage_account.storage_account' \
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}"
+      echo "  ✓ Imported module.ingestion_cache.azurerm_storage_account.storage_account"
+    else
+      echo "  ✓ module.ingestion_cache.azurerm_storage_account.storage_account already in state, skipping"
+    fi
+
+    # Import ingestion_cache Key Vault Key
+    # Format: https://{vault-name}.vault.azure.net/keys/{key-name}/{version-id}
+    echo "Checking module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]..."
+    if ! terraform state show 'module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]' >/dev/null 2>&1; then
+      KEY_VERSION=$(az keyvault key list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-cache-cmk" --query "[0].kid" -o tsv 2>/dev/null || echo "")
+      if [ -n "${KEY_VERSION}" ]; then
+        echo "  Importing module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]' \
+          "${KEY_VERSION}"
+        echo "  ✓ Imported module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]"
+      else
+        echo "  ⚠️  Could not determine key version for ingestion-cache-cmk, skipping import"
+        echo "      You may need to import manually: az keyvault key show --vault-name ${KEY_VAULT_NAME} --name ingestion-cache-cmk --query kid -o tsv"
+      fi
+    else
+      echo "  ✓ module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0] already in state, skipping"
+    fi
+
+    # Import ingestion_cache Key Vault Secrets (requires version ID)
+    echo "Checking module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]..."
+    if ! terraform state show 'module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]' >/dev/null 2>&1; then
+      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-cache-connection-string-1" --query "[0].id" -o tsv 2>/dev/null || echo "")
+      if [ -n "${SECRET_ID}" ]; then
+        echo "  Importing module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]' \
+          "${SECRET_ID}"
+        echo "  ✓ Imported module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]"
+      else
+        echo "  ⚠️  Could not determine secret version for ingestion-cache-connection-string-1, skipping import"
+        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_NAME} --name ingestion-cache-connection-string-1 --query '[0].id' -o tsv"
+      fi
+    else
+      echo "  ✓ module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0] already in state, skipping"
+    fi
+
+    echo "Checking module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]..."
+    if ! terraform state show 'module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]' >/dev/null 2>&1; then
+      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-cache-connection-string-2" --query "[0].id" -o tsv 2>/dev/null || echo "")
+      if [ -n "${SECRET_ID}" ]; then
+        echo "  Importing module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]' \
+          "${SECRET_ID}"
+        echo "  ✓ Imported module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]"
+      else
+        echo "  ⚠️  Could not determine secret version for ingestion-cache-connection-string-2, skipping import"
+        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_NAME} --name ingestion-cache-connection-string-2 --query '[0].id' -o tsv"
+      fi
+    else
+      echo "  ✓ module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0] already in state, skipping"
+    fi
+
+    # Import ingestion_cache Customer Managed Key
+    echo "Checking module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]..."
+    if ! terraform state show 'module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]' >/dev/null 2>&1; then
+      echo "  Importing module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]..."
+      terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]' \
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}"
+      echo "  ✓ Imported module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]"
+    else
+      echo "  ✓ module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0] already in state, skipping"
+    fi
+
+    # Import ingestion_cache Storage Management Policy
+    echo "Checking module.ingestion_cache.azurerm_storage_management_policy.default[0]..."
+    if ! terraform state show 'module.ingestion_cache.azurerm_storage_management_policy.default[0]' >/dev/null 2>&1; then
+      echo "  Importing module.ingestion_cache.azurerm_storage_management_policy.default[0]..."
+      terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.ingestion_cache.azurerm_storage_management_policy.default[0]' \
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}/managementPolicies/default"
+      echo "  ✓ Imported module.ingestion_cache.azurerm_storage_management_policy.default[0]"
+    else
+      echo "  ✓ module.ingestion_cache.azurerm_storage_management_policy.default[0] already in state, skipping"
+    fi
+
+    # Import ingestion_storage storage account
+    echo "Checking module.ingestion_storage.azurerm_storage_account.storage_account..."
+    if ! terraform state show 'module.ingestion_storage.azurerm_storage_account.storage_account' >/dev/null 2>&1; then
+      echo "  Importing module.ingestion_storage.azurerm_storage_account.storage_account..."
+      terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.ingestion_storage.azurerm_storage_account.storage_account' \
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}"
+      echo "  ✓ Imported module.ingestion_storage.azurerm_storage_account.storage_account"
+    else
+      echo "  ✓ module.ingestion_storage.azurerm_storage_account.storage_account already in state, skipping"
+    fi
+
+    # Import ingestion_storage Key Vault Key
+    # Format: https://{vault-name}.vault.azure.net/keys/{key-name}/{version-id}
+    echo "Checking module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]..."
+    if ! terraform state show 'module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]' >/dev/null 2>&1; then
+      KEY_VERSION=$(az keyvault key list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-storage-cmk" --query "[0].kid" -o tsv 2>/dev/null || echo "")
+      if [ -n "${KEY_VERSION}" ]; then
+        echo "  Importing module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]' \
+          "${KEY_VERSION}"
+        echo "  ✓ Imported module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]"
+      else
+        echo "  ⚠️  Could not determine key version for ingestion-storage-cmk, skipping import"
+        echo "      You may need to import manually: az keyvault key show --vault-name ${KEY_VAULT_NAME} --name ingestion-storage-cmk --query kid -o tsv"
+      fi
+    else
+      echo "  ✓ module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0] already in state, skipping"
+    fi
+
+    # Import ingestion_storage Key Vault Secrets
+    echo "Checking module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]..."
+    if ! terraform state show 'module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]' >/dev/null 2>&1; then
+      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-storage-connection-string-1" --query "[0].id" -o tsv 2>/dev/null || echo "")
+      if [ -n "${SECRET_ID}" ]; then
+        echo "  Importing module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]' \
+          "${SECRET_ID}"
+        echo "  ✓ Imported module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]"
+      else
+        echo "  ⚠️  Could not determine secret version for ingestion-storage-connection-string-1, skipping import"
+        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_NAME} --name ingestion-storage-connection-string-1 --query '[0].id' -o tsv"
+      fi
+    else
+      echo "  ✓ module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0] already in state, skipping"
+    fi
+
+    echo "Checking module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]..."
+    if ! terraform state show 'module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]' >/dev/null 2>&1; then
+      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-storage-connection-string-2" --query "[0].id" -o tsv 2>/dev/null || echo "")
+      if [ -n "${SECRET_ID}" ]; then
+        echo "  Importing module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]' \
+          "${SECRET_ID}"
+        echo "  ✓ Imported module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]"
+      else
+        echo "  ⚠️  Could not determine secret version for ingestion-storage-connection-string-2, skipping import"
+        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_NAME} --name ingestion-storage-connection-string-2 --query '[0].id' -o tsv"
+      fi
+    else
+      echo "  ✓ module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0] already in state, skipping"
+    fi
+
+    # Import ingestion_storage Customer Managed Key
+    echo "Checking module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]..."
+    if ! terraform state show 'module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]' >/dev/null 2>&1; then
+      echo "  Importing module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]..."
+      terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]' \
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}"
+      echo "  ✓ Imported module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]"
+    else
+      echo "  ✓ module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0] already in state, skipping"
+    fi
+
+    # Import ingestion_storage Storage Management Policy
+    echo "Checking module.ingestion_storage.azurerm_storage_management_policy.default[0]..."
+    if ! terraform state show 'module.ingestion_storage.azurerm_storage_management_policy.default[0]' >/dev/null 2>&1; then
+      echo "  Importing module.ingestion_storage.azurerm_storage_management_policy.default[0]..."
+      terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.ingestion_storage.azurerm_storage_management_policy.default[0]' \
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}/managementPolicies/default"
+      echo "  ✓ Imported module.ingestion_storage.azurerm_storage_management_policy.default[0]"
+    else
+      echo "  ✓ module.ingestion_storage.azurerm_storage_management_policy.default[0] already in state, skipping"
+    fi
+
+    # Import Backup Resources for ingestion_cache
+    echo ""
+    echo "=========================================="
+    echo "Backup Resources - ingestion_cache"
+    echo "=========================================="
+    echo ""
+    
+    BACKUP_VAULT_BASE_NAME="storage-backup-vault"
+    BACKUP_POLICY_NAME="default-blob-backup-policy"
+    BACKUP_INSTANCE_NAME="default-blob-backup-instance"
+    
+    # Import ingestion_cache Backup Vault
+    echo "Checking module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]..."
+    if ! terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]' >/dev/null 2>&1; then
+      # Try to find backup vault - it might have a random suffix
+      BACKUP_VAULT_NAME=$(az dataprotection backup-vault list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --query "[?starts_with(name, '${BACKUP_VAULT_BASE_NAME}')].name" -o tsv 2>/dev/null | head -1 || echo "")
+      if [ -z "${BACKUP_VAULT_NAME}" ]; then
+        # Try exact name match
+        BACKUP_VAULT_NAME="${BACKUP_VAULT_BASE_NAME}"
+      fi
+      
+      BACKUP_VAULT_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query id -o tsv 2>/dev/null || echo "")
+      if [ -n "${BACKUP_VAULT_ID}" ]; then
+        echo "  Found backup vault: ${BACKUP_VAULT_NAME}"
+        echo "  Importing module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]' \
+          "${BACKUP_VAULT_ID}"
+        echo "  ✓ Imported module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]"
+      else
+        echo "  ⚠️  Backup vault '${BACKUP_VAULT_BASE_NAME}' (or with suffix) not found, skipping backup resource imports"
+        echo "      Backup resources may need to be created fresh or imported manually"
+      fi
+    else
+      echo "  ✓ module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0] already in state, skipping"
+      BACKUP_VAULT_ID=$(terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]' 2>/dev/null | grep "^id " | cut -d'"' -f2 || echo "")
+      BACKUP_VAULT_NAME=$(echo "${BACKUP_VAULT_ID}" | sed -E 's|.*/backupVaults/([^/]+).*|\1|' || echo "")
+    fi
+
+    if [ -n "${BACKUP_VAULT_ID}" ] && [ -n "${BACKUP_VAULT_NAME}" ]; then
+      # Import ingestion_cache Backup Policy
+      echo "Checking module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]..."
+      if ! terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]' >/dev/null 2>&1; then
+        # Try to find the policy by name (it might have a different name)
+        BACKUP_POLICY_ID=$(az dataprotection backup-policy list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?name=='${BACKUP_POLICY_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
+        if [ -z "${BACKUP_POLICY_ID}" ]; then
+          # Fallback to constructed ID
+          BACKUP_POLICY_ID="${BACKUP_VAULT_ID}/backupPolicies/${BACKUP_POLICY_NAME}"
+        fi
+        echo "  Importing module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]' \
+          "${BACKUP_POLICY_ID}" 2>&1 || echo "  ⚠️  Failed to import backup policy, it may need to be created"
+        if terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]' >/dev/null 2>&1; then
+          echo "  ✓ Imported module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]"
+        fi
+      else
+        echo "  ✓ module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0] already in state, skipping"
+      fi
+
+      # Import ingestion_cache Backup Instance
+      echo "Checking module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]..."
+      if ! terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]' >/dev/null 2>&1; then
+        # Try to find the instance - it might be named differently
+        BACKUP_INSTANCE_ID=$(az dataprotection backup-instance list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?contains(name, '${INGESTION_CACHE_SA_NAME}') || name=='${BACKUP_INSTANCE_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
+        if [ -z "${BACKUP_INSTANCE_ID}" ]; then
+          # Fallback to constructed ID
+          BACKUP_INSTANCE_ID="${BACKUP_VAULT_ID}/backupInstances/${BACKUP_INSTANCE_NAME}"
+        fi
+        echo "  Importing module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]' \
+          "${BACKUP_INSTANCE_ID}" 2>&1 || echo "  ⚠️  Failed to import backup instance, it may need to be created"
+        if terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]' >/dev/null 2>&1; then
+          echo "  ✓ Imported module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]"
+        fi
+      else
+        echo "  ✓ module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0] already in state, skipping"
+      fi
+
+      # Import ingestion_cache Backup Role Assignment
+      echo "Checking module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0]..."
+      if ! terraform state show 'module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0]' >/dev/null 2>&1; then
+        # Get the principal ID from the backup vault identity
+        BACKUP_VAULT_PRINCIPAL_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "identity.principalId" -o tsv 2>/dev/null || echo "")
+        if [ -n "${BACKUP_VAULT_PRINCIPAL_ID}" ]; then
+          # Find the role assignment ID
+          ROLE_ASSIGNMENT_ID=$(az role assignment list --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}" --assignee "${BACKUP_VAULT_PRINCIPAL_ID}" --role "Storage Account Backup Contributor" --query "[0].id" -o tsv 2>/dev/null || echo "")
+          if [ -n "${ROLE_ASSIGNMENT_ID}" ]; then
+            echo "  Importing module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0]..."
+            terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+              'module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0]' \
+              "${ROLE_ASSIGNMENT_ID}"
+            echo "  ✓ Imported module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0]"
+          else
+            echo "  ⚠️  Could not find role assignment for backup vault, skipping import"
+          fi
+        else
+          echo "  ⚠️  Could not get backup vault principal ID, skipping role assignment import"
+        fi
+      else
+        echo "  ✓ module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0] already in state, skipping"
+      fi
+    fi
+
+    # Import Backup Resources for ingestion_storage
+    echo ""
+    echo "=========================================="
+    echo "Backup Resources - ingestion_storage"
+    echo "=========================================="
+    echo ""
+    
+    # Import ingestion_storage Backup Vault (may be the same vault or different)
+    echo "Checking module.ingestion_storage.azurerm_data_protection_backup_vault.backup_vault[0]..."
+    if ! terraform state show 'module.ingestion_storage.azurerm_data_protection_backup_vault.backup_vault[0]' >/dev/null 2>&1; then
+      # Try to get the backup vault ID (might be the same vault or different)
+      if [ -z "${BACKUP_VAULT_ID}" ] || [ -z "${BACKUP_VAULT_NAME}" ]; then
+        # Try to find backup vault - it might have a random suffix
+        BACKUP_VAULT_NAME_STORAGE=$(az dataprotection backup-vault list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --query "[?starts_with(name, '${BACKUP_VAULT_BASE_NAME}')].name" -o tsv 2>/dev/null | head -1 || echo "")
+        if [ -z "${BACKUP_VAULT_NAME_STORAGE}" ]; then
+          # Try exact name match
+          BACKUP_VAULT_NAME_STORAGE="${BACKUP_VAULT_BASE_NAME}"
+        fi
+        BACKUP_VAULT_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME_STORAGE}" --query id -o tsv 2>/dev/null || echo "")
+        if [ -n "${BACKUP_VAULT_ID}" ]; then
+          BACKUP_VAULT_NAME="${BACKUP_VAULT_NAME_STORAGE}"
+        fi
+      fi
+      if [ -n "${BACKUP_VAULT_ID}" ] && [ -n "${BACKUP_VAULT_NAME}" ]; then
+        echo "  Found backup vault: ${BACKUP_VAULT_NAME}"
+        echo "  Importing module.ingestion_storage.azurerm_data_protection_backup_vault.backup_vault[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_storage.azurerm_data_protection_backup_vault.backup_vault[0]' \
+          "${BACKUP_VAULT_ID}"
+        echo "  ✓ Imported module.ingestion_storage.azurerm_data_protection_backup_vault.backup_vault[0]"
+      else
+        echo "  ⚠️  Backup vault '${BACKUP_VAULT_BASE_NAME}' (or with suffix) not found, skipping backup resource imports"
+      fi
+    else
+      echo "  ✓ module.ingestion_storage.azurerm_data_protection_backup_vault.backup_vault[0] already in state, skipping"
+      if [ -z "${BACKUP_VAULT_ID}" ]; then
+        BACKUP_VAULT_ID=$(terraform state show 'module.ingestion_storage.azurerm_data_protection_backup_vault.backup_vault[0]' 2>/dev/null | grep "^id " | cut -d'"' -f2 || echo "")
+        BACKUP_VAULT_NAME=$(echo "${BACKUP_VAULT_ID}" | sed -E 's|.*/backupVaults/([^/]+).*|\1|' || echo "")
+      fi
+    fi
+
+    if [ -n "${BACKUP_VAULT_ID}" ] && [ -n "${BACKUP_VAULT_NAME}" ]; then
+      # Import ingestion_storage Backup Policy
+      echo "Checking module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]..."
+      if ! terraform state show 'module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]' >/dev/null 2>&1; then
+        # Try to find the policy by name (it might have a different name)
+        BACKUP_POLICY_ID=$(az dataprotection backup-policy list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?name=='${BACKUP_POLICY_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
+        if [ -z "${BACKUP_POLICY_ID}" ]; then
+          # Fallback to constructed ID
+          BACKUP_POLICY_ID="${BACKUP_VAULT_ID}/backupPolicies/${BACKUP_POLICY_NAME}"
+        fi
+        echo "  Importing module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]' \
+          "${BACKUP_POLICY_ID}" 2>&1 || echo "  ⚠️  Failed to import backup policy, it may need to be created"
+        if terraform state show 'module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]' >/dev/null 2>&1; then
+          echo "  ✓ Imported module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]"
+        fi
+      else
+        echo "  ✓ module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0] already in state, skipping"
+      fi
+
+      # Import ingestion_storage Backup Instance
+      echo "Checking module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]..."
+      if ! terraform state show 'module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]' >/dev/null 2>&1; then
+        # Try to find the instance - it might be named differently
+        BACKUP_INSTANCE_ID=$(az dataprotection backup-instance list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?contains(name, '${INGESTION_STORAGE_SA_NAME}') || name=='${BACKUP_INSTANCE_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
+        if [ -z "${BACKUP_INSTANCE_ID}" ]; then
+          # Fallback to constructed ID
+          BACKUP_INSTANCE_ID="${BACKUP_VAULT_ID}/backupInstances/${BACKUP_INSTANCE_NAME}"
+        fi
+        echo "  Importing module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]..."
+        terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          'module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]' \
+          "${BACKUP_INSTANCE_ID}" 2>&1 || echo "  ⚠️  Failed to import backup instance, it may need to be created"
+        if terraform state show 'module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]' >/dev/null 2>&1; then
+          echo "  ✓ Imported module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]"
+        fi
+      else
+        echo "  ✓ module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0] already in state, skipping"
+      fi
+
+      # Import ingestion_storage Backup Role Assignment
+      echo "Checking module.ingestion_storage.azurerm_role_assignment.backup_vault_storage_access[0]..."
+      if ! terraform state show 'module.ingestion_storage.azurerm_role_assignment.backup_vault_storage_access[0]' >/dev/null 2>&1; then
+        # Get the principal ID from the backup vault identity
+        if [ -z "${BACKUP_VAULT_PRINCIPAL_ID}" ]; then
+          BACKUP_VAULT_PRINCIPAL_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "identity.principalId" -o tsv 2>/dev/null || echo "")
+        fi
+        if [ -n "${BACKUP_VAULT_PRINCIPAL_ID}" ]; then
+          # Find the role assignment ID
+          ROLE_ASSIGNMENT_ID=$(az role assignment list --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}" --assignee "${BACKUP_VAULT_PRINCIPAL_ID}" --role "Storage Account Backup Contributor" --query "[0].id" -o tsv 2>/dev/null || echo "")
+          if [ -n "${ROLE_ASSIGNMENT_ID}" ]; then
+            echo "  Importing module.ingestion_storage.azurerm_role_assignment.backup_vault_storage_access[0]..."
+            terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+              'module.ingestion_storage.azurerm_role_assignment.backup_vault_storage_access[0]' \
+              "${ROLE_ASSIGNMENT_ID}"
+            echo "  ✓ Imported module.ingestion_storage.azurerm_role_assignment.backup_vault_storage_access[0]"
+          else
+            echo "  ⚠️  Could not find role assignment for backup vault, skipping import"
+          fi
+        else
+          echo "  ⚠️  Could not get backup vault principal ID, skipping role assignment import"
+        fi
+      else
+        echo "  ✓ module.ingestion_storage.azurerm_role_assignment.backup_vault_storage_access[0] already in state, skipping"
+      fi
+    fi
+  fi
+fi
+
 echo ""
 echo "=========================================="
 echo "Importing Role Assignments"
