@@ -143,6 +143,19 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
@@ -371,6 +384,18 @@ variable "cluster_workload_identities" {
       namespace = "unique"
     }
   }
+}
+
+variable "acr_push_role_name" {
+  description = "Role name for the ACR push permissions"
+  type        = string
+  default     = "AcrPush"
+}
+
+variable "monitor_metrics_reader_role_definition_name" {
+  description = "Role definition name for the monitor metrics reader"
+  type        = string
+  default     = "Monitoring Data Reader"
 }
 
 variable "ingestion_cache_access_tier" {
