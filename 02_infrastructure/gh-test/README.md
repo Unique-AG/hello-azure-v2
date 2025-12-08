@@ -68,7 +68,6 @@ For more information, see the [official GitHub documentation](https://docs.githu
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.2.0 |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >=4.14.0 |
 
 ## Modules
@@ -79,9 +78,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azapi_resource.github_network_settings](https://registry.terraform.io/providers/Azure/azapi/2.2.0/docs/resources/resource) | resource |
-| [azurerm_network_security_group.github](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
-| [azurerm_resource_provider_registration.github_network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) | resource |
 | [azurerm_resource_group.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.subnet_github_runners](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_subscription.subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
@@ -106,7 +102,5 @@ No modules.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_network_settings_id"></a> [network\_settings\_id](#output\_network\_settings\_id) | ID of the GitHub.Network/networkSettings resource |
+No outputs.
 <!-- END_TF_DOCS -->
