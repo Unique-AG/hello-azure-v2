@@ -48,6 +48,17 @@ data "azurerm_resource_group" "vnet" {
   name = var.resource_group_name_vnet
 }
 
+# Managed Identity data sources (created in day-1)
+data "azurerm_user_assigned_identity" "ingestion_cache_identity" {
+  name                = local.ingestion_cache_identity_name
+  resource_group_name = var.resource_group_sensitive_name
+}
+
+data "azurerm_user_assigned_identity" "ingestion_storage_identity" {
+  name                = local.ingestion_storage_identity_name
+  resource_group_name = var.resource_group_sensitive_name
+}
+
 # Log Analytics Workspace data source (created in day-1)
 data "azurerm_log_analytics_workspace" "log_analytics" {
   name                = local.log_analytics_workspace_name
