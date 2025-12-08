@@ -1,17 +1,17 @@
-name: "[tf] [test] Infrastructure Destroy 🏗️"
+name: "[tf] [dev] Infrastructure Destroy 🚀"
 on:
   # pull_request:
   #   branches:
   #     - preview
   #   paths:
-  #     - .github/workflows/test.infrastructure.tf.destroy.yaml
+  #     - .github/workflows/dev.infrastructure.tf.destroy.yaml
   #     - 02_infrastructure/day-1/**
   #     - 02_infrastructure/day-2/**
   # push:
   #   branches:
   #     - preview
   #   paths:
-  #     - .github/workflows/test.infrastructure.tf.destroy.yaml
+  #     - .github/workflows/dev.infrastructure.tf.destroy.yaml
   #     - 02_infrastructure/day-1/**
   #     - 02_infrastructure/day-2/**
   workflow_dispatch:
@@ -45,7 +45,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config=../environments/test/backend-config-day-2.hcl
+        run: terraform init -backend-config=../environments/dev/backend-config-day-2.hcl
 
       - name: Terraform Validate
         id: validate
@@ -54,14 +54,14 @@ jobs:
       - name: Terraform Plan Destroy
         id: plan
         run: terraform plan --destroy -no-color \
-          -var-file=../environments/test/00-config-day-2.auto.tfvars \
-          -var-file=../environments/test/00-parameters-day-2.auto.tfvars
+          -var-file=../environments/dev/00-config-day-2.auto.tfvars \
+          -var-file=../environments/dev/00-parameters-day-2.auto.tfvars
 
       - name: Terraform Destroy
         if: github.ref == 'refs/heads/preview'
         run: terraform destroy -auto-approve -input=false \
-          -var-file=../environments/test/00-config-day-2.auto.tfvars \
-          -var-file=../environments/test/00-parameters-day-2.auto.tfvars
+          -var-file=../environments/dev/00-config-day-2.auto.tfvars \
+          -var-file=../environments/dev/00-parameters-day-2.auto.tfvars
 
   day-1:
     environment: 10-pm
@@ -87,7 +87,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config=../environments/test/backend-config-day-1.hcl
+        run: terraform init -backend-config=../environments/dev/backend-config-day-1.hcl
 
       - name: Terraform Validate
         id: validate
@@ -96,11 +96,12 @@ jobs:
       - name: Terraform Plan Destroy
         id: plan
         run: terraform plan --destroy -no-color \
-          -var-file=../environments/test/00-config-day-1.auto.tfvars \
-          -var-file=../environments/test/00-parameters-day-1.auto.tfvars
+          -var-file=../environments/dev/00-config-day-1.auto.tfvars \
+          -var-file=../environments/dev/00-parameters-day-1.auto.tfvars
 
       - name: Terraform Destroy
         if: github.ref == 'refs/heads/preview'
         run: terraform destroy -auto-approve -input=false \
-          -var-file=../environments/test/00-config-day-1.auto.tfvars \
-          -var-file=../environments/test/00-parameters-day-1.auto.tfvars
+          -var-file=../environments/dev/00-config-day-1.auto.tfvars \
+          -var-file=../environments/dev/00-parameters-day-1.auto.tfvars
+

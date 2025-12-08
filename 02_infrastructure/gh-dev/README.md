@@ -4,7 +4,7 @@ This document provides information on deploying Kubernetes workloads. These work
 
 1. **[GitHub Runner Setup](github_runner_setup)**: Set up GitHub runners to communicate with the cluster using its VNET.
 2. **[Mirror Artifacts](mirror_artifacts)**: Mirror Docker images from both public registries and unique images. Note that Helm charts are not mirrored at this time.
-3. **[Terraform-Helm Mapping](terraform-helm-mapping)**: Contains a Python script that maps Terraform outputs from [../infrastructure](../infrastructure) to [Helm parameters file](../helm/terraform-outputs.yaml.jinja). This process is automated in a [deployment pipeline](../.github/workflows/helm.yaml).
+3. **[Terraform-Helm Mapping](terraform-helm-mapping)**: Contains a Python script that maps Terraform outputs from [../02_infrastructure](../02_infrastructure) to [Helm parameters file](../helm/terraform-outputs.yaml.jinja). This process is automated in a [deployment pipeline](../.github/workflows/helm.yaml).
 
 ## Set Up Private Networking for GitHub Hosted Runners
 
@@ -68,7 +68,6 @@ For more information, see the [official GitHub documentation](https://docs.githu
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.2.0 |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >=4.14.0 |
 
 ## Modules
@@ -79,9 +78,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azapi_resource.github_network_settings](https://registry.terraform.io/providers/Azure/azapi/2.2.0/docs/resources/resource) | resource |
-| [azurerm_network_security_group.github](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
-| [azurerm_resource_provider_registration.github_network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) | resource |
 | [azurerm_resource_group.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.subnet_github_runners](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_subscription.subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
@@ -106,7 +102,5 @@ No modules.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_network_settings_id"></a> [network\_settings\_id](#output\_network\_settings\_id) | ID of the GitHub.Network/networkSettings resource |
+No outputs.
 <!-- END_TF_DOCS -->

@@ -1,15 +1,16 @@
 name: '[test][rel] Mirror Public Artifacts 🪞'
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - preview
     paths:
-      - .github/workflows/test.mirror-public-artifacts.yaml
       - mirroring/test/io.docker.yaml
       - mirroring/test/io.ghcr.yaml
       - mirroring/test/io.quay.yaml
-  workflow_dispatch:
+      - .github/workflows/test.mirror-public-artifacts.yaml
+
 
 permissions:
   contents: read

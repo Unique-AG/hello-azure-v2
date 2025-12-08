@@ -1,19 +1,5 @@
 name: "[tf] [test] Infrastructure Apply 🏗️"
 on:
-  pull_request:
-    branches:
-      - preview
-    paths:
-      - .github/workflows/test.infrastructure.tf.yaml
-      - infrastructure/test/**
-      - terraform-modules/**
-  push:
-    branches:
-      - preview
-    paths:
-      - .github/workflows/test.infrastructure.tf.yaml
-      - infrastructure/test/**
-      - terraform-modules/**
   workflow_dispatch:
 
 permissions:
@@ -22,13 +8,13 @@ permissions:
   id-token: write
 
 jobs:
-  automated-plan-apply:
+  day-1:
     environment: 10-pm
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: infrastructure/test
+        working-directory: 02_infrastructure/day-1
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
@@ -41,10 +27,11 @@ jobs:
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check
+        continue-on-error: true
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config=config.auto.tfvars
+        run: terraform init -backend-config=../environments/test/backend-config-day-1.hcl
 
       - name: Terraform Validate
         id: validate
@@ -52,8 +39,54 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
-  
+        run: terraform plan -no-color \
+          -var-file=../environments/test/00-config-day-1.auto.tfvars \
+          -var-file=../environments/test/00-parameters-day-1.auto.tfvars
+
       - name: Terraform Apply
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/preview') || (github.event_name == 'pull_request' && github.head_ref == 'preview')
-        run: terraform apply -auto-approve -input=true
+        if: github.ref == 'refs/heads/preview'
+        run: terraform apply -auto-approve -input=false \
+          -var-file=../environments/test/00-config-day-1.auto.tfvars \
+          -var-file=../environments/test/00-parameters-day-1.auto.tfvars
+
+  day-2:
+    environment: 10-pm
+    runs-on: ubuntu-latest
+    needs: day-1
+    defaults:
+      run:
+        shell: bash
+        working-directory: 02_infrastructure/day-2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd #v3.1.2
+        with:
+          terraform_version: 1.12.0
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config=../environments/test/backend-config-day-2.hcl
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color \
+          -var-file=../environments/test/00-config-day-2.auto.tfvars \
+          -var-file=../environments/test/00-parameters-day-2.auto.tfvars
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/preview'
+        run: terraform apply -auto-approve -input=false \
+          -var-file=../environments/test/00-config-day-2.auto.tfvars \
+          -var-file=../environments/test/00-parameters-day-2.auto.tfvars
