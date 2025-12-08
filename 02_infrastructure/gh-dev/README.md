@@ -4,7 +4,7 @@ This document provides information on deploying Kubernetes workloads. These work
 
 1. **[GitHub Runner Setup](github_runner_setup)**: Set up GitHub runners to communicate with the cluster using its VNET.
 2. **[Mirror Artifacts](mirror_artifacts)**: Mirror Docker images from both public registries and unique images. Note that Helm charts are not mirrored at this time.
-3. **[Terraform-Helm Mapping](terraform-helm-mapping)**: Contains a Python script that maps Terraform outputs from [../infrastructure](../infrastructure) to [Helm parameters file](../helm/terraform-outputs.yaml.jinja). This process is automated in a [deployment pipeline](../.github/workflows/helm.yaml).
+3. **[Terraform-Helm Mapping](terraform-helm-mapping)**: Contains a Python script that maps Terraform outputs from [../02_infrastructure](../02_infrastructure) to [Helm parameters file](../helm/terraform-outputs.yaml.jinja). This process is automated in a [deployment pipeline](../.github/workflows/helm.yaml).
 
 ## Set Up Private Networking for GitHub Hosted Runners
 

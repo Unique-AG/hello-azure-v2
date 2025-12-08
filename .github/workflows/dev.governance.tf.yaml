@@ -5,13 +5,13 @@ on:
       - preview
     paths:
       - .github/workflows/dev.governance.tf.yaml.
-      - governance/dev/**
+      - 01_governance/environments/dev/**
   push:
     branches:
       - preview
     paths:
       - .github/workflows/dev.governance.tf.yaml.
-      - governance/dev/**
+      - 01_governance/environments/dev/**
   workflow_dispatch:
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: governance/dev
+        working-directory: 01_governance/environments/dev
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
@@ -43,7 +43,7 @@ jobs:
       
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config=config.auto.tfvars
+        run: terraform init -backend-config=../environments/dev/backend-config-day-0.hcl
       
       - name: Terraform Validate
         id: validate

@@ -53,18 +53,37 @@ Before proceeding, ensure you have the following:
 The backend configuration must be passed via `-backend-config` flag during `terraform init`.
 
 **Day-0 Initialization:**
+For development environment:
+```bash
+cd day-0
+terraform init -backend-config=../environments/dev/backend-config-day-0.hcl
+```
+For test environment:
 ```bash
 cd day-0
 terraform init -backend-config=../environments/test/backend-config-day-0.hcl
 ```
 
 **Note:** The state file is stored at:
-- Test: `terraform-init-test-v2.tfstate`
-- Dev: `terraform-init-dev-v2.tfstate`
+- Dev: `terraform-init-dev-v2.tfstate` (TODO: remove v2 when creating from scratch)
+- Test: `terraform-init-test-v2.tfstate` (TODO: remove v2 when creating from scratch)
+
 
 ### Running Terraform Plan/Apply
 
 Use `-var-file` to load environment-specific variables:
+
+**Dev Environment:**
+```bash
+cd day-0
+terraform plan \
+  -var-file=../environments/dev/00-config.auto.tfvars \
+  -var-file=../environments/dev/00-parameters.auto.tfvars
+
+terraform apply \
+  -var-file=../environments/dev/00-config.auto.tfvars \
+  -var-file=../environments/dev/00-parameters.auto.tfvars
+```
 
 **Test Environment:**
 ```bash
@@ -78,17 +97,7 @@ terraform apply \
   -var-file=../environments/test/00-parameters.auto.tfvars
 ```
 
-**Dev Environment:**
-```bash
-cd day-0
-terraform plan \
-  -var-file=../environments/dev/00-config.auto.tfvars \
-  -var-file=../environments/dev/00-parameters.auto.tfvars
 
-terraform apply \
-  -var-file=../environments/dev/00-config.auto.tfvars \
-  -var-file=../environments/dev/00-parameters.auto.tfvars
-```
 
 ### Environment-Specific Files
 
@@ -122,6 +131,16 @@ az login --tenant <<TENANT_ID>>
 ```
 
 Navigate to day-0 and apply the Terraform changes:
+
+For development environment:
+```bash
+cd day-0
+terraform init
+terraform apply \
+  -var-file=../environments/dev/00-config.auto.tfvars \
+  -var-file=../environments/dev/00-parameters.auto.tfvars
+```
+For test environment:
 ```bash
 cd day-0
 terraform init
@@ -131,6 +150,18 @@ terraform apply \
 ```
 
 Next, populate the `client_id` in the environment's `00-config.auto.tfvars` from the newly created application:
+
+For development environment:
+```bash
+var_value=$(terraform output client_id)
+# MacOS
+sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/dev/00-config.auto.tfvars
+# Linux
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/dev/00-config.auto.tfvars
+# Windows
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/dev/00-config.auto.tfvars
+```
+For test environment:
 ```bash
 var_value=$(terraform output client_id)
 # MacOS
@@ -159,6 +190,12 @@ terraform {
 ```
 
 Now migrate the local state to the newly created storage in Azure:
+For development environment:
+```bash
+cd day-0
+terraform init -backend-config=../environments/dev/backend-config-day-0.hcl -migrate-state
+```
+For test environment:
 ```bash
 cd day-0
 terraform init -backend-config=../environments/test/backend-config-day-0.hcl -migrate-state
@@ -166,6 +203,28 @@ terraform init -backend-config=../environments/test/backend-config-day-0.hcl -mi
 
 Now you are ready to make all the changes from within CI pipelines.
 
+Workflow execution sequence:
+
+for development environment:
+```
+dev.governance.tf.yaml
+dev.infrastructure.tf.apply.yaml
+dev.mirror-public-artifacts.yaml
+dev.mirror-unique-artifacts.yaml
+dev.gh.infra.yaml
+dev.argocd-bootstrap.yaml
+dev.cluster.helm.yaml
+```
+for test environment:
+```
+test.governance.tf.yaml
+test.infrastructure.tf.apply.yaml
+test.mirror-public-artifacts.yaml
+test.mirror-unique-artifacts.yaml
+test.gh.infra.yaml
+test.argocd-bootstrap.yaml
+test.cluster.helm.yaml
+```
 ## Deployment Order
 
 This bootstrap step (day-0) must be completed **before** deploying infrastructure:
@@ -175,7 +234,7 @@ This bootstrap step (day-0) must be completed **before** deploying infrastructur
    - Creates Azure AD application and service principal
    - Sets up federated credentials for GitHub Actions
    - Assigns necessary roles and permissions
-   - State stored in: `terraform-init-test-v2.tfstate` (test) or `terraform-init-dev-v2.tfstate` (dev)
+   - State stored in: `terraform-init-dev-v2.tfstate` (dev) or in `terraform-init-test-v2.tfstate` (TODO: remove v2 when creating from scratch)
 
 2. **02_infrastructure/day-1**: Deploy foundational infrastructure (depends on day-0)
 3. **02_infrastructure/day-2**: Deploy identity/governance resources (depends on day-1)

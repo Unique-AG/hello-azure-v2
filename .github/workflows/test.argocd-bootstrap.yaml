@@ -5,18 +5,11 @@ concurrency:
   cancel-in-progress: false # otherwise helm upgrade can get stuck and one needs to manually clean the secrets and helm database
 
 on:
-  push:
-    branches:
-      - chore/enable-test-workflows
-    paths:
-      - .github/workflows/test.argocd-bootstrap.yaml
-      - applications/argo-bootstrap.yaml
-      - .github/workflows/test.helm.yaml
   workflow_dispatch:
     inputs:
       action:
         description: "helmfile action to perform: apply, diff or template."
-        default: 'sync'
+        default: diff
         type: string
 
 permissions:
@@ -26,9 +19,8 @@ permissions:
 jobs:
   # The Sync Waves are a bit a fake to mimic and make sure the cluster is updated in a controlled way.
   argo-bootstrap:
-    if: github.ref == 'refs/heads/chore/enable-test-workflows'
     uses: ./.github/workflows/test.helm.yaml
     with:
-      file_name: applications/argo-bootstrap.yaml
-      action: ${{ inputs.action || 'apply' }}
+      file_name: 03_applications/argo-bootstrap.yaml
+      action: ${{ inputs.action }}
     secrets: inherit
