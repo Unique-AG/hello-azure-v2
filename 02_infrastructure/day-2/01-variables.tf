@@ -404,3 +404,15 @@ variable "cluster_workload_identities" {
     }
   }
 }
+
+variable "acr_push_role_name" {
+  description = "Role name for the ACR push permissions"
+  type        = string
+  default     = "AcrPush"
+}
+
+variable "monitor_metrics_reader_role_definition_name" {
+  description = "Role definition name for the monitor metrics reader"
+  type        = string
+  default     = "Monitoring Data Reader"
+}

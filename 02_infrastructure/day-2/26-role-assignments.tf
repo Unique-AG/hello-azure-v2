@@ -120,7 +120,7 @@ resource "azurerm_role_assignment" "kv_access_administrator_terraform_assign" {
 # Terraform Service Principal ACR Push assignment
 resource "azurerm_role_assignment" "acrpush_terraform" {
   principal_id         = data.azuread_service_principal.terraform.object_id
-  role_definition_name = "AcrPush"
+  role_definition_name = var.acr_push_role_name
   scope                = data.azurerm_resource_group.core.id
 }
 
@@ -231,7 +231,7 @@ resource "azurerm_role_assignment" "telemetry_observer_users" {
 # Monitoring Data Reader assignment for Grafana Identity
 resource "azurerm_role_assignment" "monitor_metrics_reader" {
   scope                = data.azurerm_resource_group.core.id
-  role_definition_name = "Monitoring Data Reader"
+  role_definition_name = var.monitor_metrics_reader_role_definition_name
   principal_id         = data.azurerm_user_assigned_identity.grafana_identity.principal_id
 }
 
