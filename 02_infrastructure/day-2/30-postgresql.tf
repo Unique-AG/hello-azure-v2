@@ -1,0 +1,45 @@
+# PostgreSQL Flexible Server
+# Using the azure-postgresql module from terraform-modules
+
+resource "random_password" "postgres_username" {
+  length  = var.postgres_username.length
+  special = var.postgres_username.special
+  numeric = var.postgres_username.numeric
+}
+
+resource "random_password" "postgres_password" {
+  length  = var.postgres_password.length
+  special = var.postgres_password.special
+  numeric = var.postgres_password.numeric
+}
+
+module "postgresql" {
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-postgresql?ref=azure-postgresql-3.1.0"
+
+  name                = var.postgresql_server_name
+  resource_group_name = data.azurerm_resource_group.sensitive.name
+  location            = data.azurerm_resource_group.sensitive.location
+
+  administrator_login = random_password.postgres_username.result
+  admin_password      = random_password.postgres_password.result
+
+  delegated_subnet_id = data.azurerm_subnet.postgresql.id
+  private_dns_zone_id = data.azurerm_private_dns_zone.postgresql.id
+
+  zone                          = var.postgresql_zone
+  flex_pg_version               = var.postgresql_version
+  flex_sku                      = var.postgresql_sku
+  flex_storage_mb               = var.postgresql_storage_mb
+  flex_pg_backup_retention_days = var.postgresql_backup_retention_days
+
+  identity_ids = [data.azurerm_user_assigned_identity.psql_identity.id]
+  key_vault_id = data.azurerm_key_vault.key_vault_sensitive.id
+
+  databases = var.postgresql_databases
+
+  tags                   = var.tags
+  postgresql_server_tags = var.postgresql_server_tags
+
+  metric_alerts_external_action_group_ids = var.postgresql_metric_alerts_external_action_group_ids
+}
+

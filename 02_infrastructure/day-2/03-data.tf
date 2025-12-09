@@ -148,3 +148,19 @@ data "azurerm_application_gateway" "application_gateway" {
   resource_group_name = data.azurerm_resource_group.core.name
 }
 
+# PostgreSQL data sources (created in day-1)
+data "azurerm_subnet" "postgresql" {
+  name                 = var.postgresql_subnet_name
+  virtual_network_name = var.virtual_network_name
+  resource_group_name  = data.azurerm_resource_group.vnet.name
+}
+
+data "azurerm_private_dns_zone" "postgresql" {
+  name                = var.psql_private_dns_zone_name
+  resource_group_name = data.azurerm_resource_group.vnet.name
+}
+
+data "azurerm_user_assigned_identity" "psql_identity" {
+  name                = local.psql_user_assigned_identity_name
+  resource_group_name = var.resource_group_sensitive_name
+}
