@@ -759,6 +759,137 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing OpenAI Resources"
+echo "=========================================="
+echo ""
+
+# Get subscription ID and resource group name from variables
+# Try to get subscription ID from VAR_CONFIG first, then from Azure CLI
+SUBSCRIPTION_ID=$(grep "^subscription_id" "${VAR_CONFIG}" 2>/dev/null | cut -d'"' -f2 || az account show --query id -o tsv 2>/dev/null || echo "")
+if [ -z "${SUBSCRIPTION_ID}" ]; then
+  echo "  ⚠️  Warning: Could not determine subscription ID. Some imports may fail."
+  echo "     Please ensure subscription_id is set in ${VAR_CONFIG} or run 'az login'"
+fi
+RESOURCE_GROUP_CORE=$(grep "^resource_group_core_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "resource-group-core")
+ENV_SUFFIX=$(grep "^env" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "test")
+
+# OpenAI Cognitive Account
+OPENAI_ACCOUNT_NAME="cognitive-account-swedencentral-${ENV_SUFFIX}"
+echo "Checking module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"]..."
+if ! terraform state show 'module.openai.azurerm_cognitive_account.aca["cognitive-account-swedencentral"]' >/dev/null 2>&1; then
+  echo "  Importing module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"]..."
+  # Get resource ID: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.CognitiveServices/accounts/{name}
+  COGNITIVE_ACCOUNT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/${OPENAI_ACCOUNT_NAME}"
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    'module.openai.azurerm_cognitive_account.aca["cognitive-account-swedencentral"]' \
+    "${COGNITIVE_ACCOUNT_ID}"
+  echo "  ✓ Imported module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"]"
+else
+  echo "  ✓ module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"] already in state, skipping"
+fi
+
+# OpenAI Cognitive Deployments
+echo ""
+echo "Importing OpenAI Cognitive Deployments..."
+DEPLOYMENTS=(
+  "text-embedding-ada-002:text-embedding-ada-002"
+  "gpt-35-turbo-0125:gpt-35-turbo-0125"
+  "gpt-4o-2024-11-20:gpt-4o-2024-11-20"
+)
+
+for deployment_pair in "${DEPLOYMENTS[@]}"; do
+  IFS=':' read -r deployment_key deployment_name <<< "${deployment_pair}"
+  # Deployment key format in module: "${account_key}-${deployment.name}"
+  DEPLOYMENT_STATE_KEY="cognitive-account-swedencentral-${deployment_name}"
+  echo "Checking module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]..."
+  if ! terraform state show "module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]" >/dev/null 2>&1; then
+    echo "  Importing module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]..."
+    # Get resource ID: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.CognitiveServices/accounts/{account}/deployments/{name}
+    DEPLOYMENT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/${OPENAI_ACCOUNT_NAME}/deployments/${deployment_name}"
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      "module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]" \
+      "${DEPLOYMENT_ID}"
+    echo "  ✓ Imported module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]"
+  else
+    echo "  ✓ module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"] already in state, skipping"
+  fi
+done
+
+# Speech Service Account
+echo ""
+echo "Importing Speech Service Resources..."
+SPEECH_SERVICE_NAME="speech-service-${ENV_SUFFIX}"
+echo "Checking module.speech_service.azurerm_cognitive_account.aca[\"swedencentral-speech\"]..."
+if ! terraform state show 'module.speech_service.azurerm_cognitive_account.aca["swedencentral-speech"]' >/dev/null 2>&1; then
+  echo "  Importing module.speech_service.azurerm_cognitive_account.aca[\"swedencentral-speech\"]..."
+  # Speech Service account name pattern
+  SPEECH_ACCOUNT_NAME=$(az cognitiveservices account list --resource-group "${RESOURCE_GROUP_CORE}" --query "[?kind=='SpeechServices'].name" -o tsv 2>/dev/null | head -1 || echo "")
+  if [ -z "${SPEECH_ACCOUNT_NAME}" ]; then
+    echo "  ⚠️  Could not find Speech Service account. Please import manually:"
+    echo "     az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE} --query \"[?kind=='SpeechServices'].name\" -o tsv"
+    echo "     terraform import -var-file=\"${VAR_CONFIG}\" -var-file=\"${VAR_PARAMS}\" \\"
+    echo "       'module.speech_service.azurerm_cognitive_account.aca[\"swedencentral-speech\"]' \\"
+    echo "       '/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/{account-name}'"
+  else
+    SPEECH_ACCOUNT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/${SPEECH_ACCOUNT_NAME}"
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.speech_service.azurerm_cognitive_account.aca["swedencentral-speech"]' \
+      "${SPEECH_ACCOUNT_ID}"
+    echo "  ✓ Imported module.speech_service.azurerm_cognitive_account.aca[\"swedencentral-speech\"]"
+  fi
+else
+  echo "  ✓ module.speech_service.azurerm_cognitive_account.aca[\"swedencentral-speech\"] already in state, skipping"
+fi
+
+# Speech Service Private Endpoint (if exists)
+echo ""
+echo "Checking for Speech Service Private Endpoint..."
+if ! terraform state show 'module.speech_service.azurerm_private_endpoint.pe["swedencentral-speech"]' >/dev/null 2>&1; then
+  echo "  Checking if private endpoint exists in Azure..."
+  PRIVATE_ENDPOINT_NAME=$(az network private-endpoint list --resource-group "${RESOURCE_GROUP_CORE}" --query "[?contains(name, 'speech')].name" -o tsv 2>/dev/null | head -1 || echo "")
+  if [ -n "${PRIVATE_ENDPOINT_NAME}" ]; then
+    echo "  Importing module.speech_service.azurerm_private_endpoint.pe[\"swedencentral-speech\"]..."
+    PRIVATE_ENDPOINT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.Network/privateEndpoints/${PRIVATE_ENDPOINT_NAME}"
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.speech_service.azurerm_private_endpoint.pe["swedencentral-speech"]' \
+      "${PRIVATE_ENDPOINT_ID}"
+    echo "  ✓ Imported module.speech_service.azurerm_private_endpoint.pe[\"swedencentral-speech\"]"
+  else
+    echo "  ℹ️  No private endpoint found for Speech Service (this is expected if public_network_access_enabled is true)"
+  fi
+else
+  echo "  ✓ module.speech_service.azurerm_private_endpoint.pe[\"swedencentral-speech\"] already in state, skipping"
+fi
+
+# Document Intelligence Account
+echo ""
+echo "Importing Document Intelligence Resources..."
+DOC_INTELLIGENCE_NAME="doc-intelligence-${ENV_SUFFIX}"
+echo "Checking module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"]..."
+if ! terraform state show 'module.document_intelligence.azurerm_cognitive_account.aca["swedencentral-form-recognizer"]' >/dev/null 2>&1; then
+  echo "  Importing module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"]..."
+  # Document Intelligence uses FormRecognizer account name pattern
+  # The actual account name might be different - check Azure Portal or use: az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE} --query "[?kind=='FormRecognizer'].name" -o tsv
+  DOC_INTELLIGENCE_ACCOUNT_NAME=$(az cognitiveservices account list --resource-group "${RESOURCE_GROUP_CORE}" --query "[?kind=='FormRecognizer'].name" -o tsv 2>/dev/null | head -1 || echo "")
+  if [ -z "${DOC_INTELLIGENCE_ACCOUNT_NAME}" ]; then
+    echo "  ⚠️  Could not find Document Intelligence account. Please import manually:"
+    echo "     az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE} --query \"[?kind=='FormRecognizer'].name\" -o tsv"
+    echo "     terraform import -var-file=\"${VAR_CONFIG}\" -var-file=\"${VAR_PARAMS}\" \\"
+    echo "       'module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"]' \\"
+    echo "       '/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/{account-name}'"
+  else
+    DOC_INTELLIGENCE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/${DOC_INTELLIGENCE_ACCOUNT_NAME}"
+    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.document_intelligence.azurerm_cognitive_account.aca["swedencentral-form-recognizer"]' \
+      "${DOC_INTELLIGENCE_ID}"
+    echo "  ✓ Imported module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"]"
+  fi
+else
+  echo "  ✓ module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"] already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
 echo "Importing Container Registry Resources"
 echo "=========================================="
 echo ""

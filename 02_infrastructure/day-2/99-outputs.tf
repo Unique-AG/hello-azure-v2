@@ -187,6 +187,34 @@ output "acr_identity_principal_id" {
 #   value       = azurerm_resource_group.vnet.name
 # }
 
+# OpenAI Module Outputs
+output "openai_cognitive_account_endpoints" {
+  description = "Object containing list of endpoints"
+  value       = module.openai.cognitive_account_endpoints
+}
+
+# Document Intelligence Module Outputs
+output "document_intelligence_azure_document_intelligence_endpoints" {
+  description = "Object containing list of endpoints"
+  value       = module.document_intelligence.azure_document_intelligence_endpoints
+}
+
+output "document_intelligence_endpoint_definitions_secret_name" {
+  description = "Name of the secret containing the list of objects containing endpoint definitions with name, endpoint and location."
+  value       = module.document_intelligence.endpoint_definitions_secret_name
+}
+
+# Speech Service Module Outputs
+output "speech_service_azure_speech_service_endpoint_definitions" {
+  description = "Object containing list of objects containing endpoint definitions with name, endpoint and location."
+  value       = module.speech_service.azure_speech_service_endpoint_definitions
+}
+
+output "speech_service_azure_speech_service_endpoints" {
+  description = "Object containing list of endpoints."
+  value       = module.speech_service.azure_speech_service_endpoints
+}
+    
 # ============================================================================
 # Secret Name Outputs 
 # ============================================================================
@@ -223,6 +251,8 @@ output "encryption_key_ingestion_secret_name" {
 output "zitadel_pat_secret_name" {
   description = "The secret name for Zitadel Personal Access Token (PAT)."
   value       = azurerm_key_vault_secret.zitadel_pat.name
+}
+  
 # Application Gateway outputs
 output "application_gateway_ip_address" {
   description = "The public IP address of the Application Gateway"

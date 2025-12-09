@@ -48,6 +48,24 @@ data "azurerm_resource_group" "vnet" {
   name = var.resource_group_name_vnet
 }
 
+# Virtual Network data source (created in day-1)
+data "azurerm_virtual_network" "vnet_day_1" {
+  name                = var.vnet_id
+  resource_group_name = var.resource_group_name_vnet
+}
+
+# Subnet data source for cognitive services (created in day-1)
+data "azurerm_subnet" "subnet_cognitive_services_day_1" {
+  name                 = var.subnet_cognitive_services_id
+  virtual_network_name = data.azurerm_virtual_network.vnet_day_1.name
+  resource_group_name  = var.resource_group_name_vnet
+}
+
+# Private DNS Zone data source for speech service (created in day-1)
+data "azurerm_private_dns_zone" "speech_service_day_1" {
+  name                = var.speech_service_private_dns_zone_name
+  resource_group_name = var.resource_group_name_vnet
+}
 # Managed Identity data sources (created in day-1)
 data "azurerm_user_assigned_identity" "psql_identity" {
   name                = local.psql_user_assigned_identity_name
