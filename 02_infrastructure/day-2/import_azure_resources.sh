@@ -244,6 +244,95 @@ fi
 # Storage Accounts
 echo ""
 echo "=========================================="
+echo "Importing Key Vault Secrets"
+echo "=========================================="
+echo ""
+
+# Helper function to import a Key Vault secret
+import_key_vault_secret() {
+  local resource_name=$1
+  local vault_name=$2
+  local secret_name=$3
+
+  if ! terraform state show "${resource_name}" >/dev/null 2>&1; then
+    echo "Checking azurerm_key_vault_secret.${resource_name#azurerm_key_vault_secret.}..."
+    
+    # Get the version ID from Azure CLI
+    local version_id
+    version_id=$(az keyvault secret show \
+      --vault-name "${vault_name}" \
+      --name "${secret_name}" \
+      --query id -o tsv 2>/dev/null)
+    
+    if [ -z "${version_id}" ]; then
+      echo "  ⚠️  Secret '${secret_name}' not found in vault '${vault_name}', skipping"
+      return
+    fi
+    
+    echo "  Importing ${resource_name}..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      "${resource_name}" \
+      "${version_id}" 2>/dev/null; then
+      echo "  ✓ Imported ${resource_name}"
+    else
+      echo "  ✗ Failed to import ${resource_name}"
+    fi
+  else
+    echo "  ✓ ${resource_name} already in state, skipping"
+  fi
+}
+
+# Get Key Vault names from locals (they follow the pattern: hakv1${ENV}v2 and hakv2${ENV}v2)
+SENSITIVE_KV_NAME="hakv2${ENV}v2"
+CORE_KV_NAME="hakv1${ENV}v2"
+
+echo "Using Key Vaults:"
+echo "  - Sensitive: ${SENSITIVE_KV_NAME}"
+echo "  - Core: ${CORE_KV_NAME}"
+echo ""
+
+# Import secrets from 33-secrets.tf
+# Secrets in sensitive Key Vault
+import_key_vault_secret \
+  "azurerm_key_vault_secret.rabbitmq_password_chat" \
+  "${SENSITIVE_KV_NAME}" \
+  "rabbitmq-password-chat"
+
+import_key_vault_secret \
+  "azurerm_key_vault_secret.zitadel_db_user_password" \
+  "${SENSITIVE_KV_NAME}" \
+  "zitadel-db-user-password"
+
+import_key_vault_secret \
+  "azurerm_key_vault_secret.zitadel_master_key" \
+  "${SENSITIVE_KV_NAME}" \
+  "zitadel-master-key"
+
+import_key_vault_secret \
+  "azurerm_key_vault_secret.encryption_key_app_repository" \
+  "${SENSITIVE_KV_NAME}" \
+  "encryption-key-app-repository"
+
+import_key_vault_secret \
+  "azurerm_key_vault_secret.encryption_key_ingestion" \
+  "${SENSITIVE_KV_NAME}" \
+  "encryption-key-ingestion"
+
+# Secret in core Key Vault
+import_key_vault_secret \
+  "azurerm_key_vault_secret.zitadel_pat" \
+  "${CORE_KV_NAME}" \
+  "manual-zitadel-scope-mgmt-pat"
+
+import_key_vault_secret \
+  "azurerm_key_vault_secret.encryption_key_node_chat_lxm" \
+  "${SENSITIVE_KV_NAME}" \
+  "encryption-key-chat-lxm"
+
+echo ""
+echo "=========================================="
+echo "Application Registration Secrets"
+echo "=========================================="
 echo "Storage Accounts"
 echo "=========================================="
 echo ""
@@ -729,9 +818,7 @@ KEY_VAULT_SENSITIVE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/resourc
 echo "Getting role definition IDs..."
 echo "  Note: Role definition IDs must be in full format: /subscriptions/{sub-id}/providers/Microsoft.Authorization/roleDefinitions/{guid}"
 echo ""
-echo "Reason: Terraform requires versioned secret IDs for import."
-echo "        Format: https://{vault}.vault.azure.net/secrets/{name}/{version-id}"
-echo "        Getting the version ID programmatically is complex and error-prone."
+echo "⚠️  Application registration secrets are NOT imported by this script."
 echo ""
 echo "Expected behavior:"
 echo "  - terraform plan will show these as 'to be created':"
@@ -741,7 +828,7 @@ echo ""
 echo "Resolution:"
 echo "  1. Let Terraform create them fresh (recommended if values can be regenerated)"
 echo "  2. Manually import with version ID (get version from Azure Portal or CLI):"
-echo "     az keyvault secret show --vault-name hakv2testv2 --name aad-app-ha-test-gitops-client-id --query id -o tsv"
+echo "     az keyvault secret show --vault-name ${SENSITIVE_KV_NAME} --name <secret-name> --query id -o tsv"
 echo "     terraform import -var-file=\"${VAR_CONFIG}\" -var-file=\"${VAR_PARAMS}\" \\"
 echo "       'module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]' \\"
 echo "       '<versioned-id-from-az-command>'"

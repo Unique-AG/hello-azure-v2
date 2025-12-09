@@ -172,6 +172,42 @@ output "acr_identity_principal_id" {
 #   value       = azurerm_resource_group.vnet.name
 # }
 
+# ============================================================================
+# Secret Name Outputs 
+# ============================================================================
+output "rabbitmq_password_chat_secret_name" {
+  description = "The secret name for RabbitMQ password for chat service."
+  value       = azurerm_key_vault_secret.rabbitmq_password_chat.name
+}
+
+output "zitadel_db_user_password_secret_name" {
+  description = "The secret name for Zitadel database user password."
+  value       = azurerm_key_vault_secret.zitadel_db_user_password.name
+}
+
+output "zitadel_master_key_secret_name" {
+  description = "The secret name for Zitadel master key."
+  value       = azurerm_key_vault_secret.zitadel_master_key.name
+}
+
+output "encryption_key_app_repository_secret_name" {
+  description = "The secret name for application repository encryption key."
+  value       = azurerm_key_vault_secret.encryption_key_app_repository.name
+}
+
+output "encryption_key_node_chat_lxm_secret_name" {
+  description = "The secret name for node chat LXM encryption key."
+  value       = azurerm_key_vault_secret.encryption_key_node_chat_lxm.name
+}
+
+output "encryption_key_ingestion_secret_name" {
+  description = "The secret name for ingestion encryption key."
+  value       = azurerm_key_vault_secret.encryption_key_ingestion.name
+}
+
+output "zitadel_pat_secret_name" {
+  description = "The secret name for Zitadel Personal Access Token (PAT)."
+  value       = azurerm_key_vault_secret.zitadel_pat.name
 # Application Gateway outputs
 output "application_gateway_ip_address" {
   description = "The public IP address of the Application Gateway"
