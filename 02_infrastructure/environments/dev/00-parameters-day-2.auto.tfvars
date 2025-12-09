@@ -1,4 +1,5 @@
 # Day-2 specific parameters
+env = "dev"
 
 # Resource Group Names
 resource_group_core_name      = "resource-group-core"
