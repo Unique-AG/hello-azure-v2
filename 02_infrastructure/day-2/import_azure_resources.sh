@@ -3,7 +3,7 @@
 # Usage: ./import_azure_resources.sh test
 #        ./import_azure_resources.sh dev
 
-set -uo pipefail
+set -euo pipefail
 
 ENV="${1:-test}"
 VAR_CONFIG="../environments/${ENV}/00-config-day-2.auto.tfvars"
