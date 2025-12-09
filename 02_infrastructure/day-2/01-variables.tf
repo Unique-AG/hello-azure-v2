@@ -143,6 +143,32 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
+# Application Gateway Configuration
+variable "ip_name" {
+  description = "Name of the public IP for the Application Gateway"
+  type        = string
+  default     = "default-public-ip-name"
+}
+
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
+
+variable "budget_contact_emails" {
+  description = "List of email addresses for budget notifications"
+  type        = list(string)
+}
+
 # Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
 variable "kv_sku" {
   description = "SKU for Key Vault (for compatibility, not used in day-2)"
@@ -415,8 +441,8 @@ variable "ingestion_cache_backup_vault" {
   type = object({
     name = string
   })
-  default     = null
-  nullable    = true
+  default  = null
+  nullable = true
 }
 
 variable "ingestion_cache_public_network_access_enabled" {
@@ -486,8 +512,8 @@ variable "ingestion_storage_backup_vault" {
   type = object({
     name = string
   })
-  default     = null
-  nullable    = true
+  default  = null
+  nullable = true
 }
 
 variable "ingestion_storage_public_network_access_enabled" {
@@ -538,4 +564,69 @@ variable "ingestion_storage_self_cmk_key_name" {
   description = "Self CMK for the ingestion storage account"
   type        = string
   default     = "ingestion-storage-cmk"
+}
+
+
+variable "monitor_metrics_reader_role_definition_name" {
+  description = "Role definition name for the monitor metrics reader"
+  type        = string
+  default     = "Monitoring Data Reader"
+}
+
+variable "application_gateway_public_ip_name_allocation_method" {
+  description = "Allocation method for the public IP for the Application Gateway"
+  type        = string
+  default     = "Static"
+}
+
+variable "application_gateway_public_ip_name_sku" {
+  description = "SKU for the public IP for the Application Gateway"
+  type        = string
+  default     = "Standard"
+}
+
+variable "application_gateway_autoscale_configuration_max_capacity" {
+  description = "Max capacity for the autoscale configuration for the Application Gateway"
+  type        = number
+  default     = 2
+}
+
+variable "application_gateway_sku" {
+  description = "SKU for the Application Gateway"
+  type = object({
+    name = string
+    tier = string
+  })
+  default = {
+    name = "WAF_v2"
+    tier = "WAF_v2"
+  }
+}
+
+variable "application_gateway_sku" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
+variable "application_gateway_gateway_ip_configuration_name" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
+variable "application_gateway_waf_policy_settings" {
+  description = "Explicit name for the WAF policy settings for the Application Gateway"
+  type = object({
+    explicit_name               = string
+    mode                        = string
+    file_upload_limit_in_mb     = number
+    max_request_body_size_in_kb = number
+  })
+  default = {
+    explicit_name               = "default-waf-policy-name"
+    mode                        = "Detection"
+    file_upload_limit_in_mb     = 100
+    max_request_body_size_in_kb = 1024
+  }
 }

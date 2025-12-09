@@ -164,3 +164,14 @@ output "ingestion_storage_connection_string_2_secret_name" {
 #   description = "Name of the resource group for the vnet"
 #   value       = azurerm_resource_group.vnet.name
 # }
+
+# Application Gateway outputs
+output "application_gateway_ip_address" {
+  description = "The public IP address of the Application Gateway"
+  value       = azurerm_public_ip.application_gateway_public_ip.ip_address
+}
+
+output "application_gateway_id" {
+  description = "The ID of the Application Gateway"
+  value       = module.application_gateway.appgw_id
+}

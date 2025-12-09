@@ -129,6 +129,19 @@ data "azuread_user" "telemetry_observer" {
 #   resource_group_name = local.aks.resource_group_name
 # }
 
+# Log Analytics Workspace data source (created in day-1)
+data "azurerm_log_analytics_workspace" "log_analytics" {
+  name                = local.log_analytics_workspace_name
+  resource_group_name = data.azurerm_resource_group.core.name
+}
+
+# Subnet data source for Application Gateway (created in day-1)
+data "azurerm_subnet" "application_gateway" {
+  name                 = "snet-application-gateway"
+  virtual_network_name = "vnet-001"
+  resource_group_name  = data.azurerm_resource_group.vnet.name
+}
+
 # Application Gateway data source (created in day-2, referenced here for role assignments)
 data "azurerm_application_gateway" "application_gateway" {
   name                = local.application_gateway_name
