@@ -163,25 +163,6 @@ variable "terraform_service_principal_object_id" {
   type        = string
 }
 
-
-variable "budget_contact_emails" {
-  description = "List of email addresses for budget notifications"
-  type        = list(string)
-}
-
-# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
-variable "kv_sku" {
-  description = "SKU for Key Vault (for compatibility, not used in day-2)"
-  type        = string
-  default     = "premium"
-}
-
-# Terraform Service Principal
-variable "terraform_service_principal_object_id" {
-  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
-  type        = string
-}
-
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
@@ -632,6 +613,8 @@ variable "secret_expiration_date" {
   description = "Expiration date for secrets (RFC3339 format)"
   type        = string
   default     = "2099-12-31T23:59:59Z"
+}
+
 variable "acr_push_role_name" {
   description = "Role name for the ACR push permissions"
   type        = string
@@ -697,7 +680,7 @@ variable "ingestion_cache_storage_management_policy_default" {
     enabled                                  = bool
     blob_to_cool_after_last_modified_days    = number
     blob_to_cold_after_last_modified_days    = number
-    blob_to_archie_after_last_modified_days = number
+    blob_to_archive_after_last_modified_days = number
     blob_to_deleted_after_last_modified_days = number
   })
   default = {
@@ -786,13 +769,6 @@ variable "ingestion_storage_self_cmk_key_name" {
   default     = "ingestion-storage-cmk"
 }
 
-
-variable "monitor_metrics_reader_role_definition_name" {
-  description = "Role definition name for the monitor metrics reader"
-  type        = string
-  default     = "Monitoring Data Reader"
-}
-
 variable "application_gateway_public_ip_name_allocation_method" {
   description = "Allocation method for the public IP for the Application Gateway"
   type        = string
@@ -821,12 +797,6 @@ variable "application_gateway_sku" {
     name = "WAF_v2"
     tier = "WAF_v2"
   }
-}
-
-variable "application_gateway_sku" {
-  description = "Name of the gateway IP configuration for the Application Gateway"
-  type        = string
-  default     = "gateway-ip-configuration"
 }
 
 variable "application_gateway_gateway_ip_configuration_name" {
