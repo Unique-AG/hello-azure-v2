@@ -128,3 +128,17 @@ cluster_workload_identities = {
     namespace = "unique"
   }
 }
+
+# Secrets
+rabbitmq_password_chat_secret_name        = "rabbitmq-password-chat"
+zitadel_db_user_password_secret_name      = "zitadel-db-user-password"
+zitadel_master_key_secret_name            = "zitadel-master-key"
+encryption_key_app_repository_secret_name = "encryption-key-app-repository"
+encryption_key_node_chat_lxm_secret_name  = "encryption-key-node-chat-lxm"
+encryption_key_ingestion_secret_name      = "encryption-key-ingestion"
+zitadel_pat_secret_name                   = "manual-zitadel-scope-mgmt-pat"
+
+# Secret Generation Configuration
+secret_password_length        = 32
+rabbitmq_password_chat_length = 24
+secret_expiration_date        = "2099-12-31T23:59:59Z"

@@ -409,6 +409,30 @@ variable "container_registry_name" {
   default     = "uqhacr"
 }
 
+variable "container_registry_sku" {
+  description = "SKU of the Azure Container Registry"
+  type        = string
+  default     = "Basic"
+}
+
+variable "container_registry_admin_enabled" {
+  description = "Whether to enable admin access to the Azure Container Registry"
+  type        = bool
+  default     = false
+}
+
+variable "container_registry_identity_type" {
+  description = "Type of the Azure Container Registry identity"
+  type        = string
+  default     = "SystemAssigned"
+}
+
+variable "registry_diagnostic_name" {
+  description = "Name of the diagnostic setting for the Container Registry"
+  type        = string
+  default     = "log-helloazure"
+}
+
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
@@ -552,6 +576,69 @@ variable "cluster_workload_identities" {
   }
 }
 
+########################################################
+# Secrets Configuration
+########################################################
+# Key Vault Secrets Configuration
+variable "rabbitmq_password_chat_secret_name" {
+  description = "The name of the secret containing the RabbitMQ password for chat service"
+  type        = string
+  default     = "rabbitmq-password-chat"
+}
+
+variable "zitadel_db_user_password_secret_name" {
+  description = "The name of the secret containing the Zitadel database user password"
+  type        = string
+  default     = "zitadel-db-user-password"
+}
+
+variable "zitadel_master_key_secret_name" {
+  description = "The name of the secret containing the Zitadel master key"
+  type        = string
+  default     = "zitadel-master-key"
+}
+
+variable "encryption_key_app_repository_secret_name" {
+  description = "The name of the secret containing the application repository encryption key"
+  type        = string
+  default     = "encryption-key-app-repository"
+}
+
+variable "encryption_key_node_chat_lxm_secret_name" {
+  description = "The name of the secret containing the node chat LXM encryption key"
+  type        = string
+  default     = "encryption-key-chat-lxm"
+}
+
+variable "encryption_key_ingestion_secret_name" {
+  description = "The name of the secret containing the ingestion encryption key"
+  type        = string
+  default     = "encryption-key-ingestion"
+}
+
+variable "zitadel_pat_secret_name" {
+  description = "The name of the manual secret placeholder for Zitadel PAT (to be set manually)"
+  type        = string
+  default     = "manual-zitadel-scope-mgmt-pat"
+}
+
+# Secret Generation Configuration
+variable "secret_password_length" {
+  description = "Default length for generated passwords"
+  type        = number
+  default     = 32
+}
+
+variable "rabbitmq_password_chat_length" {
+  description = "Default length for RabbitMQ generated password"
+  type        = number
+  default     = 24
+}
+
+variable "secret_expiration_date" {
+  description = "Expiration date for secrets (RFC3339 format)"
+  type        = string
+  default     = "2099-12-31T23:59:59Z"
 variable "acr_push_role_name" {
   description = "Role name for the ACR push permissions"
   type        = string

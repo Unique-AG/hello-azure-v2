@@ -82,18 +82,20 @@ output "ingestion_storage_connection_string_2_secret_name" {
   description = "The secret name for ingestion storage connection string 2."
 }
 
-# output "acr_id" {
-#   value       = module.workloads.acr_id
-#   description = "The ID of the Azure Container Registry."
-# }
-# output "acr_login_server" {
-#   value       = module.workloads.acr_login_server
-#   description = "The login server of the Azure Container Registry."
-# }
-# output "acr_name" {
-#   value       = module.workloads.acr_name
-#   description = "The name of the Azure Container Registry."
-# }
+output "acr_id" {
+  value       = azurerm_container_registry.acr.id
+  description = "The ID of the Azure Container Registry."
+}
+
+output "acr_login_server" {
+  value       = azurerm_container_registry.acr.login_server
+  description = "The login server of the Azure Container Registry."
+}
+
+output "acr_name" {
+  value       = azurerm_container_registry.acr.name
+  description = "The name of the Azure Container Registry."
+}
 # output "identity_principal_id" {
 #   value       = module.workloads.identity_principal_id
 #   description = "The principal ID of the identity."
@@ -128,10 +130,15 @@ output "ingestion_storage_connection_string_2_secret_name" {
 #   value       = module.perimeter.key_vault_main_name
 #   description = "The name of the main Key Vault."
 # }
-# output "container_registry_url" {
-#   value       = module.workloads.container_registry_url
-#   description = "The URL of the container registry."
-# }
+output "container_registry_url" {
+  value       = azurerm_container_registry.acr.login_server
+  description = "The URL of the container registry."
+}
+
+output "acr_identity_principal_id" {
+  value       = azurerm_container_registry.acr.identity[0].principal_id
+  description = "The principal ID of the Azure Container Registry's managed identity."
+}
 # output "zitadel_master_key_secret_name" {
 #   value       = module.workloads.zitadel_master_key_secret_name
 #   description = "The secret name for the Zitadel master key."
@@ -175,6 +182,42 @@ output "csi_user_assigned_identity_name" {
 #   value       = azurerm_resource_group.vnet.name
 # }
 
+# ============================================================================
+# Secret Name Outputs 
+# ============================================================================
+output "rabbitmq_password_chat_secret_name" {
+  description = "The secret name for RabbitMQ password for chat service."
+  value       = azurerm_key_vault_secret.rabbitmq_password_chat.name
+}
+
+output "zitadel_db_user_password_secret_name" {
+  description = "The secret name for Zitadel database user password."
+  value       = azurerm_key_vault_secret.zitadel_db_user_password.name
+}
+
+output "zitadel_master_key_secret_name" {
+  description = "The secret name for Zitadel master key."
+  value       = azurerm_key_vault_secret.zitadel_master_key.name
+}
+
+output "encryption_key_app_repository_secret_name" {
+  description = "The secret name for application repository encryption key."
+  value       = azurerm_key_vault_secret.encryption_key_app_repository.name
+}
+
+output "encryption_key_node_chat_lxm_secret_name" {
+  description = "The secret name for node chat LXM encryption key."
+  value       = azurerm_key_vault_secret.encryption_key_node_chat_lxm.name
+}
+
+output "encryption_key_ingestion_secret_name" {
+  description = "The secret name for ingestion encryption key."
+  value       = azurerm_key_vault_secret.encryption_key_ingestion.name
+}
+
+output "zitadel_pat_secret_name" {
+  description = "The secret name for Zitadel Personal Access Token (PAT)."
+  value       = azurerm_key_vault_secret.zitadel_pat.name
 # Application Gateway outputs
 output "application_gateway_ip_address" {
   description = "The public IP address of the Application Gateway"
