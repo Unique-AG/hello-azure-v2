@@ -98,8 +98,5 @@ azurerm_private_dns_zone_virtual_network_link_name        = "PsqlVnetZone.com"
 # DNS Zone (created in day-1)
 dns_zone_name = "test-hello.azure.unique.dev"
 
-# DNS Zone (created in day-1)
-dns_zone_name = "test-hello.azure.unique.dev"
-
 # Application Registration
 application_registration_gitops_display_name = "GitOps"
