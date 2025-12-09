@@ -269,6 +269,30 @@ variable "container_registry_name" {
   default     = "uqhacr"
 }
 
+variable "container_registry_sku" {
+  description = "SKU of the Azure Container Registry"
+  type        = string
+  default     = "Basic"
+}
+
+variable "container_registry_admin_enabled" {
+  description = "Whether to enable admin access to the Azure Container Registry"
+  type        = bool
+  default     = false
+}
+
+variable "container_registry_identity_type" {
+  description = "Type of the Azure Container Registry identity"
+  type        = string
+  default     = "SystemAssigned"
+}
+
+variable "registry_diagnostic_name" {
+  description = "Name of the diagnostic setting for the Container Registry"
+  type        = string
+  default     = "log-helloazure"
+}
+
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
