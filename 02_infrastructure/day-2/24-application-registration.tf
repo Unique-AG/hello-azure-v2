@@ -22,8 +22,7 @@ module "application_registration" {
     secret_name = local.application_secret_display_name
   }
   redirect_uris = [
-    // TODO: enable once DNS zone is created
-    // "https://argo.${data.azurerm_dns_zone.dns_zone.name}/auth/callback",
+    "https://argo.${data.azurerm_dns_zone.dns_zone.name}/auth/callback",
   ]
   required_resource_access_list = {
     (data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph) = [

@@ -1,5 +1,8 @@
 # Local values that are computed or combined from variables
 locals {
+  # Environment suffix for resource naming
+  env_suffix = "-${var.env}"
+
   # DNS and naming
   dns_zone_name                               = "${var.env}-${var.dns_zone_name}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"
@@ -32,7 +35,7 @@ locals {
   }
 
   aks = {
-    name                = "${var.cluster_name}-${var.env}"
+    name                = var.cluster_name
     resource_group_name = var.resource_group_core_name
   }
 
@@ -55,5 +58,16 @@ locals {
       records = [] # Will be populated dynamically after application gateway is created
     }
   }
+
+  # Azure Role Definitions
+  acr_pull_principals_role_name = "AcrPull Principals${local.env_suffix}"
+  vnet_subnet_access_role_name  = "VNet Subnet Access (Preview) v2${local.env_suffix}"
+  telemetry_observer_role_name  = "Telemetry Observer${local.env_suffix}"
+  contributor_role_name         = "Contributor"
+  reader_role_name              = "Reader"
+  acr_pull_role_name            = "AcrPull"
+
+  # Azure AD Service Principal
+  terraform_service_principal_name = "terraform"
 }
 

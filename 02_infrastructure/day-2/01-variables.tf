@@ -144,6 +144,27 @@ variable "log_analytics_workspace_name" {
   default     = "la"
 }
 
+# Application Gateway Configuration
+variable "ip_name" {
+  description = "Name of the public IP for the Application Gateway"
+  type        = string
+  default     = "default-public-ip-name"
+}
+
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
+
 variable "budget_contact_emails" {
   description = "List of email addresses for budget notifications"
   type        = list(string)
@@ -631,6 +652,18 @@ variable "cluster_workload_identities" {
   }
 }
 
+variable "acr_push_role_name" {
+  description = "Role name for the ACR push permissions"
+  type        = string
+  default     = "AcrPush"
+}
+
+variable "monitor_metrics_reader_role_definition_name" {
+  description = "Role definition name for the monitor metrics reader"
+  type        = string
+  default     = "Monitoring Data Reader"
+}
+
 variable "ingestion_cache_access_tier" {
   description = "Access tier for the ingestion cache account"
   type        = string
@@ -771,4 +804,107 @@ variable "ingestion_storage_self_cmk_key_name" {
   description = "Self CMK for the ingestion storage account"
   type        = string
   default     = "ingestion-storage-cmk"
+}
+
+
+variable "application_gateway_public_ip_name_allocation_method" {
+  description = "Allocation method for the public IP for the Application Gateway"
+  type        = string
+  default     = "Static"
+}
+
+variable "application_gateway_public_ip_name_sku" {
+  description = "SKU for the public IP for the Application Gateway"
+  type        = string
+  default     = "Standard"
+}
+
+variable "application_gateway_autoscale_configuration_max_capacity" {
+  description = "Max capacity for the autoscale configuration for the Application Gateway"
+  type        = number
+  default     = 2
+}
+
+variable "application_gateway_sku" {
+  description = "SKU for the Application Gateway"
+  type = object({
+    name = string
+    tier = string
+  })
+  default = {
+    name = "WAF_v2"
+    tier = "WAF_v2"
+  }
+}
+
+variable "application_gateway_sku_name" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
+variable "application_gateway_gateway_ip_configuration_name" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
+variable "application_gateway_waf_policy_settings" {
+  description = "Explicit name for the WAF policy settings for the Application Gateway"
+  type = object({
+    explicit_name               = string
+    mode                        = string
+    file_upload_limit_in_mb     = number
+    max_request_body_size_in_kb = number
+  })
+  default = {
+    explicit_name               = "default-waf-policy-name"
+    mode                        = "Detection"
+    file_upload_limit_in_mb     = 100
+    max_request_body_size_in_kb = 1024
+  }
+}
+
+
+# Role Assignments
+variable "key_reader_key_vault_role_name" {
+  description = "Role name for the key reader key vault"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "secret_reader_key_vault_role_name" {
+  description = "Role name for the secret reader key vault"
+  type        = string
+  default     = "Key Vault Secrets Reader"
+}
+
+variable "key_manager_key_vault_role_name" {
+  description = "Role name for the key manager key vault"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "secret_manager_key_vault_role_name" {
+  description = "Role name for the secret manager key vault"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "access_manager_key_vault_role_name" {
+  description = "Role name for the access manager key vault"
+  type        = string
+  default     = "Key Vault Data Access Administrator"
+}
+
+variable "cluster_user_role_name" {
+  description = "Role name for the cluster user"
+  type        = string
+  default     = "Azure Kubernetes Service Contributor Role"
+}
+
+variable "cluster_rbac_admin_role_name" {
+  description = "Role name for the cluster RBAC admin"
+  type        = string
+  default     = "Azure Kubernetes Service RBAC Cluster Admin"
 }

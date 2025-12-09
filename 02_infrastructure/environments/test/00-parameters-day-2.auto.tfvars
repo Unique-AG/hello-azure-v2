@@ -7,6 +7,13 @@ subnet_agw_cidr = "10.202.3.0/28"
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
 
+# Key Vault configuration
+kv_sku = "premium"
+
+# Terraform Service Principal (created in day-0/bootstrap)
+# To get the object_id, run: az ad sp list --display-name "terraform" --query "[].{objectId:id,displayName:displayName}" -o table, or go to Azure Portal -> Enterprise Applications -> Terraform -> Object ID
+terraform_service_principal_object_id = "dde525a7-fbfa-4a7c-88da-b9bcaf75830f" # 
+
 # GitOps configuration
 gitops_display_name = "GitOps"
 
@@ -72,15 +79,8 @@ resource_group_name_vnet      = "rg-vnet-002"
 main_kv_name      = "hakv1"
 sensitive_kv_name = "hakv2"
 
-# AKS Cluster
-# Note: This is the base name. The local adds -${env} suffix, so "aks" becomes "aks-test"
-cluster_name = "aks"
-
-# Node Resource Group (created by AKS, must match what's in Azure)
-node_resource_group_name = "resource-group-core-aks-nodes"
-
 # DNS Zone
-dns_zone_name = "hello.azure.unique.test"
+dns_zone_name = "test-hello.azure.unique.dev"
 
 # Application Registration
 application_registration_gitops_display_name = "GitOps"
