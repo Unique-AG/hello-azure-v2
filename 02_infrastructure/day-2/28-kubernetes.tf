@@ -45,44 +45,8 @@ module "kubernetes_cluster" {
   }
 
   node_pool_settings = {
-    rapid = {
-      auto_scaling_enabled = var.kubernetes_node_pool_settings_rapid_autoscaling_enabled
-      max_count            = var.kubernetes_rapid_max_count
-      min_count            = var.kubernetes_rapid_min_count
-      mode                 = var.kubernetes_node_pool_settings_rapid_mode
-      node_count           = var.kubernetes_rapid_node_count
-      node_labels = {
-        lifecycle   = var.kubernetes_node_pool_settings_rapid_node_labels.lifecycle
-        scalability = var.kubernetes_node_pool_settings_rapid_node_labels.scalability
-      }
-      node_taints     = var.kubernetes_node_pool_settings_rapid_node_taints
-      os_disk_size_gb = var.kubernetes_node_pool_settings_rapid_os_disk_size_gb
-      os_sku          = var.kubernetes_node_pool_settings_rapid_os_sku
-      upgrade_settings = {
-        max_surge = var.kubernetes_node_pool_settings_rapid_upgrade_settings.max_surge
-      }
-      vm_size = var.kubernetes_rapid_node_size
-      zones   = var.kubernetes_node_pool_settings_rapid_zones
-    }
-    steady = {
-      auto_scaling_enabled = var.kubernetes_node_pool_settings_steady_autoscaling_enabled
-      max_count            = var.kubernetes_steady_max_count
-      min_count            = var.kubernetes_steady_min_count
-      mode                 = var.kubernetes_node_pool_settings_steady_mode
-      node_count           = var.kubernetes_steady_node_count
-      node_labels = {
-        lifecycle   = var.kubernetes_node_pool_settings_steady_node_labels.lifecycle
-        scalability = var.kubernetes_node_pool_settings_steady_node_labels.scalability
-      }
-      node_taints     = var.kubernetes_node_pool_settings_steady_node_taints
-      os_disk_size_gb = var.kubernetes_node_pool_settings_steady_os_disk_size_gb
-      os_sku          = var.kubernetes_node_pool_settings_steady_os_sku
-      upgrade_settings = {
-        max_surge = var.kubernetes_node_pool_settings_steady_upgrade_settings.max_surge
-      }
-      vm_size = var.kubernetes_steady_node_size
-      zones   = var.kubernetes_node_pool_settings_steady_zones
-    }
+    rapid  = var.kubernetes_rapid_node_pool_settings
+    steady = var.kubernetes_steady_node_pool_settings
   }
 }
 

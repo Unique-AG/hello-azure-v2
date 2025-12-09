@@ -194,162 +194,62 @@ variable "kubernetes_default_node_zones" {
   default     = ["1", "3"]
 }
 
-variable "kubernetes_rapid_max_count" {
-  description = "The maximum number of nodes for the rapid node pool"
-  type        = number
-  default     = 3
-}
-
-variable "kubernetes_rapid_min_count" {
-  description = "The minimum number of nodes for the rapid node pool"
-  type        = number
-  default     = 0
-}
-
-variable "kubernetes_rapid_node_count" {
-  description = "The number of nodes for the rapid node pool"
-  type        = number
-  default     = 0
-}
-
-variable "kubernetes_rapid_node_size" {
-  description = "The rapid node pool node size for the AKS cluster"
-  type        = string
-  default     = "Standard_D8s_v4"
-}
-
-variable "kubernetes_steady_max_count" {
-  description = "The maximum number of nodes for the steady node pool"
-  type        = number
-  default     = 4
-}
-
-variable "kubernetes_steady_min_count" {
-  description = "The minimum number of nodes for the steady node pool"
-  type        = number
-  default     = 0
-}
-
-variable "kubernetes_steady_node_count" {
-  description = "The number of nodes for the steady node pool"
-  type        = number
-  default     = 2
-}
-
-variable "kubernetes_steady_node_size" {
-  description = "The steady node pool node size for the AKS cluster"
-  type        = string
-  default     = "Standard_D8as_v5"
-}
-
-variable "kubernetes_node_pool_settings_rapid_autoscaling_enabled" {
-  description = "Whether to enable autoscaling for the rapid node pool"
-  type        = bool
-  default     = true
-}
-
-variable "kubernetes_node_pool_settings_rapid_mode" {
-  description = "The mode for the rapid node pool"
-  type        = string
-  default     = "User"
-}
-
-variable "kubernetes_node_pool_settings_rapid_node_labels" {
-  description = "The labels for the rapid node pool"
-  type        = map(string)
-  default = {
-    lifecycle   = "ephemeral"
-    scalability = "rapid"
-  }
-}
-
-variable "kubernetes_node_pool_settings_rapid_node_taints" {
-  description = "The taints for the rapid node pool"
-  type        = list(string)
-  default     = ["scalability=rapid:NoSchedule", "lifecycle=ephemeral:NoSchedule"]
-}
-
-variable "kubernetes_node_pool_settings_rapid_os_disk_size_gb" {
-  description = "The size of the OS disk for the rapid node pool"
-  type        = number
-  default     = 100
-}
-
-variable "kubernetes_node_pool_settings_rapid_upgrade_settings" {
-  description = "The upgrade settings for the rapid node pool"
+variable "kubernetes_rapid_node_pool_settings" {
+  description = "Configuration settings for the rapid node pool"
   type = object({
-    max_surge = string
+    auto_scaling_enabled = optional(bool, true)
+    max_count            = optional(number, 3)
+    min_count            = optional(number, 0)
+    mode                 = optional(string, "User")
+    node_count           = optional(number, 0)
+    node_labels = optional(object({
+      lifecycle   = string
+      scalability = string
+    }), {
+      lifecycle   = "ephemeral"
+      scalability = "rapid"
+    })
+    node_taints     = optional(list(string), ["scalability=rapid:NoSchedule", "lifecycle=ephemeral:NoSchedule"])
+    os_disk_size_gb = optional(number, 100)
+    os_sku          = optional(string, "AzureLinux")
+    upgrade_settings = optional(object({
+      max_surge = string
+    }), {
+      max_surge = "10%"
+    })
+    vm_size = optional(string, "Standard_D8s_v4")
+    zones   = optional(list(string), ["1", "3"])
   })
-  default = {
-    max_surge = "10%"
-  }
+  default = {}
 }
 
-variable "kubernetes_node_pool_settings_rapid_zones" {
-  description = "The zones for the rapid node pool"
-  type        = list(string)
-  default     = ["1", "3"]
-}
-
-variable "kubernetes_node_pool_settings_steady_autoscaling_enabled" {
-  description = "The autoscaling settings for the steady node pool"
-  type        = bool
-  default     = true
-}
-
-variable "kubernetes_node_pool_settings_steady_mode" {
-  description = "The mode for the steady node pool"
-  type        = string
-  default     = "User"
-}
-
-variable "kubernetes_node_pool_settings_steady_node_labels" {
-  description = "The labels for the steady node pool"
-  type        = map(string)
-  default = {
-    lifecycle   = "persistent"
-    scalability = "steady"
-  }
-}
-
-variable "kubernetes_node_pool_settings_steady_node_taints" {
-  description = "The taints for the steady node pool"
-  type        = list(string)
-  default     = []
-}
-
-variable "kubernetes_node_pool_settings_steady_os_disk_size_gb" {
-  description = "The size of the OS disk for the steady node pool"
-  type        = number
-  default     = 100
-}
-
-variable "kubernetes_node_pool_settings_steady_os_sku" {
-  description = "The SKU of the OS for the steady node pool"
-  type        = string
-  default     = "AzureLinux"
-}
-
-variable "kubernetes_node_pool_settings_steady_upgrade_settings" {
-  description = "The upgrade settings for the steady node pool"
+variable "kubernetes_steady_node_pool_settings" {
+  description = "Configuration settings for the steady node pool"
   type = object({
-    max_surge = string
+    auto_scaling_enabled = optional(bool, true)
+    max_count            = optional(number, 4)
+    min_count            = optional(number, 0)
+    mode                 = optional(string, "User")
+    node_count           = optional(number, 2)
+    node_labels = optional(object({
+      lifecycle   = string
+      scalability = string
+    }), {
+      lifecycle   = "persistent"
+      scalability = "steady"
+    })
+    node_taints     = optional(list(string), [])
+    os_disk_size_gb = optional(number, 100)
+    os_sku          = optional(string, "AzureLinux")
+    upgrade_settings = optional(object({
+      max_surge = string
+    }), {
+      max_surge = "30%"
+    })
+    vm_size = optional(string, "Standard_D8as_v5")
+    zones   = optional(list(string), ["1", "3"])
   })
-  default = {
-    max_surge = "30%"
-  }
-}
-
-variable "kubernetes_node_pool_settings_steady_zones" {
-  description = "The zones for the steady node pool"
-  type        = list(string)
-  default     = ["1", "3"]
-}
-
-variable "kubernetes_node_pool_settings_rapid_os_sku" {
-  description = "The SKU of the OS for the rapid node pool"
-  type        = string
-  default     = "AzureLinux"
+  default = {}
 }
 
 variable "node_resource_group_name" {
