@@ -155,6 +155,45 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
+# Application Gateway Configuration
+variable "ip_name" {
+  description = "Name of the public IP for the Application Gateway"
+  type        = string
+  default     = "default-public-ip-name"
+}
+
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
+
+variable "budget_contact_emails" {
+  description = "List of email addresses for budget notifications"
+  type        = list(string)
+}
+
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
@@ -357,6 +396,30 @@ variable "container_registry_name" {
   default     = "uqhacr"
 }
 
+variable "container_registry_sku" {
+  description = "SKU of the Azure Container Registry"
+  type        = string
+  default     = "Basic"
+}
+
+variable "container_registry_admin_enabled" {
+  description = "Whether to enable admin access to the Azure Container Registry"
+  type        = bool
+  default     = false
+}
+
+variable "container_registry_identity_type" {
+  description = "Type of the Azure Container Registry identity"
+  type        = string
+  default     = "SystemAssigned"
+}
+
+variable "registry_diagnostic_name" {
+  description = "Name of the diagnostic setting for the Container Registry"
+  type        = string
+  default     = "log-helloazure"
+}
+
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
@@ -500,6 +563,81 @@ variable "cluster_workload_identities" {
   }
 }
 
+########################################################
+# Secrets Configuration
+########################################################
+# Key Vault Secrets Configuration
+variable "rabbitmq_password_chat_secret_name" {
+  description = "The name of the secret containing the RabbitMQ password for chat service"
+  type        = string
+  default     = "rabbitmq-password-chat"
+}
+
+variable "zitadel_db_user_password_secret_name" {
+  description = "The name of the secret containing the Zitadel database user password"
+  type        = string
+  default     = "zitadel-db-user-password"
+}
+
+variable "zitadel_master_key_secret_name" {
+  description = "The name of the secret containing the Zitadel master key"
+  type        = string
+  default     = "zitadel-master-key"
+}
+
+variable "encryption_key_app_repository_secret_name" {
+  description = "The name of the secret containing the application repository encryption key"
+  type        = string
+  default     = "encryption-key-app-repository"
+}
+
+variable "encryption_key_node_chat_lxm_secret_name" {
+  description = "The name of the secret containing the node chat LXM encryption key"
+  type        = string
+  default     = "encryption-key-chat-lxm"
+}
+
+variable "encryption_key_ingestion_secret_name" {
+  description = "The name of the secret containing the ingestion encryption key"
+  type        = string
+  default     = "encryption-key-ingestion"
+}
+
+variable "zitadel_pat_secret_name" {
+  description = "The name of the manual secret placeholder for Zitadel PAT (to be set manually)"
+  type        = string
+  default     = "manual-zitadel-scope-mgmt-pat"
+}
+
+# Secret Generation Configuration
+variable "secret_password_length" {
+  description = "Default length for generated passwords"
+  type        = number
+  default     = 32
+}
+
+variable "rabbitmq_password_chat_length" {
+  description = "Default length for RabbitMQ generated password"
+  type        = number
+  default     = 24
+}
+
+variable "secret_expiration_date" {
+  description = "Expiration date for secrets (RFC3339 format)"
+  type        = string
+  default     = "2099-12-31T23:59:59Z"
+variable "acr_push_role_name" {
+  description = "Role name for the ACR push permissions"
+  type        = string
+  default     = "AcrPush"
+}
+
+variable "monitor_metrics_reader_role_definition_name" {
+  description = "Role definition name for the monitor metrics reader"
+  type        = string
+  default     = "Monitoring Data Reader"
+}
+
 variable "ingestion_cache_access_tier" {
   description = "Access tier for the ingestion cache account"
   type        = string
@@ -640,4 +778,69 @@ variable "ingestion_storage_self_cmk_key_name" {
   description = "Self CMK for the ingestion storage account"
   type        = string
   default     = "ingestion-storage-cmk"
+}
+
+
+variable "monitor_metrics_reader_role_definition_name" {
+  description = "Role definition name for the monitor metrics reader"
+  type        = string
+  default     = "Monitoring Data Reader"
+}
+
+variable "application_gateway_public_ip_name_allocation_method" {
+  description = "Allocation method for the public IP for the Application Gateway"
+  type        = string
+  default     = "Static"
+}
+
+variable "application_gateway_public_ip_name_sku" {
+  description = "SKU for the public IP for the Application Gateway"
+  type        = string
+  default     = "Standard"
+}
+
+variable "application_gateway_autoscale_configuration_max_capacity" {
+  description = "Max capacity for the autoscale configuration for the Application Gateway"
+  type        = number
+  default     = 2
+}
+
+variable "application_gateway_sku" {
+  description = "SKU for the Application Gateway"
+  type = object({
+    name = string
+    tier = string
+  })
+  default = {
+    name = "WAF_v2"
+    tier = "WAF_v2"
+  }
+}
+
+variable "application_gateway_sku" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
+variable "application_gateway_gateway_ip_configuration_name" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
+variable "application_gateway_waf_policy_settings" {
+  description = "Explicit name for the WAF policy settings for the Application Gateway"
+  type = object({
+    explicit_name               = string
+    mode                        = string
+    file_upload_limit_in_mb     = number
+    max_request_body_size_in_kb = number
+  })
+  default = {
+    explicit_name               = "default-waf-policy-name"
+    mode                        = "Detection"
+    file_upload_limit_in_mb     = 100
+    max_request_body_size_in_kb = 1024
+  }
 }
