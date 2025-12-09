@@ -407,6 +407,12 @@ variable "redis_name" {
   default     = "uqharedis"
 }
 
+variable "public_network_access_enabled" {
+  description = "Whether public network access is enabled for the Redis Cache"
+  type        = bool
+  default     = true
+}
+
 variable "ingestion_cache_sa_name" {
   description = "Name of the storage account used for ingestion cache"
   type        = string
