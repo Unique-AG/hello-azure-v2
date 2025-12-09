@@ -24,26 +24,41 @@ output "aks_cluster_id" {
   description = "The ID of the AKS cluster."
 }
 
-# output "psql_host_secret_name" {
-#   value       = module.workloads.psql_host_secret_name
-#   description = "The secret name for PostgreSQL host."
-# }
-# output "psql_port_secret_name" {
-#   value       = module.workloads.psql_port_secret_name
-#   description = "The secret name for PostgreSQL port."
-# }
-# output "psql_username_secret_name" {
-#   value       = module.workloads.psql_username_secret_name
-#   description = "The secret name for PostgreSQL username."
-# }
-# output "psql_password_secret_name" {
-#   value       = module.workloads.psql_password_secret_name
-#   description = "The secret name for PostgreSQL password."
-# }
-# output "psql_database_connection_strings_secret_names" {
-#   value       = module.workloads.psql_database_connection_strings_secret_names
-#   description = "The secret names for PostgreSQL database connection strings."
-# }
+# PostgreSQL outputs
+output "postgresql_server_id" {
+  value       = module.postgresql.postgresql_server_id
+  description = "The ID of the PostgreSQL server"
+}
+
+output "postgresql_server_fqdn" {
+  value       = module.postgresql.postgresql_server_fqdn
+  description = "The FQDN of the PostgreSQL server"
+}
+
+output "psql_host_secret_name" {
+  value       = module.postgresql.host_secret_name
+  description = "The secret name for PostgreSQL host."
+}
+
+output "psql_port_secret_name" {
+  value       = module.postgresql.port_secret_name
+  description = "The secret name for PostgreSQL port."
+}
+
+output "psql_username_secret_name" {
+  value       = module.postgresql.username_secret_name
+  description = "The secret name for PostgreSQL username."
+}
+
+output "psql_password_secret_name" {
+  value       = module.postgresql.password_secret_name
+  description = "The secret name for PostgreSQL password."
+}
+
+output "psql_database_connection_strings_secret_names" {
+  value       = module.postgresql.database_connection_strings_secret_name
+  description = "The secret names for PostgreSQL database connection strings."
+}
 # output "rabbitmq_password_chat_secret_name" {
 #   value       = module.workloads.rabbitmq_password_chat_secret_name
 #   description = "The secret name for RabbitMQ password for chat."

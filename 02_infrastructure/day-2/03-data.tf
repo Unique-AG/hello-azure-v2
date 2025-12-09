@@ -17,9 +17,6 @@ data "azurerm_role_definition" "acr_pull" {
 # Azure AD data sources
 data "azuread_client_config" "current" {}
 
-# Azure Client Config data source (for tenant_id)
-data "azurerm_client_config" "current" {}
-
 data "azuread_application_published_app_ids" "well_known" {}
 
 data "azuread_user" "gitops_maintainer" {
@@ -63,7 +60,7 @@ data "azurerm_user_assigned_identity" "ingestion_cache_identity" {
 }
 
 data "azurerm_user_assigned_identity" "ingestion_storage_identity" {
-  name                = local.ingestion_storage_identity_name 
+  name                = local.ingestion_storage_identity_name
   resource_group_name = data.azurerm_resource_group.sensitive.name
 }
 
@@ -72,7 +69,6 @@ data "azurerm_user_assigned_identity" "aks_workload_identity" {
   resource_group_name = data.azurerm_resource_group.core.name
 }
 
-# Grafana identity data source (created in day-1)
 data "azurerm_user_assigned_identity" "grafana_identity" {
   name                = local.grafana_identity_name
   resource_group_name = data.azurerm_resource_group.core.name
