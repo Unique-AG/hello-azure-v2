@@ -356,6 +356,7 @@ variable "psql_private_dns_zone_name" {
 variable "postgresql_server_name" {
   description = "The name of the PostgreSQL server"
   type        = string
+  default     = "psql"
 }
 
 variable "postgresql_zone" {
