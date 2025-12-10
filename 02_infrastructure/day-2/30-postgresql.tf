@@ -1,6 +1,12 @@
 # PostgreSQL Flexible Server
 # Using the azure-postgresql module from terraform-modules
 
+resource "random_string" "psql_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
 resource "random_password" "postgres_username" {
   length  = var.postgres_username.length
   special = var.postgres_username.special
@@ -16,7 +22,7 @@ resource "random_password" "postgres_password" {
 module "postgresql" {
   source = "github.com/Unique-AG/terraform-modules.git//modules/azure-postgresql?ref=azure-postgresql-3.1.0"
 
-  name                = var.postgresql_server_name
+  name                = "${var.postgresql_server_name}-${random_string.psql_suffix.result}"
   resource_group_name = data.azurerm_resource_group.sensitive.name
   location            = data.azurerm_resource_group.sensitive.location
 
