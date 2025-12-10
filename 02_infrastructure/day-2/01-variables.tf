@@ -156,6 +156,11 @@ variable "log_analytics_workspace_name" {
   default     = "la"
 }
 
+variable "budget_contact_emails" {
+  description = "List of email addresses for budget notifications"
+  type        = list(string)
+}
+
 # Application Gateway Configuration
 variable "ip_name" {
   description = "Name of the public IP for the Application Gateway"
@@ -182,115 +187,23 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
   default     = "aks"
-}
-
-variable "kubernetes_version" {
-  description = "The version of Kubernetes to use for the AKS cluster"
-  type        = string
-  default     = "1.34.0"
-}
-
-variable "kubernetes_default_node_size" {
-  description = "The default node size for the AKS cluster"
-  type        = string
-  default     = "Standard_D2s_v6"
-}
-
-variable "kubernetes_default_node_zones" {
-  description = "The default node zones for the AKS cluster"
-  type        = list(string)
-  default     = ["1", "3"]
-}
-
-variable "kubernetes_node_pool_settings" {
-  description = "Configuration settings for the rapid node pool"
-  type = map(object({
-    auto_scaling_enabled = optional(bool, true)
-    max_count            = optional(number, 3)
-    min_count            = optional(number, 0)
-    mode                 = optional(string, "User")
-    node_count           = optional(number, 0)
-    node_labels = optional(object({
-      lifecycle   = string
-      scalability = string
-      }), {
-      lifecycle   = "ephemeral"
-      scalability = "rapid"
-    })
-    node_taints     = optional(list(string), ["scalability=rapid:NoSchedule", "lifecycle=ephemeral:NoSchedule"])
-    os_disk_size_gb = optional(number, 100)
-    os_sku          = optional(string, "AzureLinux")
-    upgrade_settings = optional(object({
-      max_surge = string
-      }), {
-      max_surge = "10%"
-    })
-    vm_size = optional(string, "Standard_D8s_v4")
-    zones   = optional(list(string), ["1", "3"])
-  }))
-  default = {}
-}
-
-variable "node_resource_group_name" {
-  description = "The name of the resource group for AKS nodes"
-  type        = string
-  default     = "resource-group-core-aks-nodes"
-}
-
-variable "aks_public_ip_name" {
-  description = "Name of the AKS public IP (created in day-1)"
-  type        = string
-  default     = "aks_public_ip"
-}
-
-variable "aks_segregated_node_and_pod_subnets_enabled" {
-  description = "Whether to enable segregated node and pod subnets for the AKS cluster"
-  type        = bool
-  default     = true
-}
-
-variable "aks_network_profile_idle_timeout_in_minutes" {
-  description = "The idle timeout in minutes for the AKS network profile"
-  type        = number
-  default     = 100
-}
-
-
-variable "prometheus_node_recording_rules" {
-  description = "Node level recording rules for Prometheus monitoring"
-  type = list(object({
-    enabled    = optional(bool, true)
-    record     = string
-    expression = string
-    labels     = optional(map(string))
-  }))
-  default = null
-}
-
-variable "prometheus_kubernetes_recording_rules" {
-  description = "Kubernetes level recording rules for Prometheus monitoring"
-  type = list(object({
-    enabled    = optional(bool, true)
-    record     = string
-    expression = string
-    labels     = optional(map(string))
-  }))
-  default = null
-}
-
-variable "prometheus_ux_recording_rules" {
-  description = "UX level recording rules for Prometheus monitoring"
-  type = list(object({
-    enabled    = optional(bool, true)
-    record     = string
-    expression = string
-    labels     = optional(map(string))
-  }))
-  default = null
 }
 
 # Managed Identities
@@ -324,24 +237,6 @@ variable "grafana_identity_name" {
   default     = "grafana-id"
 }
 
-variable "grafana_identity_type" {
-  description = "The type of the Grafana user-assigned identity"
-  type        = string
-  default     = "UserAssigned"
-}
-
-variable "grafana_monitor_enabled" {
-  description = "Whether to enable Grafana for the AKS cluster"
-  type        = bool
-  default     = true
-}
-
-variable "grafana_major_version" {
-  description = "The major version of Grafana to use for the AKS cluster"
-  type        = string
-  default     = "11"
-}
-
 variable "psql_user_assigned_identity_name" {
   description = "The name of the PostgreSQL user-assigned identity"
   type        = string
@@ -358,7 +253,6 @@ variable "psql_private_dns_zone_name" {
 variable "postgresql_server_name" {
   description = "The name of the PostgreSQL server"
   type        = string
-  default     = "psql"
 }
 
 variable "postgresql_zone" {
@@ -438,11 +332,11 @@ variable "postgresql_metric_alerts_external_action_group_ids" {
 
 variable "postgres_username" {
   description = "The username for the PostgreSQL server"
-  type = object({
+  type = map(object({
     length  = number
     special = bool
     numeric = bool
-  })
+  }))
   default = {
     length  = 16
     special = false
@@ -452,11 +346,11 @@ variable "postgres_username" {
 
 variable "postgres_password" {
   description = "The password for the PostgreSQL server"
-  type = object({
+  type = map(object({
     length  = number
     special = bool
     numeric = bool
-  })
+  }))
   default = {
     length  = 32
     special = false
@@ -1032,7 +926,6 @@ variable "ingestion_storage_self_cmk_key_name" {
   type        = string
   default     = "ingestion-storage-cmk"
 }
-
 
 variable "application_gateway_public_ip_name_allocation_method" {
   description = "Allocation method for the public IP for the Application Gateway"

@@ -194,21 +194,19 @@ data "azurerm_application_gateway" "application_gateway" {
   resource_group_name = data.azurerm_resource_group.core.name
 }
 
-
-# Application Gateway Public IP data source (created in day-2, referenced here for role assignments)
-data "azurerm_public_ip" "application_gateway_public_ip" {
-  name                = var.ip_name
-  resource_group_name = data.azurerm_resource_group.core.name
+# PostgreSQL data sources (created in day-1)
+data "azurerm_subnet" "postgresql" {
+  name                 = var.postgresql_subnet_name
+  virtual_network_name = var.virtual_network_name
+  resource_group_name  = data.azurerm_resource_group.vnet.name
 }
 
-# AKS Public IP data source (created in day-1)
-data "azurerm_public_ip" "aks_public_ip" {
-  name                = var.aks_public_ip_name
-  resource_group_name = data.azurerm_resource_group.core.name
+data "azurerm_private_dns_zone" "postgresql" {
+  name                = var.psql_private_dns_zone_name
+  resource_group_name = data.azurerm_resource_group.vnet.name
 }
 
-# AKS data source (created in day-2, referenced here for role assignments)
-data "azurerm_kubernetes_cluster" "aks" {
-  name                = local.cluster_name
-  resource_group_name = local.aks.resource_group_name
+data "azurerm_user_assigned_identity" "psql_identity" {
+  name                = local.psql_user_assigned_identity_name
+  resource_group_name = var.resource_group_sensitive_name
 }
