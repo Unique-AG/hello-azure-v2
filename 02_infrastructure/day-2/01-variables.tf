@@ -206,9 +206,9 @@ variable "kubernetes_default_node_zones" {
   default     = ["1", "3"]
 }
 
-variable "kubernetes_rapid_node_pool_settings" {
+variable "kubernetes_node_pool_settings" {
   description = "Configuration settings for the rapid node pool"
-  type = object({
+  type = map(object({
     auto_scaling_enabled = optional(bool, true)
     max_count            = optional(number, 3)
     min_count            = optional(number, 0)
@@ -217,7 +217,7 @@ variable "kubernetes_rapid_node_pool_settings" {
     node_labels = optional(object({
       lifecycle   = string
       scalability = string
-    }), {
+      }), {
       lifecycle   = "ephemeral"
       scalability = "rapid"
     })
@@ -226,41 +226,12 @@ variable "kubernetes_rapid_node_pool_settings" {
     os_sku          = optional(string, "AzureLinux")
     upgrade_settings = optional(object({
       max_surge = string
-    }), {
+      }), {
       max_surge = "10%"
     })
     vm_size = optional(string, "Standard_D8s_v4")
     zones   = optional(list(string), ["1", "3"])
-  })
-  default = {}
-}
-
-variable "kubernetes_steady_node_pool_settings" {
-  description = "Configuration settings for the steady node pool"
-  type = object({
-    auto_scaling_enabled = optional(bool, true)
-    max_count            = optional(number, 4)
-    min_count            = optional(number, 0)
-    mode                 = optional(string, "User")
-    node_count           = optional(number, 2)
-    node_labels = optional(object({
-      lifecycle   = string
-      scalability = string
-    }), {
-      lifecycle   = "persistent"
-      scalability = "steady"
-    })
-    node_taints     = optional(list(string), [])
-    os_disk_size_gb = optional(number, 100)
-    os_sku          = optional(string, "AzureLinux")
-    upgrade_settings = optional(object({
-      max_surge = string
-    }), {
-      max_surge = "30%"
-    })
-    vm_size = optional(string, "Standard_D8as_v5")
-    zones   = optional(list(string), ["1", "3"])
-  })
+  }))
   default = {}
 }
 
@@ -466,11 +437,11 @@ variable "postgresql_metric_alerts_external_action_group_ids" {
 
 variable "postgres_username" {
   description = "The username for the PostgreSQL server"
-  type = map(object({
+  type = object({
     length  = number
     special = bool
     numeric = bool
-  }))
+  })
   default = {
     length  = 16
     special = false
@@ -480,11 +451,11 @@ variable "postgres_username" {
 
 variable "postgres_password" {
   description = "The password for the PostgreSQL server"
-  type = map(object({
+  type = object({
     length  = number
     special = bool
     numeric = bool
-  }))
+  })
   default = {
     length  = 32
     special = false
@@ -772,6 +743,8 @@ variable "secret_expiration_date" {
   description = "Expiration date for secrets (RFC3339 format)"
   type        = string
   default     = "2099-12-31T23:59:59Z"
+}
+
 variable "acr_push_role_name" {
   description = "Role name for the ACR push permissions"
   type        = string
@@ -984,7 +957,6 @@ variable "application_gateway_waf_policy_settings" {
     max_request_body_size_in_kb = 1024
   }
 }
-
 
 # Role Assignments
 variable "key_reader_key_vault_role_name" {

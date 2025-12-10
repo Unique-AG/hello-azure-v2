@@ -233,6 +233,8 @@ output "encryption_key_ingestion_secret_name" {
 output "zitadel_pat_secret_name" {
   description = "The secret name for Zitadel Personal Access Token (PAT)."
   value       = azurerm_key_vault_secret.zitadel_pat.name
+}
+
 # Application Gateway outputs
 output "application_gateway_ip_address" {
   description = "The public IP address of the Application Gateway"
