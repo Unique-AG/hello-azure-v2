@@ -79,9 +79,6 @@ resource_group_name_vnet      = "rg-vnet-002"
 main_kv_name      = "hakv1"
 sensitive_kv_name = "hakv2"
 
-# AKS Cluster
-cluster_name = "aks-test"
-
 # DNS Zone
 dns_zone_name = "test-hello.azure.unique.dev"
 
@@ -201,3 +198,32 @@ zitadel_pat_secret_name                   = "manual-zitadel-scope-mgmt-pat"
 secret_password_length        = 32
 rabbitmq_password_chat_length = 24
 secret_expiration_date        = "2099-12-31T23:59:59Z"
+
+# Kubernetes Configuration
+kubernetes_node_pool_settings = {
+  rapid = {
+    max_count   = 3
+    min_count   = 0
+    node_count  = 0
+    node_taints = ["scalability=rapid:NoSchedule", "lifecycle=ephemeral:NoSchedule"]
+    node_labels = {
+      lifecycle   = "ephemeral"
+      scalability = "rapid"
+    }
+    vm_size = "Standard_D8s_v4"
+  },
+  steady = {
+    max_count   = 4
+    min_count   = 0
+    node_count  = 2
+    node_taints = []
+    node_labels = {
+      lifecycle   = "persistent"
+      scalability = "steady"
+    }
+    upgrade_settings = {
+      max_surge = "30%"
+    }
+    vm_size = "Standard_D8as_v5"
+  }
+}

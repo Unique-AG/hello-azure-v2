@@ -4,11 +4,14 @@ locals {
   env_suffix = "-${var.env}"
 
   # DNS and naming
-  dns_zone_name                               = "${var.env}-${var.dns_zone_name}"
-  name_prefix                                 = "${var.custom_subdomain_name}-${var.env}"
+  dns_zone_name                        = "${var.env}-${var.dns_zone_name}"
+  speech_service_custom_subdomain_name = "${var.speech_service_custom_subdomain_name}-${var.env}"
+
+  # OpenAI service names
+  document_intelligence_name                  = "${var.document_intelligence_name}-${var.env}"
+  speech_service_name                         = "${var.speech_service_name}-${var.env}"
   custom_subdomain_name                       = "${var.custom_subdomain_name}-${var.env}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"
-  speech_service_custom_subdomain_name        = "${var.speech_service_custom_subdomain_name}-${var.env}"
 
   # OpenAI service names
   document_intelligence_name = "${var.document_intelligence_name}-${var.env}"
@@ -18,6 +21,7 @@ locals {
   log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
   aks_user_assigned_identity_name     = "${var.aks_user_assigned_identity_name}-${var.env}"
   cluster_name                        = "${var.cluster_name}-${var.env}"
+  application_gateway_name            = "${var.custom_subdomain_name}-${var.env}-${var.application_gateway_name}"
   document_intelligence_identity_name = "${var.document_intelligence_identity_name}-${var.env}"
   ingestion_cache_identity_name       = "${var.ingestion_cache_identity_name}-${var.env}"
   ingestion_storage_identity_name     = "${var.ingestion_storage_identity_name}-${var.env}"
@@ -63,9 +67,6 @@ locals {
       records = [] # Will be populated dynamically after application gateway is created
     }
   }
-
-  # Application Gateway
-  application_gateway_name = "${local.name_prefix}-appgw"
 
   # Azure Role Definitions
   acr_pull_principals_role_name = "AcrPull Principals${local.env_suffix}"

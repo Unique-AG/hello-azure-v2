@@ -12,7 +12,7 @@ module "openai" {
       name                          = "${v.name}-${var.env}"
       location                      = v.location
       local_auth_enabled            = v.local_auth_enabled
-      custom_subdomain_name         = v.custom_subdomain_name != null ? "${v.custom_subdomain_name}-${var.env}" : local.custom_subdomain_name
+      custom_subdomain_name         = local.custom_subdomain_name
       public_network_access_enabled = v.public_network_access_enabled
       cognitive_deployments         = v.cognitive_deployments
     }
@@ -33,7 +33,7 @@ module "document_intelligence" {
   accounts = {
     for k, v in var.document_intelligence_accounts : k => {
       location                      = v.location
-      custom_subdomain_name         = v.custom_subdomain_name != null ? "${v.custom_subdomain_name}-${var.env}" : local.document_intelligence_custom_subdomain_name
+      custom_subdomain_name         = local.document_intelligence_custom_subdomain_name
       public_network_access_enabled = v.public_network_access_enabled
       local_auth_enabled            = v.local_auth_enabled
     }

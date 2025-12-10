@@ -19,10 +19,10 @@
 #   description = "The secret name for document intelligence endpoints."
 # }
 
-# output "aks_cluster_id" {
-#   value       = module.workloads.aks_cluster_id
-#   description = "The ID of the AKS cluster."
-# }
+output "aks_cluster_id" {
+  value       = module.kubernetes_cluster.kubernetes_cluster_id
+  description = "The ID of the AKS cluster."
+}
 
 # PostgreSQL outputs
 output "postgresql_server_id" {
@@ -162,10 +162,20 @@ output "acr_identity_principal_id" {
 #   value       = module.identities.aks_workload_identity_client_id
 #   description = "The client ID of the AKS workload identity."
 # }
-# output "cluster_kublet_client_id" {
-#   value       = module.workloads.cluster_kublet_client_id
-#   description = "The client ID of the cluster kubelet."
-# }
+output "cluster_kublet_client_id" {
+  value       = module.kubernetes_cluster.kublet_identity_client_id
+  description = "The client ID of the cluster kubelet."
+}
+
+output "cluster_kublet_object_id" {
+  value       = module.kubernetes_cluster.kublet_identity_object_id
+  description = "The object ID of the cluster kubelet."
+}
+
+output "csi_user_assigned_identity_name" {
+  value       = module.kubernetes_cluster.csi_user_assigned_identity_name
+  description = "The name of the user-assigned identity for the CSI driver."
+}
 # output "key_vault_secrets_provider_client_id" {
 #   value       = module.identities.key_vault_secrets_provider_client_id
 #   description = "The client ID of the Key Vault secrets provider."

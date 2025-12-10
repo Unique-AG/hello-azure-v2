@@ -116,6 +116,12 @@ variable "custom_subdomain_name" {
   default     = "ha"
 }
 
+variable "application_gateway_name" {
+  description = "Application Gateway name."
+  type        = string
+  default     = "appgw"
+}
+
 variable "document_intelligence_custom_subdomain_name" {
   description = "The custom subdomain name to use for the document intelligence"
   type        = string
@@ -160,6 +166,25 @@ variable "ip_name" {
   description = "Name of the public IP for the Application Gateway"
   type        = string
   default     = "default-public-ip-name"
+}
+
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
+
+variable "budget_contact_emails" {
+  description = "List of email addresses for budget notifications"
+  type        = list(string)
 }
 
 # Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
@@ -932,6 +957,12 @@ variable "application_gateway_sku" {
   }
 }
 
+variable "application_gateway_sku_name" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
 variable "application_gateway_gateway_ip_configuration_name" {
   description = "Name of the gateway IP configuration for the Application Gateway"
   type        = string
@@ -952,4 +983,47 @@ variable "application_gateway_waf_policy_settings" {
     file_upload_limit_in_mb     = 100
     max_request_body_size_in_kb = 1024
   }
+}
+
+# Role Assignments
+variable "key_reader_key_vault_role_name" {
+  description = "Role name for the key reader key vault"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "secret_reader_key_vault_role_name" {
+  description = "Role name for the secret reader key vault"
+  type        = string
+  default     = "Key Vault Secrets Reader"
+}
+
+variable "key_manager_key_vault_role_name" {
+  description = "Role name for the key manager key vault"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "secret_manager_key_vault_role_name" {
+  description = "Role name for the secret manager key vault"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "access_manager_key_vault_role_name" {
+  description = "Role name for the access manager key vault"
+  type        = string
+  default     = "Key Vault Data Access Administrator"
+}
+
+variable "cluster_user_role_name" {
+  description = "Role name for the cluster user"
+  type        = string
+  default     = "Azure Kubernetes Service Contributor Role"
+}
+
+variable "cluster_rbac_admin_role_name" {
+  description = "Role name for the cluster RBAC admin"
+  type        = string
+  default     = "Azure Kubernetes Service RBAC Cluster Admin"
 }
