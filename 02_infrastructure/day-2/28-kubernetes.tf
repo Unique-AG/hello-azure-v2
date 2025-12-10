@@ -46,7 +46,6 @@ module "kubernetes_cluster" {
 
   node_pool_settings = {
     for k, v in var.kubernetes_node_pool_settings : k => {
-      temporary_name_for_rotation = "${k}repl"
       auto_scaling_enabled        = v.auto_scaling_enabled
       max_count                   = v.max_count
       min_count                   = v.min_count
