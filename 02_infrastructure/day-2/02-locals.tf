@@ -4,9 +4,14 @@ locals {
   env_suffix = "-${var.env}"
 
   # DNS and naming
-  dns_zone_name                               = "${var.env}-${var.dns_zone_name}"
+  dns_zone_name                        = "${var.env}-${var.dns_zone_name}"
+  speech_service_custom_subdomain_name = "${var.speech_service_custom_subdomain_name}-${var.env}"
+
+  # OpenAI service names
+  document_intelligence_name                  = "${var.document_intelligence_name}-${var.env}"
+  speech_service_name                         = "${var.speech_service_name}-${var.env}"
+  custom_subdomain_name                       = "${var.custom_subdomain_name}-${var.env}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"
-  speech_service_custom_subdomain_name        = "${var.speech_service_custom_subdomain_name}-${var.env}"
 
   # Resource names
   log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"

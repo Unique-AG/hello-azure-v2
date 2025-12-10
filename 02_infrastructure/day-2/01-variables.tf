@@ -583,6 +583,7 @@ variable "ingestion_storage_connection_string_2_secret_name" {
 variable "speech_service_private_dns_zone_name" {
   description = "The name of the private DNS zone for the speech service"
   type        = string
+  default     = "privatelink.cognitiveservices.azure.com"
 }
 
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
@@ -595,6 +596,138 @@ variable "speech_service_custom_subdomain_name" {
   description = "The custom subdomain name to use for the speech service"
   type        = string
   default     = "ss-hello-azure"
+}
+
+# OpenAI Configuration
+variable "openai_endpoint_secret_name_suffix" {
+  description = "Suffix for OpenAI endpoint secret names in Key Vault"
+  type        = string
+  default     = "-ep"
+}
+
+variable "openai_cognitive_accounts" {
+  description = "Map of Azure OpenAI cognitive accounts configuration"
+  type = map(object({
+    name                          = string
+    location                      = string
+    local_auth_enabled            = bool
+    custom_subdomain_name         = optional(string)
+    public_network_access_enabled = bool
+    cognitive_deployments = list(object({
+      name          = string
+      model_name    = string
+      model_version = string
+      sku_name      = optional(string)
+      sku_capacity  = number
+    }))
+  }))
+  default = {
+    "cognitive-account-swedencentral" = {
+      name                          = "cognitive-account-swedencentral"
+      location                      = "swedencentral"
+      local_auth_enabled            = false
+      custom_subdomain_name         = null
+      public_network_access_enabled = true
+      cognitive_deployments = [
+        {
+          name          = "text-embedding-ada-002"
+          model_name    = "text-embedding-ada-002"
+          model_version = "2"
+          sku_name      = null
+          sku_capacity  = 350
+        },
+        {
+          name          = "gpt-35-turbo-0125"
+          model_name    = "gpt-35-turbo"
+          model_version = "0125"
+          sku_name      = null
+          sku_capacity  = 120
+        },
+        {
+          name          = "gpt-4o-2024-11-20"
+          model_name    = "gpt-4o"
+          model_version = "2024-11-20"
+          sku_name      = "Standard"
+          sku_capacity  = 50
+        }
+      ]
+    }
+  }
+}
+
+# Document Intelligence Configuration
+variable "document_intelligence_name" {
+  description = "Name of the Document Intelligence service"
+  type        = string
+  default     = "doc-intelligence"
+}
+
+variable "document_intelligence_accounts" {
+  description = "Map of Document Intelligence accounts configuration"
+  type = map(object({
+    location                      = string
+    custom_subdomain_name         = optional(string)
+    public_network_access_enabled = bool
+    local_auth_enabled            = bool
+  }))
+  default = {
+    "swedencentral-form-recognizer" = {
+      location                      = "swedencentral"
+      custom_subdomain_name         = null
+      public_network_access_enabled = true
+      local_auth_enabled            = true
+    }
+  }
+}
+
+# Speech Service Configuration
+variable "speech_service_name" {
+  description = "Name of the Speech Service"
+  type        = string
+  default     = "speech-service"
+}
+
+variable "speech_service_accounts" {
+  description = "Map of Speech Service accounts configuration"
+  type = map(object({
+    location              = string
+    account_kind          = string
+    account_sku_name      = string
+    custom_subdomain_name = optional(string)
+    private_endpoint      = optional(bool)
+    diagnostic_settings = optional(object({
+      log_analytics_workspace_id = string
+      enabled_log_categories     = list(string)
+    }))
+  }))
+  default = {
+    "swedencentral-speech" = {
+      location              = "swedencentral"
+      account_kind          = "SpeechServices"
+      account_sku_name      = "S0"
+      custom_subdomain_name = null
+      private_endpoint      = true
+      diagnostic_settings   = null
+    }
+  }
+}
+
+variable "subnet_cognitive_services_id" {
+  description = "Subnet name for cognitive services private endpoints"
+  type        = string
+  default     = "snet-cognitive-services"
+}
+
+variable "vnet_id" {
+  description = "Virtual network name for cognitive services private endpoints"
+  type        = string
+  default     = "vnet-001"
+}
+
+variable "log_analytics_workspace_id" {
+  description = "Log Analytics workspace ID for diagnostic settings"
+  type        = string
+  default     = ""
 }
 
 # Azure AD Groups
