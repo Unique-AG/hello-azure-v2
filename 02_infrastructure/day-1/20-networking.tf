@@ -75,6 +75,12 @@ module "vnet" {
         }
       }]
     }
+
+    # If you do not want to use Azure Bastion, you can remove this subnet.
+    "snet-bastion" = {
+      name             = "AzureBastionSubnet"
+      address_prefixes = [var.bastion_subnet_cidr]
+    }
   }
 }
 

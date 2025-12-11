@@ -2,7 +2,8 @@
 env = "dev"
 
 # Network configuration
-subnet_agw_cidr = "10.201.3.0/28"
+subnet_agw_cidr     = "10.201.3.0/28"
+bastion_subnet_cidr = "10.201.3.128/26"
 
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
