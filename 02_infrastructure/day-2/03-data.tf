@@ -3,18 +3,6 @@ data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
 
-# PostgreSQL data sources (created in day-1)
-data "azurerm_subnet" "postgresql" {
-  name                 = var.postgresql_subnet_name
-  virtual_network_name = var.virtual_network_name
-  resource_group_name  = data.azurerm_resource_group.vnet.name
-}
-
-data "azurerm_private_dns_zone" "postgresql" {
-  name                = var.psql_private_dns_zone_name
-  resource_group_name = data.azurerm_resource_group.vnet.name
-}
-
 # Role definitions for custom roles
 data "azurerm_role_definition" "contributor" {
   name = local.contributor_role_name
@@ -182,6 +170,12 @@ data "azurerm_subnet" "aks_nodes" {
   resource_group_name  = data.azurerm_resource_group.vnet.name
 }
 
+# AKS Public IP data source (created in day-1)
+data "azurerm_public_ip" "aks_public_ip" {
+  name                = var.aks_public_ip_name
+  resource_group_name = data.azurerm_resource_group.core.name
+}
+
 data "azurerm_subnet" "aks_pods" {
   name                 = "snet-aks-pods"
   virtual_network_name = "vnet-001"
@@ -204,9 +198,4 @@ data "azurerm_subnet" "postgresql" {
 data "azurerm_private_dns_zone" "postgresql" {
   name                = var.psql_private_dns_zone_name
   resource_group_name = data.azurerm_resource_group.vnet.name
-}
-
-data "azurerm_user_assigned_identity" "psql_identity" {
-  name                = local.psql_user_assigned_identity_name
-  resource_group_name = var.resource_group_sensitive_name
 }

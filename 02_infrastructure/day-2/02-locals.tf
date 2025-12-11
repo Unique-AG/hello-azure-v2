@@ -13,10 +13,6 @@ locals {
   custom_subdomain_name                       = "${var.custom_subdomain_name}-${var.env}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"
 
-  # OpenAI service names
-  document_intelligence_name = "${var.document_intelligence_name}-${var.env}"
-  speech_service_name        = "${var.speech_service_name}-${var.env}"
-
   # Resource names
   log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
   aks_user_assigned_identity_name     = "${var.aks_user_assigned_identity_name}-${var.env}"
