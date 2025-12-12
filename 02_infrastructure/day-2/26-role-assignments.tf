@@ -1,16 +1,6 @@
 # Role Assignments
 # These role assignments grant permissions to various identities and groups
 
-locals {
-  key_reader_key_vault_role_name     = var.key_reader_key_vault_role_name
-  secret_reader_key_vault_role_name  = var.secret_reader_key_vault_role_name
-  key_manager_key_vault_role_name    = var.key_manager_key_vault_role_name
-  secret_manager_key_vault_role_name = var.secret_manager_key_vault_role_name
-  access_manager_key_vault_role_name = var.access_manager_key_vault_role_name
-  cluster_user_role_name             = var.cluster_user_role_name
-  cluster_rbac_admin_role_name       = var.cluster_rbac_admin_role_name
-}
-
 # CSI Identity Key Vault Secret Reader assignments
 # COMMENTED OUT - AKS cluster related (depends on data.azurerm_kubernetes_cluster.cluster)
 # resource "azurerm_role_assignment" "csi_identity_secret_reader_main_kv" {
@@ -28,7 +18,7 @@ locals {
 # PostgreSQL Identity Key Vault Key Reader
 resource "azurerm_role_assignment" "psql_identity_role_assignment" {
   principal_id         = data.azurerm_user_assigned_identity.psql_identity.principal_id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
+  role_definition_name = local.key_vault_crypto_service_encryption_user_role_name
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
 }
 
@@ -36,26 +26,26 @@ resource "azurerm_role_assignment" "psql_identity_role_assignment" {
 resource "azurerm_role_assignment" "ingestion_cache_kv_key_reader" {
   principal_id         = data.azurerm_user_assigned_identity.ingestion_cache_identity.principal_id
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = "Key Vault Secrets User"
+  role_definition_name = local.secret_reader_key_vault_role_name
 }
 
 resource "azurerm_role_assignment" "ingestion_cache_kv_secrets_reader" {
   principal_id         = data.azurerm_user_assigned_identity.ingestion_cache_identity.principal_id
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = "Key Vault Secrets User"
+  role_definition_name = local.secret_reader_key_vault_role_name
 }
 
 # Ingestion Storage Identity Key Vault assignments
 resource "azurerm_role_assignment" "ingestion_storage_kv_key_reader" {
   principal_id         = data.azurerm_user_assigned_identity.ingestion_storage_identity.principal_id
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = "Key Vault Crypto Service Encryption User"
+  role_definition_name = local.key_vault_crypto_service_encryption_user_role_name
 }
 
 resource "azurerm_role_assignment" "ingestion_storage_kv_secrets_reader" {
   principal_id         = data.azurerm_user_assigned_identity.ingestion_storage_identity.principal_id
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = "Key Vault Secrets User"
+  role_definition_name = local.secret_reader_key_vault_role_name
 }
 
 # Terraform Service Principal Key Vault assignments

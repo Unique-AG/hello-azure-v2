@@ -1105,7 +1105,7 @@ variable "key_reader_key_vault_role_name" {
 variable "secret_reader_key_vault_role_name" {
   description = "Role name for the secret reader key vault"
   type        = string
-  default     = "Key Vault Secrets Reader"
+  default     = "Key Vault Secrets User"
 }
 
 variable "key_manager_key_vault_role_name" {
@@ -1136,4 +1136,10 @@ variable "cluster_rbac_admin_role_name" {
   description = "Role name for the cluster RBAC admin"
   type        = string
   default     = "Azure Kubernetes Service RBAC Cluster Admin"
+}
+
+variable "key_vault_crypto_service_encryption_user_role_name" {
+  description = "Role name for Key Vault Crypto Service Encryption User"
+  type        = string
+  default     = "Key Vault Crypto Service Encryption User"
 }

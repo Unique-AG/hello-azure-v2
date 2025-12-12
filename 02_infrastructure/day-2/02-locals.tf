@@ -74,5 +74,15 @@ locals {
 
   # Azure AD Service Principal
   terraform_service_principal_name = "terraform"
+
+  # Key Vault Role Names
+  key_reader_key_vault_role_name                     = var.key_reader_key_vault_role_name
+  secret_reader_key_vault_role_name                  = var.secret_reader_key_vault_role_name
+  key_manager_key_vault_role_name                    = var.key_manager_key_vault_role_name
+  secret_manager_key_vault_role_name                 = var.secret_manager_key_vault_role_name
+  access_manager_key_vault_role_name                 = var.access_manager_key_vault_role_name
+  cluster_user_role_name                             = var.cluster_user_role_name
+  cluster_rbac_admin_role_name                       = var.cluster_rbac_admin_role_name
+  key_vault_crypto_service_encryption_user_role_name = var.key_vault_crypto_service_encryption_user_role_name
 }
 
