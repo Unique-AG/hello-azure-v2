@@ -1073,6 +1073,12 @@ variable "application_gateway_gateway_ip_configuration_name" {
   default     = "gateway-ip-configuration"
 }
 
+variable "application_gateway_frontend_ip_configuration_name" {
+  description = "Name suffix for the frontend IP configuration of the Application Gateway. The full name will be constructed using the custom_subdomain_name, environment, and this value."
+  type        = string
+  default     = "feip"
+}
+
 variable "application_gateway_waf_policy_settings" {
   description = "Explicit name for the WAF policy settings for the Application Gateway"
   type = object({

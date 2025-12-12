@@ -28,7 +28,7 @@ locals {
 # PostgreSQL Identity Key Vault Key Reader
 resource "azurerm_role_assignment" "psql_identity_role_assignment" {
   principal_id         = data.azurerm_user_assigned_identity.psql_identity.principal_id
-  role_definition_name = local.key_reader_key_vault_role_name
+  role_definition_name = "Key Vault Crypto Service Encryption User"
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
 }
 
@@ -36,26 +36,26 @@ resource "azurerm_role_assignment" "psql_identity_role_assignment" {
 resource "azurerm_role_assignment" "ingestion_cache_kv_key_reader" {
   principal_id         = data.azurerm_user_assigned_identity.ingestion_cache_identity.principal_id
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.key_reader_key_vault_role_name
+  role_definition_name = "Key Vault Secrets User"
 }
 
 resource "azurerm_role_assignment" "ingestion_cache_kv_secrets_reader" {
   principal_id         = data.azurerm_user_assigned_identity.ingestion_cache_identity.principal_id
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.secret_reader_key_vault_role_name
+  role_definition_name = "Key Vault Secrets User"
 }
 
 # Ingestion Storage Identity Key Vault assignments
 resource "azurerm_role_assignment" "ingestion_storage_kv_key_reader" {
   principal_id         = data.azurerm_user_assigned_identity.ingestion_storage_identity.principal_id
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.key_reader_key_vault_role_name
+  role_definition_name = "Key Vault Crypto Service Encryption User"
 }
 
 resource "azurerm_role_assignment" "ingestion_storage_kv_secrets_reader" {
   principal_id         = data.azurerm_user_assigned_identity.ingestion_storage_identity.principal_id
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.secret_reader_key_vault_role_name
+  role_definition_name = "Key Vault Secrets User"
 }
 
 # Terraform Service Principal Key Vault assignments

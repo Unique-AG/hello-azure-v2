@@ -1,15 +1,15 @@
-# output "resource_group_core_name" {
-#   value       = module.identities.resource_group_core_name
-#   description = "The name of the core resource group."
-# }
-# output "oai_model_version_endpoints_secret_name" {
-#   value       = module.workloads.oai_model_version_endpoints_secret_name
-#   description = "The secret name for OAI model version endpoints."
-# }
-# output "oai_cognitive_account_endpoints_secret_names" {
-#   value       = module.workloads.oai_cognitive_account_endpoints_secret_names
-#   description = "The secret names for OAI cognitive account endpoints."
-# }
+output "resource_group_core_name" {
+  value       = data.azurerm_resource_group.core.name
+  description = "The name of the core resource group."
+}
+output "oai_model_version_endpoints_secret_name" {
+  value       = module.openai.model_version_endpoint_secret_name
+  description = "The secret name for OAI model version endpoints."
+}
+output "oai_cognitive_account_endpoints_secret_names" {
+  value       = module.openai.endpoints_secret_names
+  description = "The secret names for OAI cognitive account endpoints."
+}
 # output "document_inteliigence_endpoint_definitions_secret_name" {
 #   value       = module.workloads.document_inteliigence_endpoint_definitions_secret_name
 #   description = "The secret name for document intelligence endpoint definitions."
@@ -136,15 +136,15 @@ output "acr_name" {
 #   description = "The secret name for the Zitadel database user password."
 # }
 
-# output "sensitive_keyvault_name" {
-#   value       = module.perimeter.key_vault_sensitive_name
-#   description = "The name of the sensitive Key Vault."
-# }
+output "sensitive_keyvault_name" {
+  value       = data.azurerm_key_vault.key_vault_sensitive.name
+  description = "The name of the sensitive Key Vault."
+}
 
-# output "main_keyvault_name" {
-#   value       = module.perimeter.key_vault_main_name
-#   description = "The name of the main Key Vault."
-# }
+output "main_keyvault_name" {
+  value       = data.azurerm_key_vault.key_vault_core.name
+  description = "The name of the main Key Vault."
+}
 output "container_registry_url" {
   value       = azurerm_container_registry.acr.login_server
   description = "The URL of the container registry."
@@ -158,10 +158,10 @@ output "acr_identity_principal_id" {
 #   value       = module.workloads.zitadel_master_key_secret_name
 #   description = "The secret name for the Zitadel master key."
 # }
-# output "aks_workload_identity_client_id" {
-#   value       = module.identities.aks_workload_identity_client_id
-#   description = "The client ID of the AKS workload identity."
-# }
+output "aks_workload_identity_client_id" {
+  value       = data.azurerm_user_assigned_identity.aks_workload_identity.client_id
+  description = "The client ID of the AKS workload identity."
+}
 output "cluster_kublet_client_id" {
   value       = module.kubernetes_cluster.kublet_identity_client_id
   description = "The client ID of the cluster kubelet."
@@ -180,22 +180,22 @@ output "csi_user_assigned_identity_name" {
 #   value       = module.identities.key_vault_secrets_provider_client_id
 #   description = "The client ID of the Key Vault secrets provider."
 # }
-# output "dns_zone_name_servers" {
-#   description = "The Name Servers for the DNS zone"
-#   value       = module.perimeter.dns_zone_name_servers
-# }
-# output "dns_zone_name" {
-#   description = "Name of the DNS zone"
-#   value       = module.perimeter.dns_zone_name
-# }
+output "dns_zone_name_servers" {
+  description = "The Name Servers for the DNS zone"
+  value       = data.azurerm_dns_zone.dns_zone.name_servers
+}
+output "dns_zone_name" {
+  description = "Name of the DNS zone"
+  value       = data.azurerm_dns_zone.dns_zone.name
+}
 # output "zitadel_pat_secret_name" {
 #   description = "Name of the manual secret containing Zitadel PAT"
 #   value       = module.workloads.zitadel_pat_secret_name
 # }
-# output "resource_group_vnet_name" {
-#   description = "Name of the resource group for the vnet"
-#   value       = azurerm_resource_group.vnet.name
-# }
+output "resource_group_vnet_name" {
+  description = "Name of the resource group for the vnet"
+  value       = data.azurerm_resource_group.vnet.name
+}
 
 # OpenAI Module Outputs
 output "openai_cognitive_account_endpoints" {
@@ -224,7 +224,7 @@ output "speech_service_azure_speech_service_endpoints" {
   description = "Object containing list of endpoints."
   value       = module.speech_service.azure_speech_service_endpoints
 }
-    
+
 # ============================================================================
 # Secret Name Outputs 
 # ============================================================================
@@ -262,7 +262,7 @@ output "zitadel_pat_secret_name" {
   description = "The secret name for Zitadel Personal Access Token (PAT)."
   value       = azurerm_key_vault_secret.zitadel_pat.name
 }
-  
+
 # Application Gateway outputs
 output "application_gateway_ip_address" {
   description = "The public IP address of the Application Gateway"
