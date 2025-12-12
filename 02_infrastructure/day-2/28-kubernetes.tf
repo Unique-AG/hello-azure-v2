@@ -46,18 +46,18 @@ module "kubernetes_cluster" {
 
   node_pool_settings = {
     for k, v in var.kubernetes_node_pool_settings : k => {
-      auto_scaling_enabled        = v.auto_scaling_enabled
-      max_count                   = v.max_count
-      min_count                   = v.min_count
-      mode                        = v.mode
-      node_count                  = v.node_count
-      node_labels                 = v.node_labels
-      node_taints                 = v.node_taints
-      os_disk_size_gb             = v.os_disk_size_gb
-      os_sku                      = v.os_sku
-      upgrade_settings            = v.upgrade_settings
-      vm_size                     = v.vm_size
-      zones                       = v.zones
+      auto_scaling_enabled = v.auto_scaling_enabled
+      max_count            = v.max_count
+      min_count            = v.min_count
+      mode                 = v.mode
+      node_count           = v.node_count
+      node_labels          = v.node_labels
+      node_taints          = v.node_taints
+      os_disk_size_gb      = v.os_disk_size_gb
+      os_sku               = v.os_sku
+      upgrade_settings     = v.upgrade_settings
+      vm_size              = v.vm_size
+      zones                = v.zones
     }
   }
 }

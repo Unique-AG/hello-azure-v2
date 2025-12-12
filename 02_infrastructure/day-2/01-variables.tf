@@ -1073,6 +1073,12 @@ variable "application_gateway_gateway_ip_configuration_name" {
   default     = "gateway-ip-configuration"
 }
 
+variable "application_gateway_frontend_ip_configuration_name" {
+  description = "Name suffix for the frontend IP configuration of the Application Gateway. The full name will be constructed using the custom_subdomain_name, environment, and this value."
+  type        = string
+  default     = "feip"
+}
+
 variable "application_gateway_waf_policy_settings" {
   description = "Explicit name for the WAF policy settings for the Application Gateway"
   type = object({
@@ -1099,7 +1105,7 @@ variable "key_reader_key_vault_role_name" {
 variable "secret_reader_key_vault_role_name" {
   description = "Role name for the secret reader key vault"
   type        = string
-  default     = "Key Vault Secrets Reader"
+  default     = "Key Vault Secrets User"
 }
 
 variable "key_manager_key_vault_role_name" {
@@ -1130,4 +1136,10 @@ variable "cluster_rbac_admin_role_name" {
   description = "Role name for the cluster RBAC admin"
   type        = string
   default     = "Azure Kubernetes Service RBAC Cluster Admin"
+}
+
+variable "key_vault_crypto_service_encryption_user_role_name" {
+  description = "Role name for Key Vault Crypto Service Encryption User"
+  type        = string
+  default     = "Key Vault Crypto Service Encryption User"
 }

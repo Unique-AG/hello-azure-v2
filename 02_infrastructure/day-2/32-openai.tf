@@ -5,11 +5,12 @@ module "openai" {
 
   resource_group_name         = data.azurerm_resource_group.core.name
   endpoint_secret_name_suffix = var.openai_endpoint_secret_name_suffix
-  key_vault_id                = data.azurerm_key_vault.key_vault_core.id
+  # WORKAROUND: Set to null to bypass module bug in secrets.tf for_each
+  key_vault_id = null
 
   cognitive_accounts = {
     for k, v in var.openai_cognitive_accounts : k => {
-      name                          = "${v.name}-${var.env}"
+      name                          = "${v.name}"
       location                      = v.location
       local_auth_enabled            = v.local_auth_enabled
       custom_subdomain_name         = local.custom_subdomain_name
@@ -23,12 +24,21 @@ module "openai" {
 
 # Azure Document Intelligence Service
 # This module creates and configures Azure Document Intelligence (Form Recognizer) accounts
+# 
+# WORKAROUND: The module has a bug in secrets.tf line 4-7 where it uses azurerm_cognitive_account.aca 
+# directly in for_each, causing "known only after apply" errors. To work around this, we set 
+# key_vault_id = null which disables the problematic secrets creation (local.create_vault_secrets = false),
+# allowing the module to work for importing and managing the main resources.
+# 
+# Key Vault secrets drift: The secrets exist in Azure but are not managed by Terraform due to this 
+# workaround. They can be managed manually or wait for a module fix.
 module "document_intelligence" {
   source = "github.com/Unique-AG/terraform-modules.git//modules/azure-document-intelligence?ref=azure-document-intelligence-3.0.3"
 
   doc_intelligence_name = local.document_intelligence_name
   resource_group_name   = data.azurerm_resource_group.core.name
-  key_vault_id          = data.azurerm_key_vault.key_vault_core.id
+  # WORKAROUND: Set to null to bypass module bug in secrets.tf for_each
+  key_vault_id = null
 
   accounts = {
     for k, v in var.document_intelligence_accounts : k => {
@@ -44,12 +54,15 @@ module "document_intelligence" {
 
 # Azure Speech Service
 # This module creates and configures Azure Speech Service accounts with optional private endpoints
+# Note: This module uses count instead of for_each for secrets, so it doesn't have the same bug
 module "speech_service" {
   source = "github.com/unique-ag/terraform-modules.git//modules/azure-speech-service?depth=1&ref=azure-speech-service-4.0.1"
 
   key_vault_id        = data.azurerm_key_vault.key_vault_sensitive.id
   resource_group_name = data.azurerm_resource_group.core.name
-  speech_service_name = local.speech_service_name
+  # Use var.speech_service_name directly (without env suffix) to match existing resource names
+  # The existing private endpoint is named "speech-service-swedencentral-speech-pe" (no env suffix)
+  speech_service_name = var.speech_service_name
 
   accounts = {
     for k, v in var.speech_service_accounts : k => {
@@ -75,5 +88,4 @@ module "speech_service" {
     }
   }
 
-  tags = var.tags
 }

@@ -11,8 +11,9 @@ resource "azurerm_public_ip" "application_gateway_public_ip" {
 }
 
 module "application_gateway" {
-  source      = "github.com/Unique-AG/terraform-modules.git//modules/azure-application-gateway?depth=1&ref=azure-application-gateway-4.4.1"
-  name_prefix = var.application_gateway_name
+  source        = "github.com/Unique-AG/terraform-modules.git//modules/azure-application-gateway?depth=1&ref=azure-application-gateway-4.4.1"
+  name_prefix   = var.application_gateway_name
+  explicit_name = local.application_gateway_name
   autoscale_configuration = {
     max_capacity = var.application_gateway_autoscale_configuration_max_capacity
   }
@@ -26,12 +27,12 @@ module "application_gateway" {
   sku = var.application_gateway_sku
 
   gateway_ip_configuration = {
-    name               = var.application_gateway_gateway_ip_configuration_name
+    explicit_name      = var.application_gateway_gateway_ip_configuration_name
     subnet_resource_id = data.azurerm_subnet.application_gateway.id
   }
 
   public_frontend_ip_configuration = {
-    name                   = azurerm_public_ip.application_gateway_public_ip.name
+    explicit_name          = local.application_gateway_frontend_ip_configuration_name
     ip_address_resource_id = azurerm_public_ip.application_gateway_public_ip.id
   }
 
