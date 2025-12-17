@@ -28,5 +28,3 @@ terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.telemetry_observer_users' 'azurerm_role_assignment.telemetry_observer_users'
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.telemetry_observer_group' 'azurerm_role_assignment.telemetry_observer_group'
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.monitor_metrics_reader' 'azurerm_role_assignment.monitor_metrics_reader'
-
-# terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.workloads.azurerm_key_vault_secret.encryption_key_node_chat_lxm' 'azurerm_key_vault_secret.encryption_key_node_chat_lxm'
