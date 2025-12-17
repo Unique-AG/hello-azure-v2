@@ -13,6 +13,13 @@ resource "random_password" "rabbitmq_password_chat" {
   }
   length  = var.rabbitmq_password_chat_length
   special = false
+
+  lifecycle {
+    ignore_changes = [
+      length,
+      lower,
+    ]
+  }
 }
 
 resource "azurerm_key_vault_secret" "rabbitmq_password_chat" {

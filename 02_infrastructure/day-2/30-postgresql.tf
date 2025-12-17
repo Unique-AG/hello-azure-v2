@@ -81,8 +81,8 @@ module "postgresql" {
         threshold   = 90
       }
     }
-    # Note: default_absence_alert is excluded because it doesn't exist in Azure yet
-    # If needed in the future, it can be added back
+
   }
+
 }
 

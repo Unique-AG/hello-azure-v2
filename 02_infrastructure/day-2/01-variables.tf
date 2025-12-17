@@ -458,7 +458,7 @@ variable "postgres_password" {
   default = {
     length  = 32
     special = false
-    numeric = false
+    numeric = true
   }
 }
 
