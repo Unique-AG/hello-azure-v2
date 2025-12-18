@@ -1,6 +1,7 @@
 # Terraform State Migration Guide
 
 This guide describes the process for migrating Terraform state from the legacy infrastructure to the new hello-azure-v2 day-2 state file.
+Guid should not be followed blindly, you should understand each step and make your own adjustments.
 
 ## Prerequisites
 
@@ -19,31 +20,17 @@ Download the following state files from Azure Storage:
 
 Manually move Terraform state resources from the legacy Terraform state file to the new day-2 state file using one of the following options:
 
-**Option A: Use the provided script**
+**Option A: Use the provided script (after you made your adjustments)**
 ```bash
 ./move_terraform_state.sh
 ```
 
-**Option B: Run commands manually**
+**Option B: Run commands manually (check the script for details)**
 - Adjust and use the commands from `move_terraform_state.sh` script
 - Ensure you understand each state move operation before executing
 
-### Step 3: Push State to Azure Storage
-
-1. Make sure you're positioned in the `day-2` directory:
-   ```bash
-   cd /var/git/repos/hello-azure-v2/02_infrastructure/day-2
-   ```
-
-2. Run terraform state push to propagate the changes:
-   ```bash
-   terraform state push ./migration/<new-state-file>
-   ```
-
-   **Note**: This should only create a new version of the state file, since versioning should be enabled for the storage account.
-
 ## Important Notes
-
 - Always verify state file backups before proceeding
 - Review the state moves carefully before pushing to Azure Storage
 - Ensure Azure Storage account versioning is enabled for state file protection
+- Following this steps should only create a new version of the state file, since versioning should be enabled for the storage account. Should something go wrong, you can always revert to the previous version.

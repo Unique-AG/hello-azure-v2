@@ -149,26 +149,30 @@ for dev environment:
 ```bash
 cd day-1
 terraform init -backend-config=../environments/dev/backend-config-day-1.hcl
-./import_azure_resources.sh
+# will output the log to import_azure_resources.log and console
+bash ./import_azure_resources.sh | tee import_azure_resources.log
 ```
 
 ```bash
 cd day-2
 terraform init -backend-config=../environments/dev/backend-config-day-2.hcl
-./import_azure_resources.sh
+# will output the log to import_azure_resources.log and console
+bash ./import_azure_resources.sh | tee import_azure_resources.log
 ```
 
 for test environment:
 ```bash
 cd day-1
 terraform init -backend-config=../environments/test/backend-config-day-1.hcl
-./import_azure_resources.sh
+# will output the log to import_azure_resources.log and console
+bash ./import_azure_resources.sh | tee import_azure_resources.log
 ```
 
 ```bash
 cd day-2
 terraform init -backend-config=../environments/test/backend-config-day-2.hcl
-./import_azure_resources.sh
+# will output the log to import_azure_resources.log and console
+bash ./import_azure_resources.sh | tee import_azure_resources.log
 ```
 
 ### Important Notes

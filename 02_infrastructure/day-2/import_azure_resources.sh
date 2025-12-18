@@ -1121,11 +1121,6 @@ else
 fi
 
 echo ""
-echo "Note: Application Registration Key Vault secrets are not imported by this script."
-echo "      If needed, import them manually using:"
-echo "      az keyvault secret show --vault-name <vault-name> --name <secret-name> --query id -o tsv"
-
-echo ""
 echo "=========================================="
 echo "Importing OpenAI Resources"
 echo "=========================================="
@@ -1296,7 +1291,6 @@ if ! terraform state show 'module.document_intelligence.azurerm_cognitive_accoun
 else
   echo "  ✓ module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"] already in state, skipping"
 fi
-
 
 echo ""
 echo "=========================================="
@@ -1488,7 +1482,6 @@ else
   done
 
   # PostgreSQL Key Vault Secrets
-  KEY_VAULT_SENSITIVE_NAME="${SENSITIVE_KV_NAME}${ENV}v2"
   POSTGRESQL_SECRET_NAMES=("host" "port" "username" "password")
   for secret_type in "${POSTGRESQL_SECRET_NAMES[@]}"; do
     echo "Checking module.postgresql.azurerm_key_vault_secret.${secret_type}[0]..."
@@ -1518,9 +1511,7 @@ else
     echo "Checking module.postgresql.azurerm_key_vault_secret.database_connection_strings[\"${db_name}\"]..."
     if ! terraform state show "module.postgresql.azurerm_key_vault_secret.database_connection_strings[\"${db_name}\"]" >/dev/null 2>&1; then
       # Connection string secret name pattern: ${database_connection_string_secret_prefix}${db_name}
-      # Default prefix is usually empty or "connection-string-", check actual secret name
       SECRET_NAME="${POSTGRESQL_SERVER_NAME}-connection-string-${db_name}"
-      # Try alternative patterns
       ALTERNATIVE_SECRET_NAME="${db_name}-connection-string"
       SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || \
         az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${ALTERNATIVE_SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
@@ -1542,6 +1533,93 @@ else
   done
 else
   echo "  ⚠️  PostgreSQL server not found in Azure"
+fi
+
+echo ""
+echo "=========================================="
+echo "PostgreSQL Drift Documentation"
+echo "=========================================="
+echo ""
+echo "⚠️  DRIFT DOCUMENTATION: PostgreSQL Resources"
+echo ""
+if [ -n "${POSTGRESQL_SERVER_NAME:-}" ] && [ -n "${PSQL_SUFFIX:-}" ]; then
+  echo "The PostgreSQL server name is constructed as: \${var.postgresql_server_name}-\${random_string.psql_suffix.result}"
+  echo "The existing server name is: ${POSTGRESQL_SERVER_NAME}"
+  echo "The extracted suffix is: ${PSQL_SUFFIX}"
+echo ""
+  echo "1. random_string.psql_suffix:"
+  echo "   - Status: ✅ FIXED - Configuration updated to match existing resource"
+  echo "   - Issue: Original resource had special=true and upper=true, but config had special=false and upper=false"
+  echo "   - Resolution: Updated 30-postgresql.tf to set special=true and upper=true to match state"
+  echo "   - Impact: Server name will now remain '${POSTGRESQL_SERVER_NAME}' (no replacement)"
+echo ""
+  echo "2. random_password.postgres_username and random_password.postgres_password:"
+  echo "   - Status: ✅ NOT CRITICAL - Can be safely ignored (we only care about Key Vault secrets)"
+  echo "   - Reason: These resources cannot be imported (random_password doesn't support import)"
+  echo "   - Impact: Will be regenerated, causing administrator_login and admin_password to change"
+  echo "   - Why it's safe:"
+  echo "     * We import Key Vault secrets (preserves secret resources, not recreated)"
+  echo "     * Server will UPDATE credentials in-place (not replaced, no data loss)"
+  echo "     * Key Vault secrets will be updated with new values after apply"
+  echo "   - Resolution:"
+  echo "     * Accept password regeneration (this is actually a security best practice)"
+  echo "     * Update applications with new credentials from Key Vault after apply"
+  echo "   - Key insight: Unlike random_string.psql_suffix, these don't affect the server NAME,"
+  echo "                so they only cause credential updates (safe), not server replacement"
+  echo ""
+  echo "3. PostgreSQL Server Configuration Updates (Expected - Non-Breaking):"
+  echo "   - Resource: module.postgresql.azurerm_postgresql_flexible_server.apfs"
+  echo "   - Drifts:"
+  echo "     * maintenance_window block being added (day_of_week=0, start_hour=3, start_minute=15)"
+  echo "     * timeouts block being added (update = '30m')"
+  echo "     * authentication block structure change (from explicit block to computed)"
+  echo "     * identity block updates (principal_id and tenant_id computed)"
+  echo "     * storage_tier may change (P4 -> computed value)"
+  echo "   - Impact: These are non-breaking configuration enhancements from the module"
+  echo "   - Action: Safe to apply - these improve server management and don't affect data"
+  echo ""
+  echo "4. PostgreSQL Key Vault Secrets (Expected - Due to Password Regeneration):"
+  echo "   - Resources:"
+  echo "     * module.postgresql.azurerm_key_vault_secret.host[0]"
+  echo "     * module.postgresql.azurerm_key_vault_secret.port[0]"
+  echo "     * module.postgresql.azurerm_key_vault_secret.username[0]"
+  echo "     * module.postgresql.azurerm_key_vault_secret.password[0]"
+  echo "   - Drift: Secret names changing from 'psql-s5xqjn64-*' to new names (if server name changes)"
+  echo "   - Status: ✅ RESOLVED - Server name is preserved, so secret names will update in-place"
+  echo "   - Note: Secret values will be updated with new credentials (username/password regeneration)"
+  echo ""
+  echo "5. PostgreSQL Resources Being Created (Expected - New Features):"
+  echo "   - Resources:"
+  echo "     * module.postgresql.azurerm_key_vault_secret.database_connection_strings[*] (5 databases)"
+  echo "     * module.postgresql.azurerm_management_lock.can_not_delete_server[0]"
+  echo "     * module.postgresql.azurerm_monitor_metric_alert.postgres_metric_alerts[*] (3 alerts)"
+  echo "   - Status: These are new resources from the module that enhance functionality"
+  echo "   - Impact: No impact on existing data - these are additive features"
+  echo "   - Action: Safe to create - these improve security, monitoring, and management"
+  echo ""
+  echo "6. PostgreSQL Server Configurations and Databases (Expected - Due to Server ID Reference):"
+  echo "   - Resources:"
+  echo "     * module.postgresql.azurerm_postgresql_flexible_server_configuration.parameters[*]"
+  echo "     * module.postgresql.azurerm_postgresql_flexible_server_database.destroyable_database[*]"
+  echo "   - Status: ✅ RESOLVED - These will update in-place (not be replaced) since server name is preserved"
+  echo "   - Note: The server_id reference will remain the same, so these resources will update, not replace"
+  echo ""
+  echo "SUMMARY:"
+  echo "  ✅ Server replacement: PREVENTED (random_string.psql_suffix configuration fixed)"
+  echo "  ⚠️  Password regeneration: EXPECTED (random_password cannot be imported)"
+  echo "  ✅ Configuration updates: EXPECTED (non-breaking enhancements)"
+  echo "  ✅ New resources: EXPECTED (additive features)"
+  echo ""
+  echo "RECOMMENDED ACTION:"
+  echo "  1. ✅ random_string.psql_suffix is fixed (configuration updated)"
+  echo "  2. ⚠️  Accept password regeneration (update applications after apply)"
+  echo "  3. ✅ Apply configuration updates (safe, non-breaking)"
+  echo "  4. ✅ Create new resources (safe, additive)"
+  echo ""
+else
+  echo "PostgreSQL server information not available. If you see drifts related to PostgreSQL"
+  echo "random resources, ensure the PostgreSQL server import section ran successfully."
+  echo ""
 fi
 
 echo ""
@@ -2141,7 +2219,6 @@ echo "   - Resource: module.postgresql.azurerm_postgresql_flexible_server.apfs"
 echo "   - Changes:"
 echo "     * maintenance_window block (day_of_week=0, start_hour=3, start_minute=15)"
 echo "     * timeouts { update = '30m' }"
-echo "     * administrator_password (password rotation from random_password regeneration)"
 echo "   - Impact: Non-breaking enhancements for maintenance scheduling"
 echo "   - Action: Safe to apply"
 echo ""
@@ -2167,4 +2244,3 @@ echo "  - Secret value refreshes (Application Registration secret)"
 echo ""
 echo "For state migration details, see: migration/Readme.md"
 echo ""
-
