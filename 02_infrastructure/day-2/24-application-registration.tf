@@ -6,16 +6,13 @@ locals {
 }
 
 resource "azuread_service_principal" "msgraph" {
-  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing = true
+  client_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
 }
 
 module "application_registration" {
   source       = "github.com/Unique-AG/terraform-modules.git//modules/azure-entra-app-registration?ref=azure-entra-app-registration-3.0.0"
   display_name = var.application_registration_gitops_display_name
-  # Keep SP behavior consistent with previous versions
   role_assignments_required = false
-  # Ensure the client secret stays managed to avoid destroy
   client_secret_generation_config = {
     enabled     = true
     keyvault_id = data.azurerm_key_vault.key_vault_sensitive.id

@@ -434,6 +434,54 @@ variable "postgresql_metric_alerts_external_action_group_ids" {
   default     = []
 }
 
+variable "postgresql_metric_alerts" {
+  description = "Map of metric alerts for PostgreSQL server. Each alert includes name, description, severity, frequency, window_size, enabled status, and criteria."
+  type = map(object({
+    name        = string
+    description = string
+    severity    = number
+    frequency   = string
+    window_size = string
+    enabled     = bool
+    criteria = object({
+      metric_name = string
+      aggregation = string
+      operator    = string
+      threshold   = number
+    })
+  }))
+  default = {
+    default_cpu_alert = {
+      name        = "PostgreSQL High CPU Usage"
+      description = "Alert when CPU usage is above 80% for more than 30 minutes"
+      severity    = 2
+      frequency   = "PT5M"
+      window_size = "PT30M"
+      enabled     = true
+      criteria = {
+        metric_name = "cpu_percent"
+        aggregation = "Average"
+        operator    = "GreaterThan"
+        threshold   = 80
+      }
+    }
+    default_memory_alert = {
+      name        = "PostgreSQL High Memory Usage"
+      description = "Alert when memory usage is above 90% for more than 1 hour"
+      severity    = 1
+      frequency   = "PT15M"
+      window_size = "PT1H"
+      enabled     = true
+      criteria = {
+        metric_name = "memory_percent"
+        aggregation = "Average"
+        operator    = "GreaterThan"
+        threshold   = 90
+      }
+    }
+  }
+}
+
 variable "postgres_username" {
   description = "The username for the PostgreSQL server"
   type = object({
@@ -458,7 +506,21 @@ variable "postgres_password" {
   default = {
     length  = 32
     special = false
-    numeric = false
+    numeric = true
+  }
+}
+
+variable "postgres_suffix" {
+  description = "The suffix for the PostgreSQL server"
+  type = object({
+    length  = number
+    special = bool
+    upper   = bool
+  })
+  default = {
+    length  = 8
+    special = true
+    upper   = true
   }
 }
 
@@ -1073,6 +1135,12 @@ variable "application_gateway_gateway_ip_configuration_name" {
   default     = "gateway-ip-configuration"
 }
 
+variable "application_gateway_frontend_ip_configuration_name" {
+  description = "Name suffix for the frontend IP configuration of the Application Gateway. The full name will be constructed using the custom_subdomain_name, environment, and this value."
+  type        = string
+  default     = "feip"
+}
+
 variable "application_gateway_waf_policy_settings" {
   description = "Explicit name for the WAF policy settings for the Application Gateway"
   type = object({
@@ -1099,7 +1167,7 @@ variable "key_reader_key_vault_role_name" {
 variable "secret_reader_key_vault_role_name" {
   description = "Role name for the secret reader key vault"
   type        = string
-  default     = "Key Vault Secrets Reader"
+  default     = "Key Vault Secrets User"
 }
 
 variable "key_manager_key_vault_role_name" {
@@ -1130,4 +1198,10 @@ variable "cluster_rbac_admin_role_name" {
   description = "Role name for the cluster RBAC admin"
   type        = string
   default     = "Azure Kubernetes Service RBAC Cluster Admin"
+}
+
+variable "key_vault_crypto_service_encryption_user_role_name" {
+  description = "Role name for Key Vault Crypto Service Encryption User"
+  type        = string
+  default     = "Key Vault Crypto Service Encryption User"
 }

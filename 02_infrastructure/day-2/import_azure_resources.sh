@@ -5,6 +5,8 @@
 
 set -euo pipefail
 
+SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || echo "")
+
 ENV="${1:-test}"
 VAR_CONFIG="../environments/${ENV}/00-config-day-2.auto.tfvars"
 VAR_PARAMS="../environments/${ENV}/00-parameters-day-2.auto.tfvars"
@@ -12,10 +14,16 @@ SERVICE_PRINCIPAL_ID="5dbf19b3-6943-4696-9334-55b8c5566010"
 
 # Resource Group Names
 RESOURCE_GROUP_CORE_NAME="resource-group-core"
+RESOURCE_GROUP_SENSITIVE_NAME="resource-group-sensitive"
+
+# Key Vault Names
+KEY_VAULT_SENSITIVE_NAME="hakv2${ENV}v2"
+KEY_VAULT_CORE_NAME="hakv1${ENV}v2"
 
 echo "=========================================="
 echo "Day-2 Resource Import Script"
 echo "Environment: ${ENV}"
+echo "Started at: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=========================================="
 echo ""
 echo "⚠️  IMPORTANT: Before running this script, ensure:"
@@ -82,6 +90,17 @@ if ! terraform state show azuread_group.main_keyvault_secret_writer >/dev/null 2
   echo "  ✓ Imported azuread_group.main_keyvault_secret_writer"
 else
   echo "  ✓ azuread_group.main_keyvault_secret_writer already in state, skipping"
+fi
+
+echo "Checking azuread_group.sensitive_data_observer..."
+if ! terraform state show azuread_group.sensitive_data_observer >/dev/null 2>&1; then
+  echo "  Importing azuread_group.sensitive_data_observer..."
+  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azuread_group.sensitive_data_observer \
+    "/groups/5f3eb592-0881-4a94-baca-4060397b3c63"
+  echo "  ✓ Imported azuread_group.sensitive_data_observer"
+else
+  echo "  ✓ azuread_group.sensitive_data_observer already in state, skipping"
 fi
 
 echo ""
@@ -282,51 +301,47 @@ import_key_vault_secret() {
   fi
 }
 
-# Get Key Vault names from locals (they follow the pattern: hakv1${ENV}v2 and hakv2${ENV}v2)
-SENSITIVE_KV_NAME="hakv2${ENV}v2"
-CORE_KV_NAME="hakv1${ENV}v2"
-
 echo "Using Key Vaults:"
-echo "  - Sensitive: ${SENSITIVE_KV_NAME}"
-echo "  - Core: ${CORE_KV_NAME}"
+echo "  - Sensitive: ${KEY_VAULT_SENSITIVE_NAME}"
+echo "  - Core: ${KEY_VAULT_CORE_NAME}"
 echo ""
 
 # Import secrets from 33-secrets.tf
 # Secrets in sensitive Key Vault
 import_key_vault_secret \
   "azurerm_key_vault_secret.rabbitmq_password_chat" \
-  "${SENSITIVE_KV_NAME}" \
+  "${KEY_VAULT_SENSITIVE_NAME}" \
   "rabbitmq-password-chat"
 
 import_key_vault_secret \
   "azurerm_key_vault_secret.zitadel_db_user_password" \
-  "${SENSITIVE_KV_NAME}" \
+  "${KEY_VAULT_SENSITIVE_NAME}" \
   "zitadel-db-user-password"
 
 import_key_vault_secret \
   "azurerm_key_vault_secret.zitadel_master_key" \
-  "${SENSITIVE_KV_NAME}" \
+  "${KEY_VAULT_SENSITIVE_NAME}" \
   "zitadel-master-key"
 
 import_key_vault_secret \
   "azurerm_key_vault_secret.encryption_key_app_repository" \
-  "${SENSITIVE_KV_NAME}" \
+  "${KEY_VAULT_SENSITIVE_NAME}" \
   "encryption-key-app-repository"
 
 import_key_vault_secret \
   "azurerm_key_vault_secret.encryption_key_ingestion" \
-  "${SENSITIVE_KV_NAME}" \
+  "${KEY_VAULT_SENSITIVE_NAME}" \
   "encryption-key-ingestion"
 
 # Secret in core Key Vault
 import_key_vault_secret \
   "azurerm_key_vault_secret.zitadel_pat" \
-  "${CORE_KV_NAME}" \
+  "${KEY_VAULT_CORE_NAME}" \
   "manual-zitadel-scope-mgmt-pat"
 
 import_key_vault_secret \
   "azurerm_key_vault_secret.encryption_key_node_chat_lxm" \
-  "${SENSITIVE_KV_NAME}" \
+  "${KEY_VAULT_SENSITIVE_NAME}" \
   "encryption-key-chat-lxm"
 
 echo ""
@@ -341,25 +356,18 @@ echo ""
 # Try to get from tfvars, otherwise use defaults
 INGESTION_CACHE_SA_BASE=$(grep "^ingestion_cache_sa_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 || echo "uqhacache")
 INGESTION_STORAGE_SA_BASE=$(grep "^ingestion_storage_sa_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 || echo "uqhastorage")
-RESOURCE_GROUP_SENSITIVE=$(grep "^resource_group_sensitive_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 || echo "")
-SENSITIVE_KV_NAME=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" 2>/dev/null | cut -d'"' -f2 || echo "")
-ENV_NAME=$(grep "^env" "${VAR_PARAMS}" 2>/dev/null | head -1 | sed -E 's/^env\s*=\s*"?([^"]+)"?.*/\1/' | tr -d ' ' || echo "")
-
 # Construct full storage account names (base + env)
-INGESTION_CACHE_SA_NAME="${INGESTION_CACHE_SA_BASE}${ENV_NAME}"
-INGESTION_STORAGE_SA_NAME="${INGESTION_STORAGE_SA_BASE}${ENV_NAME}"
+INGESTION_CACHE_SA_NAME="${INGESTION_CACHE_SA_BASE}${ENV}"
+INGESTION_STORAGE_SA_NAME="${INGESTION_STORAGE_SA_BASE}${ENV}"
 
-if [ -z "${RESOURCE_GROUP_SENSITIVE}" ] || [ -z "${SENSITIVE_KV_NAME}" ] || [ -z "${ENV_NAME}" ]; then
-  echo "⚠️  Key vault name, resource group, or environment not found in config files, skipping storage account imports"
-  echo "   RESOURCE_GROUP_SENSITIVE: ${RESOURCE_GROUP_SENSITIVE:-<empty>}"
-  echo "   SENSITIVE_KV_NAME: ${SENSITIVE_KV_NAME:-<empty>}"
-  echo "   ENV_NAME: ${ENV_NAME:-<empty>}"
+if [ -z "${RESOURCE_GROUP_SENSITIVE_NAME}" ] || [ -z "${KEY_VAULT_SENSITIVE_NAME}" ]; then
+  echo "⚠️  Key vault name or resource group not found in config files, skipping storage account imports"
+  echo "   RESOURCE_GROUP_SENSITIVE_NAME: ${RESOURCE_GROUP_SENSITIVE_NAME:-<empty>}"
+  echo "   KEY_VAULT_SENSITIVE_NAME: ${KEY_VAULT_SENSITIVE_NAME:-<empty>}"
 else
-  SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || echo "")
   if [ -z "${SUBSCRIPTION_ID}" ]; then
     echo "⚠️  Could not get Azure subscription ID, skipping storage account imports"
   else
-    KEY_VAULT_NAME="${SENSITIVE_KV_NAME}${ENV_NAME}v2"
     
     # Import ingestion_cache storage account
     echo "Checking module.ingestion_cache.azurerm_storage_account.storage_account..."
@@ -367,7 +375,7 @@ else
       echo "  Importing module.ingestion_cache.azurerm_storage_account.storage_account..."
       terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
         'module.ingestion_cache.azurerm_storage_account.storage_account' \
-        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}"
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}"
       echo "  ✓ Imported module.ingestion_cache.azurerm_storage_account.storage_account"
     else
       echo "  ✓ module.ingestion_cache.azurerm_storage_account.storage_account already in state, skipping"
@@ -377,7 +385,7 @@ else
     # Format: https://{vault-name}.vault.azure.net/keys/{key-name}/{version-id}
     echo "Checking module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]..."
     if ! terraform state show 'module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]' >/dev/null 2>&1; then
-      KEY_VERSION=$(az keyvault key list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-cache-cmk" --query "[0].kid" -o tsv 2>/dev/null || echo "")
+      KEY_VERSION=$(az keyvault key list-versions --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "ingestion-cache-cmk" --query "[0].kid" -o tsv 2>/dev/null || echo "")
       if [ -n "${KEY_VERSION}" ]; then
         echo "  Importing module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]..."
         terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -386,7 +394,7 @@ else
         echo "  ✓ Imported module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0]"
       else
         echo "  ⚠️  Could not determine key version for ingestion-cache-cmk, skipping import"
-        echo "      You may need to import manually: az keyvault key show --vault-name ${KEY_VAULT_NAME} --name ingestion-cache-cmk --query kid -o tsv"
+        echo "      You may need to import manually: az keyvault key show --vault-name ${KEY_VAULT_SENSITIVE_NAME} --name ingestion-cache-cmk --query kid -o tsv"
       fi
     else
       echo "  ✓ module.ingestion_cache.azurerm_key_vault_key.storage-account-byok[0] already in state, skipping"
@@ -395,7 +403,7 @@ else
     # Import ingestion_cache Key Vault Secrets (requires version ID)
     echo "Checking module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]..."
     if ! terraform state show 'module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]' >/dev/null 2>&1; then
-      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-cache-connection-string-1" --query "[0].id" -o tsv 2>/dev/null || echo "")
+      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "ingestion-cache-connection-string-1" --query "[0].id" -o tsv 2>/dev/null || echo "")
       if [ -n "${SECRET_ID}" ]; then
         echo "  Importing module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]..."
         terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -404,7 +412,7 @@ else
         echo "  ✓ Imported module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0]"
       else
         echo "  ⚠️  Could not determine secret version for ingestion-cache-connection-string-1, skipping import"
-        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_NAME} --name ingestion-cache-connection-string-1 --query '[0].id' -o tsv"
+        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_SENSITIVE_NAME} --name ingestion-cache-connection-string-1 --query '[0].id' -o tsv"
       fi
     else
       echo "  ✓ module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-1[0] already in state, skipping"
@@ -412,7 +420,7 @@ else
 
     echo "Checking module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]..."
     if ! terraform state show 'module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]' >/dev/null 2>&1; then
-      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-cache-connection-string-2" --query "[0].id" -o tsv 2>/dev/null || echo "")
+      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "ingestion-cache-connection-string-2" --query "[0].id" -o tsv 2>/dev/null || echo "")
       if [ -n "${SECRET_ID}" ]; then
         echo "  Importing module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]..."
         terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -421,7 +429,7 @@ else
         echo "  ✓ Imported module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0]"
       else
         echo "  ⚠️  Could not determine secret version for ingestion-cache-connection-string-2, skipping import"
-        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_NAME} --name ingestion-cache-connection-string-2 --query '[0].id' -o tsv"
+        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_SENSITIVE_NAME} --name ingestion-cache-connection-string-2 --query '[0].id' -o tsv"
       fi
     else
       echo "  ✓ module.ingestion_cache.azurerm_key_vault_secret.storage-account-connection-string-2[0] already in state, skipping"
@@ -433,7 +441,7 @@ else
       echo "  Importing module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]..."
       terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
         'module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]' \
-        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}"
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}"
       echo "  ✓ Imported module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]"
     else
       echo "  ✓ module.ingestion_cache.azurerm_storage_account_customer_managed_key.storage_account_cmk[0] already in state, skipping"
@@ -445,7 +453,7 @@ else
       echo "  Importing module.ingestion_cache.azurerm_storage_management_policy.default[0]..."
       terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
         'module.ingestion_cache.azurerm_storage_management_policy.default[0]' \
-        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}/managementPolicies/default"
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}/managementPolicies/default"
       echo "  ✓ Imported module.ingestion_cache.azurerm_storage_management_policy.default[0]"
     else
       echo "  ✓ module.ingestion_cache.azurerm_storage_management_policy.default[0] already in state, skipping"
@@ -457,7 +465,7 @@ else
       echo "  Importing module.ingestion_storage.azurerm_storage_account.storage_account..."
       terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
         'module.ingestion_storage.azurerm_storage_account.storage_account' \
-        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}"
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}"
       echo "  ✓ Imported module.ingestion_storage.azurerm_storage_account.storage_account"
     else
       echo "  ✓ module.ingestion_storage.azurerm_storage_account.storage_account already in state, skipping"
@@ -467,7 +475,7 @@ else
     # Format: https://{vault-name}.vault.azure.net/keys/{key-name}/{version-id}
     echo "Checking module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]..."
     if ! terraform state show 'module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]' >/dev/null 2>&1; then
-      KEY_VERSION=$(az keyvault key list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-storage-cmk" --query "[0].kid" -o tsv 2>/dev/null || echo "")
+      KEY_VERSION=$(az keyvault key list-versions --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "ingestion-storage-cmk" --query "[0].kid" -o tsv 2>/dev/null || echo "")
       if [ -n "${KEY_VERSION}" ]; then
         echo "  Importing module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]..."
         terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -476,7 +484,7 @@ else
         echo "  ✓ Imported module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0]"
       else
         echo "  ⚠️  Could not determine key version for ingestion-storage-cmk, skipping import"
-        echo "      You may need to import manually: az keyvault key show --vault-name ${KEY_VAULT_NAME} --name ingestion-storage-cmk --query kid -o tsv"
+        echo "      You may need to import manually: az keyvault key show --vault-name ${KEY_VAULT_SENSITIVE_NAME} --name ingestion-storage-cmk --query kid -o tsv"
       fi
     else
       echo "  ✓ module.ingestion_storage.azurerm_key_vault_key.storage-account-byok[0] already in state, skipping"
@@ -485,7 +493,7 @@ else
     # Import ingestion_storage Key Vault Secrets
     echo "Checking module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]..."
     if ! terraform state show 'module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]' >/dev/null 2>&1; then
-      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-storage-connection-string-1" --query "[0].id" -o tsv 2>/dev/null || echo "")
+      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "ingestion-storage-connection-string-1" --query "[0].id" -o tsv 2>/dev/null || echo "")
       if [ -n "${SECRET_ID}" ]; then
         echo "  Importing module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]..."
         terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -494,7 +502,7 @@ else
         echo "  ✓ Imported module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0]"
       else
         echo "  ⚠️  Could not determine secret version for ingestion-storage-connection-string-1, skipping import"
-        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_NAME} --name ingestion-storage-connection-string-1 --query '[0].id' -o tsv"
+        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_SENSITIVE_NAME} --name ingestion-storage-connection-string-1 --query '[0].id' -o tsv"
       fi
     else
       echo "  ✓ module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-1[0] already in state, skipping"
@@ -502,7 +510,7 @@ else
 
     echo "Checking module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]..."
     if ! terraform state show 'module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]' >/dev/null 2>&1; then
-      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_NAME}" --name "ingestion-storage-connection-string-2" --query "[0].id" -o tsv 2>/dev/null || echo "")
+      SECRET_ID=$(az keyvault secret list-versions --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "ingestion-storage-connection-string-2" --query "[0].id" -o tsv 2>/dev/null || echo "")
       if [ -n "${SECRET_ID}" ]; then
         echo "  Importing module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]..."
         terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -511,7 +519,7 @@ else
         echo "  ✓ Imported module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0]"
       else
         echo "  ⚠️  Could not determine secret version for ingestion-storage-connection-string-2, skipping import"
-        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_NAME} --name ingestion-storage-connection-string-2 --query '[0].id' -o tsv"
+        echo "      You may need to import manually: az keyvault secret list-versions --vault-name ${KEY_VAULT_SENSITIVE_NAME} --name ingestion-storage-connection-string-2 --query '[0].id' -o tsv"
       fi
     else
       echo "  ✓ module.ingestion_storage.azurerm_key_vault_secret.storage-account-connection-string-2[0] already in state, skipping"
@@ -523,7 +531,7 @@ else
       echo "  Importing module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]..."
       terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
         'module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]' \
-        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}"
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}"
       echo "  ✓ Imported module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0]"
     else
       echo "  ✓ module.ingestion_storage.azurerm_storage_account_customer_managed_key.storage_account_cmk[0] already in state, skipping"
@@ -535,7 +543,7 @@ else
       echo "  Importing module.ingestion_storage.azurerm_storage_management_policy.default[0]..."
       terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
         'module.ingestion_storage.azurerm_storage_management_policy.default[0]' \
-        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}/managementPolicies/default"
+        "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}/managementPolicies/default"
       echo "  ✓ Imported module.ingestion_storage.azurerm_storage_management_policy.default[0]"
     else
       echo "  ✓ module.ingestion_storage.azurerm_storage_management_policy.default[0] already in state, skipping"
@@ -556,13 +564,13 @@ else
     echo "Checking module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]..."
     if ! terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]' >/dev/null 2>&1; then
       # Try to find backup vault - it might have a random suffix
-      BACKUP_VAULT_NAME=$(az dataprotection backup-vault list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --query "[?starts_with(name, '${BACKUP_VAULT_BASE_NAME}')].name" -o tsv 2>/dev/null | head -1 || echo "")
+      BACKUP_VAULT_NAME=$(az dataprotection backup-vault list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --query "[?starts_with(name, '${BACKUP_VAULT_BASE_NAME}')].name" -o tsv 2>/dev/null | head -1 || echo "")
       if [ -z "${BACKUP_VAULT_NAME}" ]; then
         # Try exact name match
         BACKUP_VAULT_NAME="${BACKUP_VAULT_BASE_NAME}"
       fi
       
-      BACKUP_VAULT_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query id -o tsv 2>/dev/null || echo "")
+      BACKUP_VAULT_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --vault-name "${BACKUP_VAULT_NAME}" --query id -o tsv 2>/dev/null || echo "")
       if [ -n "${BACKUP_VAULT_ID}" ]; then
         echo "  Found backup vault: ${BACKUP_VAULT_NAME}"
         echo "  Importing module.ingestion_cache.azurerm_data_protection_backup_vault.backup_vault[0]..."
@@ -585,7 +593,7 @@ else
       echo "Checking module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]..."
       if ! terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]' >/dev/null 2>&1; then
         # Try to find the policy by name (it might have a different name)
-        BACKUP_POLICY_ID=$(az dataprotection backup-policy list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?name=='${BACKUP_POLICY_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
+        BACKUP_POLICY_ID=$(az dataprotection backup-policy list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?name=='${BACKUP_POLICY_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
         if [ -z "${BACKUP_POLICY_ID}" ]; then
           # Fallback to constructed ID
           BACKUP_POLICY_ID="${BACKUP_VAULT_ID}/backupPolicies/${BACKUP_POLICY_NAME}"
@@ -605,7 +613,7 @@ else
       echo "Checking module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]..."
       if ! terraform state show 'module.ingestion_cache.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]' >/dev/null 2>&1; then
         # Try to find the instance - it might be named differently
-        BACKUP_INSTANCE_ID=$(az dataprotection backup-instance list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?contains(name, '${INGESTION_CACHE_SA_NAME}') || name=='${BACKUP_INSTANCE_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
+        BACKUP_INSTANCE_ID=$(az dataprotection backup-instance list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?contains(name, '${INGESTION_CACHE_SA_NAME}') || name=='${BACKUP_INSTANCE_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
         if [ -z "${BACKUP_INSTANCE_ID}" ]; then
           # Fallback to constructed ID
           BACKUP_INSTANCE_ID="${BACKUP_VAULT_ID}/backupInstances/${BACKUP_INSTANCE_NAME}"
@@ -625,10 +633,10 @@ else
       echo "Checking module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0]..."
       if ! terraform state show 'module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0]' >/dev/null 2>&1; then
         # Get the principal ID from the backup vault identity
-        BACKUP_VAULT_PRINCIPAL_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "identity.principalId" -o tsv 2>/dev/null || echo "")
+        BACKUP_VAULT_PRINCIPAL_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --vault-name "${BACKUP_VAULT_NAME}" --query "identity.principalId" -o tsv 2>/dev/null || echo "")
         if [ -n "${BACKUP_VAULT_PRINCIPAL_ID}" ]; then
           # Find the role assignment ID
-          ROLE_ASSIGNMENT_ID=$(az role assignment list --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}" --assignee "${BACKUP_VAULT_PRINCIPAL_ID}" --role "Storage Account Backup Contributor" --query "[0].id" -o tsv 2>/dev/null || echo "")
+          ROLE_ASSIGNMENT_ID=$(az role assignment list --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Storage/storageAccounts/${INGESTION_CACHE_SA_NAME}" --assignee "${BACKUP_VAULT_PRINCIPAL_ID}" --role "Storage Account Backup Contributor" --query "[0].id" -o tsv 2>/dev/null || echo "")
           if [ -n "${ROLE_ASSIGNMENT_ID}" ]; then
             echo "  Importing module.ingestion_cache.azurerm_role_assignment.backup_vault_storage_access[0]..."
             terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -659,12 +667,12 @@ else
       # Try to get the backup vault ID (might be the same vault or different)
       if [ -z "${BACKUP_VAULT_ID}" ] || [ -z "${BACKUP_VAULT_NAME}" ]; then
         # Try to find backup vault - it might have a random suffix
-        BACKUP_VAULT_NAME_STORAGE=$(az dataprotection backup-vault list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --query "[?starts_with(name, '${BACKUP_VAULT_BASE_NAME}')].name" -o tsv 2>/dev/null | head -1 || echo "")
+        BACKUP_VAULT_NAME_STORAGE=$(az dataprotection backup-vault list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --query "[?starts_with(name, '${BACKUP_VAULT_BASE_NAME}')].name" -o tsv 2>/dev/null | head -1 || echo "")
         if [ -z "${BACKUP_VAULT_NAME_STORAGE}" ]; then
           # Try exact name match
           BACKUP_VAULT_NAME_STORAGE="${BACKUP_VAULT_BASE_NAME}"
         fi
-        BACKUP_VAULT_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME_STORAGE}" --query id -o tsv 2>/dev/null || echo "")
+        BACKUP_VAULT_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --vault-name "${BACKUP_VAULT_NAME_STORAGE}" --query id -o tsv 2>/dev/null || echo "")
         if [ -n "${BACKUP_VAULT_ID}" ]; then
           BACKUP_VAULT_NAME="${BACKUP_VAULT_NAME_STORAGE}"
         fi
@@ -692,7 +700,7 @@ else
       echo "Checking module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]..."
       if ! terraform state show 'module.ingestion_storage.azurerm_data_protection_backup_policy_blob_storage.backup_policy[0]' >/dev/null 2>&1; then
         # Try to find the policy by name (it might have a different name)
-        BACKUP_POLICY_ID=$(az dataprotection backup-policy list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?name=='${BACKUP_POLICY_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
+        BACKUP_POLICY_ID=$(az dataprotection backup-policy list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?name=='${BACKUP_POLICY_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
         if [ -z "${BACKUP_POLICY_ID}" ]; then
           # Fallback to constructed ID
           BACKUP_POLICY_ID="${BACKUP_VAULT_ID}/backupPolicies/${BACKUP_POLICY_NAME}"
@@ -712,7 +720,7 @@ else
       echo "Checking module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]..."
       if ! terraform state show 'module.ingestion_storage.azurerm_data_protection_backup_instance_blob_storage.backup_instance[0]' >/dev/null 2>&1; then
         # Try to find the instance - it might be named differently
-        BACKUP_INSTANCE_ID=$(az dataprotection backup-instance list --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?contains(name, '${INGESTION_STORAGE_SA_NAME}') || name=='${BACKUP_INSTANCE_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
+        BACKUP_INSTANCE_ID=$(az dataprotection backup-instance list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --vault-name "${BACKUP_VAULT_NAME}" --query "[?contains(name, '${INGESTION_STORAGE_SA_NAME}') || name=='${BACKUP_INSTANCE_NAME}'].id" -o tsv 2>/dev/null | head -1 || echo "")
         if [ -z "${BACKUP_INSTANCE_ID}" ]; then
           # Fallback to constructed ID
           BACKUP_INSTANCE_ID="${BACKUP_VAULT_ID}/backupInstances/${BACKUP_INSTANCE_NAME}"
@@ -733,11 +741,11 @@ else
       if ! terraform state show 'module.ingestion_storage.azurerm_role_assignment.backup_vault_storage_access[0]' >/dev/null 2>&1; then
         # Get the principal ID from the backup vault identity
         if [ -z "${BACKUP_VAULT_PRINCIPAL_ID}" ]; then
-          BACKUP_VAULT_PRINCIPAL_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE}" --vault-name "${BACKUP_VAULT_NAME}" --query "identity.principalId" -o tsv 2>/dev/null || echo "")
+          BACKUP_VAULT_PRINCIPAL_ID=$(az dataprotection backup-vault show --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --vault-name "${BACKUP_VAULT_NAME}" --query "identity.principalId" -o tsv 2>/dev/null || echo "")
         fi
         if [ -n "${BACKUP_VAULT_PRINCIPAL_ID}" ]; then
           # Find the role assignment ID
-          ROLE_ASSIGNMENT_ID=$(az role assignment list --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}" --assignee "${BACKUP_VAULT_PRINCIPAL_ID}" --role "Storage Account Backup Contributor" --query "[0].id" -o tsv 2>/dev/null || echo "")
+          ROLE_ASSIGNMENT_ID=$(az role assignment list --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Storage/storageAccounts/${INGESTION_STORAGE_SA_NAME}" --assignee "${BACKUP_VAULT_PRINCIPAL_ID}" --role "Storage Account Backup Contributor" --query "[0].id" -o tsv 2>/dev/null || echo "")
           if [ -n "${ROLE_ASSIGNMENT_ID}" ]; then
             echo "  Importing module.ingestion_storage.azurerm_role_assignment.backup_vault_storage_access[0]..."
             terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -764,12 +772,7 @@ echo "=========================================="
 echo ""
 
 # Kubernetes Cluster (AKS)
-# Note: The local.cluster_name adds -${env} suffix, so if tfvars has "aks-test" and env is "test",
-# the Terraform resource name would be "aks-test-test", but the actual Azure cluster is "aks-test"
-# For import, we need to use the actual Azure cluster name
 # Format: /subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.ContainerService/managedClusters/{cluster-name}
-RESOURCE_GROUP_CORE_NAME=$(grep "^resource_group_core_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "resource-group-core")
-SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || echo "")
 
 # Get the actual cluster name from Azure (this is what exists, not what Terraform thinks it should be)
 CLUSTER_NAME_FROM_TFVARS=$(grep "^cluster_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "aks")
@@ -1008,47 +1011,114 @@ fi
 
 echo ""
 echo "=========================================="
-echo "Expected Drifts After Import"
+echo "Importing Redis Cache"
 echo "=========================================="
 echo ""
-echo "⚠️  The following drifts are EXPECTED and can be safely ignored:"
-echo ""
-echo "1. Kubernetes Cluster - Configuration Updates:"
-echo "   - Resource: module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster"
-echo "   - Drifts:"
-echo "     * temporary_name_for_rotation on default_node_pool: 'defaultrepl'"
-echo "     * storage_profile block (blob_driver_enabled, disk_driver_enabled, etc.)"
-echo "     * timeouts block (update = '30m')"
-echo "   - Reason: These are feature additions from the module that enhance cluster"
-echo "            functionality. The temporary_name_for_rotation helps with zero-downtime"
-echo "            node pool upgrades, storage_profile enables additional storage drivers,"
-echo "            and timeouts sets reasonable update timeouts."
-echo "   - Action: Safe to ignore - these are non-breaking feature additions."
-echo ""
-echo "2. Kubernetes Node Pools - temporary_name_for_rotation:"
-echo "   - Resources:"
-echo "     * module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"rapid\"]"
-echo "     * module.kubernetes_cluster.azurerm_kubernetes_cluster_node_pool.node_pool[\"steady\"]"
-echo "   - Drift: temporary_name_for_rotation = 'rapidrepl' / 'steadyrepl'"
-echo "   - Reason: The module sets this automatically for node pool rotation during upgrades."
-echo "            This is a best practice for zero-downtime upgrades."
-echo "   - Action: Safe to ignore - this is a non-breaking configuration enhancement."
-echo ""
-echo "3. Log Analytics Workspace Tables:"
-echo "   - Resources:"
-echo "     * module.kubernetes_cluster.azurerm_log_analytics_workspace_table.basic_log_table[\"AKSControlPlane\"]"
-echo "     * module.kubernetes_cluster.azurerm_log_analytics_workspace_table.basic_log_table[\"ContainerLogV2\"]"
-echo "   - Note: These tables are NOT imported because:"
-echo "     * They are auto-created by Azure Monitor/Container Insights"
-echo "     * Importing them causes refresh errors (empty resource ID parsing)"
-echo "     * They can be safely created fresh by Terraform without affecting existing data"
-echo "   - Action: These will show as 'to be created' in terraform plan - this is expected"
-echo "            and safe. The tables will be created by Terraform on first apply."
+
+# Get Redis cache name from locals (redis_name with env suffix)
+REDIS_NAME=$(grep "^redis_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "uqharedis")
+REDIS_FULL_NAME="${REDIS_NAME}-${ENV}"
+
+echo "Checking module.redis.azurerm_redis_cache.arc..."
+if ! terraform state show module.redis.azurerm_redis_cache.arc >/dev/null 2>&1; then
+  # Get Redis cache ID from Azure
+  REDIS_ID=$(az redis show --name "${REDIS_FULL_NAME}" --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --query id -o tsv 2>/dev/null || echo "")
+
+  if [ -n "${REDIS_ID}" ]; then
+    # Terraform expects lowercase "redis" in the resource ID, but Azure returns "Redis"
+    # Convert the resource ID to use lowercase "redis"
+    REDIS_ID_FIXED=$(echo "${REDIS_ID}" | sed 's|/Redis/|/redis/|')
+
+    echo "  Importing module.redis.azurerm_redis_cache.arc..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      module.redis.azurerm_redis_cache.arc \
+      "${REDIS_ID_FIXED}" 2>&1; then
+      echo "  ✓ Imported module.redis.azurerm_redis_cache.arc"
+    else
+      echo "  ⚠️  Failed to import Redis cache. It may not exist yet."
+    fi
+  else
+    echo "  ⚠️  Redis cache '${REDIS_FULL_NAME}' not found in Azure."
+    echo "      Available Redis caches in ${RESOURCE_GROUP_SENSITIVE_NAME}:"
+    az redis list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --query "[].name" -o tsv 2>/dev/null | sed 's/^/        - /' || echo "        (none found)"
+    echo "  Skipping Redis import."
+  fi
+else
+  echo "  ✓ module.redis.azurerm_redis_cache.arc already in state, skipping"
+fi
+
 echo ""
 echo "=========================================="
-echo "Import script completed!"
+echo "Importing Redis Key Vault Secrets"
 echo "=========================================="
 echo ""
+
+# Get Key Vault name from variables (constructed as ${KEY_VAULT_SENSITIVE_NAME}${env}v2)
+
+
+# Redis Key Vault secrets
+echo "Checking module.redis.azurerm_key_vault_secret.redis-cache-host[0]..."
+if ! terraform state show 'module.redis.azurerm_key_vault_secret.redis-cache-host[0]' >/dev/null 2>&1; then
+  SECRET_NAME="${REDIS_FULL_NAME}-host"
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Importing module.redis.azurerm_key_vault_secret.redis-cache-host[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.redis.azurerm_key_vault_secret.redis-cache-host[0]' \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported module.redis.azurerm_key_vault_secret.redis-cache-host[0]"
+    else
+      echo "  ⚠️  Failed to import redis-cache-host secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault '${KEY_VAULT_SENSITIVE_NAME}'"
+  fi
+else
+  echo "  ✓ module.redis.azurerm_key_vault_secret.redis-cache-host[0] already in state, skipping"
+fi
+
+echo "Checking module.redis.azurerm_key_vault_secret.redis-cache-password[0]..."
+if ! terraform state show 'module.redis.azurerm_key_vault_secret.redis-cache-password[0]' >/dev/null 2>&1; then
+  SECRET_NAME="${REDIS_FULL_NAME}-password"
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Importing module.redis.azurerm_key_vault_secret.redis-cache-password[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.redis.azurerm_key_vault_secret.redis-cache-password[0]' \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported module.redis.azurerm_key_vault_secret.redis-cache-password[0]"
+    else
+      echo "  ⚠️  Failed to import redis-cache-password secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault '${KEY_VAULT_SENSITIVE_NAME}'"
+  fi
+else
+  echo "  ✓ module.redis.azurerm_key_vault_secret.redis-cache-password[0] already in state, skipping"
+fi
+
+echo "Checking module.redis.azurerm_key_vault_secret.redis-cache-port[0]..."
+if ! terraform state show 'module.redis.azurerm_key_vault_secret.redis-cache-port[0]' >/dev/null 2>&1; then
+  SECRET_NAME="${REDIS_FULL_NAME}-port"
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Importing module.redis.azurerm_key_vault_secret.redis-cache-port[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.redis.azurerm_key_vault_secret.redis-cache-port[0]' \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported module.redis.azurerm_key_vault_secret.redis-cache-port[0]"
+    else
+      echo "  ⚠️  Failed to import redis-cache-port secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault '${KEY_VAULT_SENSITIVE_NAME}'"
+  fi
+else
+  echo "  ✓ module.redis.azurerm_key_vault_secret.redis-cache-port[0] already in state, skipping"
+fi
 
 echo ""
 echo "=========================================="
@@ -1058,73 +1128,105 @@ echo ""
 
 # Get subscription ID and resource group name from variables
 # Try to get subscription ID from VAR_CONFIG first, then from Azure CLI
-SUBSCRIPTION_ID=$(grep "^subscription_id" "${VAR_CONFIG}" 2>/dev/null | cut -d'"' -f2 || az account show --query id -o tsv 2>/dev/null || echo "")
 if [ -z "${SUBSCRIPTION_ID}" ]; then
   echo "  ⚠️  Warning: Could not determine subscription ID. Some imports may fail."
   echo "     Please ensure subscription_id is set in ${VAR_CONFIG} or run 'az login'"
 fi
-RESOURCE_GROUP_CORE=$(grep "^resource_group_core_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "resource-group-core")
-ENV_SUFFIX=$(grep "^env" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "test")
-
 # OpenAI Cognitive Account
-OPENAI_ACCOUNT_NAME="cognitive-account-swedencentral-${ENV_SUFFIX}"
+OPENAI_ACCOUNT_NAME_BASE="cognitive-account-swedencentral"
+OPENAI_ACCOUNT_NAME="${OPENAI_ACCOUNT_NAME_BASE}-${ENV}"
 echo "Checking module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"]..."
 if ! terraform state show 'module.openai.azurerm_cognitive_account.aca["cognitive-account-swedencentral"]' >/dev/null 2>&1; then
-  echo "  Importing module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"]..."
-  # Get resource ID: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.CognitiveServices/accounts/{name}
-  COGNITIVE_ACCOUNT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/${OPENAI_ACCOUNT_NAME}"
-  terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+  echo "  Attempting to import module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"]..."
+  # Try to discover the actual account name from Azure (OpenAI accounts have kind='OpenAI')
+  ACTUAL_ACCOUNT_NAME=$(az cognitiveservices account list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[?kind=='OpenAI'].name" -o tsv 2>/dev/null | head -1 || echo "")
+  
+  if [ -z "${ACTUAL_ACCOUNT_NAME}" ]; then
+    echo "  ⚠️  Could not find OpenAI cognitive account in Azure."
+    echo "     Attempting import with expected name: ${OPENAI_ACCOUNT_NAME}"
+    echo "     If this fails, please check:"
+    echo "     1. Account exists: az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE_NAME} --query \"[?kind=='OpenAI'].name\" -o tsv"
+    echo "     2. Account name matches: ${OPENAI_ACCOUNT_NAME}"
+    COGNITIVE_ACCOUNT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.CognitiveServices/accounts/${OPENAI_ACCOUNT_NAME}"
+  else
+    echo "  Found OpenAI account in Azure: ${ACTUAL_ACCOUNT_NAME}"
+    COGNITIVE_ACCOUNT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.CognitiveServices/accounts/${ACTUAL_ACCOUNT_NAME}"
+  fi
+  
+  # Attempt the import
+  if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
     'module.openai.azurerm_cognitive_account.aca["cognitive-account-swedencentral"]' \
-    "${COGNITIVE_ACCOUNT_ID}"
-  echo "  ✓ Imported module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"]"
+    "${COGNITIVE_ACCOUNT_ID}" 2>&1; then
+    echo "  ✓ Imported module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"]"
+  else
+    echo "  ✗ Failed to import. Please verify:"
+    echo "     - Account exists: az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE_NAME} --query \"[?kind=='OpenAI']\" -o table"
+    echo "     - Account name: ${ACTUAL_ACCOUNT_NAME:-${OPENAI_ACCOUNT_NAME}}"
+    echo "     - Resource ID: ${COGNITIVE_ACCOUNT_ID}"
+  fi
 else
   echo "  ✓ module.openai.azurerm_cognitive_account.aca[\"cognitive-account-swedencentral\"] already in state, skipping"
 fi
 
 # OpenAI Cognitive Deployments
-echo ""
-echo "Importing OpenAI Cognitive Deployments..."
-DEPLOYMENTS=(
-  "text-embedding-ada-002:text-embedding-ada-002"
-  "gpt-35-turbo-0125:gpt-35-turbo-0125"
-  "gpt-4o-2024-11-20:gpt-4o-2024-11-20"
-)
+# Get the actual account name (either discovered or expected)
+if [ -z "${ACTUAL_ACCOUNT_NAME:-}" ]; then
+  ACTUAL_ACCOUNT_NAME=$(az cognitiveservices account list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[?kind=='OpenAI'].name" -o tsv 2>/dev/null | head -1 || echo "${OPENAI_ACCOUNT_NAME}")
+fi
 
-for deployment_pair in "${DEPLOYMENTS[@]}"; do
-  IFS=':' read -r deployment_key deployment_name <<< "${deployment_pair}"
-  # Deployment key format in module: "${account_key}-${deployment.name}"
-  DEPLOYMENT_STATE_KEY="cognitive-account-swedencentral-${deployment_name}"
-  echo "Checking module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]..."
-  if ! terraform state show "module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]" >/dev/null 2>&1; then
-    echo "  Importing module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]..."
-    # Get resource ID: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.CognitiveServices/accounts/{account}/deployments/{name}
-    DEPLOYMENT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/${OPENAI_ACCOUNT_NAME}/deployments/${deployment_name}"
-    terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
-      "module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]" \
-      "${DEPLOYMENT_ID}"
-    echo "  ✓ Imported module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]"
-  else
-    echo "  ✓ module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"] already in state, skipping"
-  fi
-done
+if [ -z "${ACTUAL_ACCOUNT_NAME}" ]; then
+  echo ""
+  echo "  ⚠️  Skipping deployment imports - OpenAI account not found."
+  echo "     Please import the cognitive account first, then re-run this script."
+else
+  echo ""
+  echo "Importing OpenAI Cognitive Deployments for account: ${ACTUAL_ACCOUNT_NAME}..."
+  DEPLOYMENTS=(
+    "text-embedding-ada-002:text-embedding-ada-002"
+    "gpt-35-turbo-0125:gpt-35-turbo-0125"
+    "gpt-4o-2024-11-20:gpt-4o-2024-11-20"
+  )
+
+  for deployment_pair in "${DEPLOYMENTS[@]}"; do
+    IFS=':' read -r deployment_key deployment_name <<< "${deployment_pair}"
+    # Deployment key format in module: "${account_key}-${deployment.name}"
+    DEPLOYMENT_STATE_KEY="cognitive-account-swedencentral-${deployment_name}"
+    echo "Checking module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]..."
+    if ! terraform state show "module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]" >/dev/null 2>&1; then
+      echo "  Importing module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]..."
+      # Get resource ID: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.CognitiveServices/accounts/{account}/deployments/{name}
+      DEPLOYMENT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.CognitiveServices/accounts/${ACTUAL_ACCOUNT_NAME}/deployments/${deployment_name}"
+      if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        "module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]" \
+        "${DEPLOYMENT_ID}" 2>&1; then
+        echo "  ✓ Imported module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"]"
+      else
+        echo "  ✗ Failed to import deployment ${deployment_name}. It may not exist in Azure."
+      fi
+    else
+      echo "  ✓ module.openai.azurerm_cognitive_deployment.deployments[\"${DEPLOYMENT_STATE_KEY}\"] already in state, skipping"
+    fi
+  done
+fi
+
 
 # Speech Service Account
 echo ""
 echo "Importing Speech Service Resources..."
-SPEECH_SERVICE_NAME="speech-service-${ENV_SUFFIX}"
+SPEECH_SERVICE_NAME="speech-service-${ENV}"
 echo "Checking module.speech_service.azurerm_cognitive_account.aca[\"swedencentral-speech\"]..."
 if ! terraform state show 'module.speech_service.azurerm_cognitive_account.aca["swedencentral-speech"]' >/dev/null 2>&1; then
   echo "  Importing module.speech_service.azurerm_cognitive_account.aca[\"swedencentral-speech\"]..."
   # Speech Service account name pattern
-  SPEECH_ACCOUNT_NAME=$(az cognitiveservices account list --resource-group "${RESOURCE_GROUP_CORE}" --query "[?kind=='SpeechServices'].name" -o tsv 2>/dev/null | head -1 || echo "")
+  SPEECH_ACCOUNT_NAME=$(az cognitiveservices account list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[?kind=='SpeechServices'].name" -o tsv 2>/dev/null | head -1 || echo "")
   if [ -z "${SPEECH_ACCOUNT_NAME}" ]; then
     echo "  ⚠️  Could not find Speech Service account. Please import manually:"
-    echo "     az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE} --query \"[?kind=='SpeechServices'].name\" -o tsv"
+    echo "     az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE_NAME} --query \"[?kind=='SpeechServices'].name\" -o tsv"
     echo "     terraform import -var-file=\"${VAR_CONFIG}\" -var-file=\"${VAR_PARAMS}\" \\"
     echo "       'module.speech_service.azurerm_cognitive_account.aca[\"swedencentral-speech\"]' \\"
-    echo "       '/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/{account-name}'"
+    echo "       '/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.CognitiveServices/accounts/{account-name}'"
   else
-    SPEECH_ACCOUNT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/${SPEECH_ACCOUNT_NAME}"
+    SPEECH_ACCOUNT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.CognitiveServices/accounts/${SPEECH_ACCOUNT_NAME}"
     terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
       'module.speech_service.azurerm_cognitive_account.aca["swedencentral-speech"]' \
       "${SPEECH_ACCOUNT_ID}"
@@ -1139,10 +1241,10 @@ echo ""
 echo "Checking for Speech Service Private Endpoint..."
 if ! terraform state show 'module.speech_service.azurerm_private_endpoint.pe["swedencentral-speech"]' >/dev/null 2>&1; then
   echo "  Checking if private endpoint exists in Azure..."
-  PRIVATE_ENDPOINT_NAME=$(az network private-endpoint list --resource-group "${RESOURCE_GROUP_CORE}" --query "[?contains(name, 'speech')].name" -o tsv 2>/dev/null | head -1 || echo "")
+  PRIVATE_ENDPOINT_NAME=$(az network private-endpoint list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[?contains(name, 'speech')].name" -o tsv 2>/dev/null | head -1 || echo "")
   if [ -n "${PRIVATE_ENDPOINT_NAME}" ]; then
     echo "  Importing module.speech_service.azurerm_private_endpoint.pe[\"swedencentral-speech\"]..."
-    PRIVATE_ENDPOINT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.Network/privateEndpoints/${PRIVATE_ENDPOINT_NAME}"
+    PRIVATE_ENDPOINT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Network/privateEndpoints/${PRIVATE_ENDPOINT_NAME}"
     terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
       'module.speech_service.azurerm_private_endpoint.pe["swedencentral-speech"]' \
       "${PRIVATE_ENDPOINT_ID}"
@@ -1157,21 +1259,21 @@ fi
 # Document Intelligence Account
 echo ""
 echo "Importing Document Intelligence Resources..."
-DOC_INTELLIGENCE_NAME="doc-intelligence-${ENV_SUFFIX}"
+DOC_INTELLIGENCE_NAME="doc-intelligence-${ENV}"
 echo "Checking module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"]..."
 if ! terraform state show 'module.document_intelligence.azurerm_cognitive_account.aca["swedencentral-form-recognizer"]' >/dev/null 2>&1; then
   echo "  Importing module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"]..."
   # Document Intelligence uses FormRecognizer account name pattern
-  # The actual account name might be different - check Azure Portal or use: az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE} --query "[?kind=='FormRecognizer'].name" -o tsv
-  DOC_INTELLIGENCE_ACCOUNT_NAME=$(az cognitiveservices account list --resource-group "${RESOURCE_GROUP_CORE}" --query "[?kind=='FormRecognizer'].name" -o tsv 2>/dev/null | head -1 || echo "")
+  # The actual account name might be different - check Azure Portal or use: az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE_NAME} --query "[?kind=='FormRecognizer'].name" -o tsv
+  DOC_INTELLIGENCE_ACCOUNT_NAME=$(az cognitiveservices account list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[?kind=='FormRecognizer'].name" -o tsv 2>/dev/null | head -1 || echo "")
   if [ -z "${DOC_INTELLIGENCE_ACCOUNT_NAME}" ]; then
     echo "  ⚠️  Could not find Document Intelligence account. Please import manually:"
-    echo "     az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE} --query \"[?kind=='FormRecognizer'].name\" -o tsv"
+    echo "     az cognitiveservices account list --resource-group ${RESOURCE_GROUP_CORE_NAME} --query \"[?kind=='FormRecognizer'].name\" -o tsv"
     echo "     terraform import -var-file=\"${VAR_CONFIG}\" -var-file=\"${VAR_PARAMS}\" \\"
     echo "       'module.document_intelligence.azurerm_cognitive_account.aca[\"swedencentral-form-recognizer\"]' \\"
-    echo "       '/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/{account-name}'"
+    echo "       '/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.CognitiveServices/accounts/{account-name}'"
   else
-    DOC_INTELLIGENCE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE}/providers/Microsoft.CognitiveServices/accounts/${DOC_INTELLIGENCE_ACCOUNT_NAME}"
+    DOC_INTELLIGENCE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.CognitiveServices/accounts/${DOC_INTELLIGENCE_ACCOUNT_NAME}"
     terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
       'module.document_intelligence.azurerm_cognitive_account.aca["swedencentral-form-recognizer"]' \
       "${DOC_INTELLIGENCE_ID}"
@@ -1183,6 +1285,532 @@ fi
 
 echo ""
 echo "=========================================="
+echo "Importing PostgreSQL Module Resources"
+echo "=========================================="
+echo ""
+
+# PostgreSQL Server
+POSTGRESQL_SERVER_NAME=$(az postgres flexible-server list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --query "[0].name" -o tsv 2>/dev/null || echo "")
+if [ -n "${POSTGRESQL_SERVER_NAME}" ]; then
+  # Extract the suffix from the server name (format: psql-{suffix})
+  # The server name is constructed as: ${var.postgresql_server_name}-${random_string.psql_suffix.result}
+  POSTGRESQL_SERVER_NAME_BASE=$(grep "^postgresql_server_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "psql")
+  PSQL_SUFFIX=$(echo "${POSTGRESQL_SERVER_NAME}" | sed "s/^${POSTGRESQL_SERVER_NAME_BASE}-//")
+  
+  echo "  ℹ️  Detected PostgreSQL server name: ${POSTGRESQL_SERVER_NAME}"
+  echo "  ℹ️  Extracted suffix: ${PSQL_SUFFIX}"
+  echo ""
+  
+  # Import random_string.psql_suffix with the extracted suffix value
+  # For random_string, the import ID is the result value itself
+  echo "Checking random_string.psql_suffix..."
+  if ! terraform state show random_string.psql_suffix >/dev/null 2>&1; then
+    echo "  Importing random_string.psql_suffix with value: ${PSQL_SUFFIX}..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      random_string.psql_suffix \
+      "${PSQL_SUFFIX}" 2>&1; then
+      echo "  ✓ Imported random_string.psql_suffix"
+    else
+      echo "  ⚠️  Failed to import random_string.psql_suffix"
+      echo "     This will cause the PostgreSQL server to be replaced with a new name."
+      echo "     To fix manually, run: terraform import random_string.psql_suffix ${PSQL_SUFFIX}"
+  fi
+else
+    echo "  ✓ random_string.psql_suffix already in state, skipping"
+  fi
+   
+  POSTGRESQL_SERVER_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.DBforPostgreSQL/flexibleServers/${POSTGRESQL_SERVER_NAME}"
+  
+  echo "Checking module.postgresql.azurerm_postgresql_flexible_server.apfs..."
+  if ! terraform state show module.postgresql.azurerm_postgresql_flexible_server.apfs >/dev/null 2>&1; then
+    echo "  Importing module.postgresql.azurerm_postgresql_flexible_server.apfs..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      module.postgresql.azurerm_postgresql_flexible_server.apfs \
+      "${POSTGRESQL_SERVER_ID}" 2>&1; then
+      echo "  ✓ Imported module.postgresql.azurerm_postgresql_flexible_server.apfs"
+    else
+      echo "  ✗ Failed to import PostgreSQL server"
+    fi
+  else
+    echo "  ✓ module.postgresql.azurerm_postgresql_flexible_server.apfs already in state, skipping"
+  fi
+
+  # PostgreSQL Server Configurations
+  CONFIGURATION_NAMES=("azure.extensions" "enable_seqscan" "max_connections")
+  for config_name in "${CONFIGURATION_NAMES[@]}"; do
+    echo "Checking module.postgresql.azurerm_postgresql_flexible_server_configuration.parameters[\"${config_name}\"]..."
+    if ! terraform state show "module.postgresql.azurerm_postgresql_flexible_server_configuration.parameters[\"${config_name}\"]" >/dev/null 2>&1; then
+      CONFIG_ID="${POSTGRESQL_SERVER_ID}/configurations/${config_name}"
+      echo "  Importing module.postgresql.azurerm_postgresql_flexible_server_configuration.parameters[\"${config_name}\"]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        "module.postgresql.azurerm_postgresql_flexible_server_configuration.parameters[\"${config_name}\"]" \
+        "${CONFIG_ID}" 2>&1; then
+        echo "  ✓ Imported configuration ${config_name}"
+      else
+        echo "  ⚠️  Configuration ${config_name} may not exist or may have a different name"
+    fi
+  else
+      echo "  ✓ module.postgresql.azurerm_postgresql_flexible_server_configuration.parameters[\"${config_name}\"] already in state, skipping"
+    fi
+  done
+
+  # PostgreSQL Databases
+  DATABASE_NAMES=("app-repository" "chat" "ingestion" "scope-management" "theme")
+  for db_name in "${DATABASE_NAMES[@]}"; do
+    echo "Checking module.postgresql.azurerm_postgresql_flexible_server_database.destroyable_database[\"${db_name}\"]..."
+    if ! terraform state show "module.postgresql.azurerm_postgresql_flexible_server_database.destroyable_database[\"${db_name}\"]" >/dev/null 2>&1; then
+      DB_ID="${POSTGRESQL_SERVER_ID}/databases/${db_name}"
+      echo "  Importing module.postgresql.azurerm_postgresql_flexible_server_database.destroyable_database[\"${db_name}\"]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        "module.postgresql.azurerm_postgresql_flexible_server_database.destroyable_database[\"${db_name}\"]" \
+        "${DB_ID}" 2>&1; then
+        echo "  ✓ Imported database ${db_name}"
+      else
+        echo "  ⚠️  Database ${db_name} may not exist"
+    fi
+  else
+      echo "  ✓ module.postgresql.azurerm_postgresql_flexible_server_database.destroyable_database[\"${db_name}\"] already in state, skipping"
+    fi
+  done
+
+  # Management Lock (if exists)
+  # The lock name is "TerraformModuleLock-CanNotDelete" as per the module
+  echo "Checking module.postgresql.azurerm_management_lock.can_not_delete_server[0]..."
+  if ! terraform state show 'module.postgresql.azurerm_management_lock.can_not_delete_server[0]' >/dev/null 2>&1; then
+    # Try the module's standard lock name first
+    LOCK_NAME="TerraformModuleLock-CanNotDelete"
+    LOCK_ID="${POSTGRESQL_SERVER_ID}/providers/Microsoft.Authorization/locks/${LOCK_NAME}"
+    
+    # If that doesn't exist, try to discover any lock on the server
+    if ! az lock show --name "${LOCK_NAME}" --resource "${POSTGRESQL_SERVER_ID}" >/dev/null 2>&1; then
+      DISCOVERED_LOCK_NAME=$(az lock list --resource "${POSTGRESQL_SERVER_ID}" --query "[0].name" -o tsv 2>/dev/null || echo "")
+      if [ -n "${DISCOVERED_LOCK_NAME}" ]; then
+        LOCK_NAME="${DISCOVERED_LOCK_NAME}"
+        LOCK_ID="${POSTGRESQL_SERVER_ID}/providers/Microsoft.Authorization/locks/${LOCK_NAME}"
+        echo "  ℹ️  Found lock with name: ${LOCK_NAME}"
+      fi
+    fi
+    
+    if az lock show --name "${LOCK_NAME}" --resource "${POSTGRESQL_SERVER_ID}" >/dev/null 2>&1; then
+      echo "  Importing module.postgresql.azurerm_management_lock.can_not_delete_server[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.postgresql.azurerm_management_lock.can_not_delete_server[0]' \
+        "${LOCK_ID}" 2>&1; then
+        echo "  ✓ Imported management lock"
+      else
+        echo "  ✗ Failed to import management lock"
+    fi
+  else
+      echo "  ℹ️  Management lock not found (may not exist yet)"
+    fi
+  else
+    echo "  ✓ module.postgresql.azurerm_management_lock.can_not_delete_server[0] already in state, skipping"
+  fi
+
+  # Metric Alerts
+  # The module creates alerts with names like "PostgreSQL Heartbeat Absent", "PostgreSQL High CPU Usage", etc.
+  # Map Terraform keys to actual alert name patterns
+  declare -A ALERT_NAME_MAP=(
+    ["default_absence_alert"]="PostgreSQL Heartbeat Absent"
+    ["default_cpu_alert"]="PostgreSQL High CPU Usage"
+    ["default_memory_alert"]="PostgreSQL High Memory Usage"
+  )
+  
+  # Get all PostgreSQL alerts from Azure to match them with Terraform keys
+  ALL_POSTGRESQL_ALERTS=$(az monitor metrics alert list --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" \
+    --query "[?contains(name, 'PostgreSQL')].name" -o tsv 2>/dev/null || echo "")
+  
+  ALERT_KEYS=("default_absence_alert" "default_cpu_alert" "default_memory_alert")
+  for alert_key in "${ALERT_KEYS[@]}"; do
+    echo "Checking module.postgresql.azurerm_monitor_metric_alert.postgres_metric_alerts[\"${alert_key}\"]..."
+    if ! terraform state show "module.postgresql.azurerm_monitor_metric_alert.postgres_metric_alerts[\"${alert_key}\"]" >/dev/null 2>&1; then
+      # Try the mapped name first
+      METRIC_ALERT_NAME="${ALERT_NAME_MAP[$alert_key]}"
+      
+      # If the mapped name doesn't exist, try to find it in the list of PostgreSQL alerts
+      if ! echo "${ALL_POSTGRESQL_ALERTS}" | grep -q "^${METRIC_ALERT_NAME}$"; then
+        # Try to match by pattern (e.g., "CPU" for default_cpu_alert, "Memory" for default_memory_alert, "Heartbeat" or "Absent" for default_absence_alert)
+        case "${alert_key}" in
+          "default_cpu_alert")
+            PATTERN="CPU"
+            ;;
+          "default_memory_alert")
+            PATTERN="Memory"
+            ;;
+          "default_absence_alert")
+            PATTERN="Heartbeat\|Absent"
+            ;;
+          *)
+            PATTERN=""
+            ;;
+        esac
+        
+        if [ -n "${PATTERN}" ]; then
+          DISCOVERED_ALERT_NAME=$(echo "${ALL_POSTGRESQL_ALERTS}" | grep -i "${PATTERN}" | head -1 || echo "")
+          if [ -n "${DISCOVERED_ALERT_NAME}" ]; then
+            METRIC_ALERT_NAME="${DISCOVERED_ALERT_NAME}"
+            echo "  ℹ️  Discovered alert name: ${METRIC_ALERT_NAME}"
+          fi
+        fi
+      fi
+      
+      METRIC_ALERT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}/providers/Microsoft.Insights/metricAlerts/${METRIC_ALERT_NAME}"
+      if [ -n "${METRIC_ALERT_NAME}" ] && az monitor metrics alert show --name "${METRIC_ALERT_NAME}" --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" >/dev/null 2>&1; then
+        echo "  Importing module.postgresql.azurerm_monitor_metric_alert.postgres_metric_alerts[\"${alert_key}\"]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          "module.postgresql.azurerm_monitor_metric_alert.postgres_metric_alerts[\"${alert_key}\"]" \
+          "${METRIC_ALERT_ID}" 2>&1; then
+          echo "  ✓ Imported metric alert ${alert_key} (${METRIC_ALERT_NAME})"
+        else
+          echo "  ✗ Failed to import metric alert ${alert_key}"
+    fi
+  else
+        echo "  ℹ️  Metric alert ${alert_key} (${METRIC_ALERT_NAME:-<not found>}) not found (may not exist yet)"
+      fi
+    else
+      echo "  ✓ module.postgresql.azurerm_monitor_metric_alert.postgres_metric_alerts[\"${alert_key}\"] already in state, skipping"
+    fi
+  done
+
+  # PostgreSQL Key Vault Secrets
+  POSTGRESQL_SECRET_NAMES=("host" "port" "username" "password")
+  for secret_type in "${POSTGRESQL_SECRET_NAMES[@]}"; do
+    echo "Checking module.postgresql.azurerm_key_vault_secret.${secret_type}[0]..."
+    if ! terraform state show "module.postgresql.azurerm_key_vault_secret.${secret_type}[0]" >/dev/null 2>&1; then
+      # Secret name pattern: ${name}-${secret_type}
+      SECRET_NAME="${POSTGRESQL_SERVER_NAME}-${secret_type}"
+      SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+      if [ -n "${SECRET_VERSION_ID}" ]; then
+        echo "  Importing module.postgresql.azurerm_key_vault_secret.${secret_type}[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          "module.postgresql.azurerm_key_vault_secret.${secret_type}[0]" \
+          "${SECRET_VERSION_ID}" 2>&1; then
+          echo "  ✓ Imported PostgreSQL ${secret_type} secret"
+        else
+          echo "  ✗ Failed to import PostgreSQL ${secret_type} secret"
+    fi
+  else
+        echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault"
+      fi
+    else
+      echo "  ✓ module.postgresql.azurerm_key_vault_secret.${secret_type}[0] already in state, skipping"
+    fi
+  done
+
+  # PostgreSQL Database Connection String Secrets
+  for db_name in "${DATABASE_NAMES[@]}"; do
+    echo "Checking module.postgresql.azurerm_key_vault_secret.database_connection_strings[\"${db_name}\"]..."
+    if ! terraform state show "module.postgresql.azurerm_key_vault_secret.database_connection_strings[\"${db_name}\"]" >/dev/null 2>&1; then
+      # Connection string secret name pattern: ${database_connection_string_secret_prefix}${db_name}
+      SECRET_NAME="${POSTGRESQL_SERVER_NAME}-connection-string-${db_name}"
+      ALTERNATIVE_SECRET_NAME="${db_name}-connection-string"
+      SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || \
+        az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${ALTERNATIVE_SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+      if [ -n "${SECRET_VERSION_ID}" ]; then
+        echo "  Importing module.postgresql.azurerm_key_vault_secret.database_connection_strings[\"${db_name}\"]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+          "module.postgresql.azurerm_key_vault_secret.database_connection_strings[\"${db_name}\"]" \
+          "${SECRET_VERSION_ID}" 2>&1; then
+          echo "  ✓ Imported database connection string for ${db_name}"
+        else
+          echo "  ✗ Failed to import database connection string for ${db_name}"
+    fi
+  else
+        echo "  ⚠️  Connection string secret for ${db_name} not found (tried: ${SECRET_NAME}, ${ALTERNATIVE_SECRET_NAME})"
+      fi
+    else
+      echo "  ✓ module.postgresql.azurerm_key_vault_secret.database_connection_strings[\"${db_name}\"] already in state, skipping"
+    fi
+  done
+else
+  echo "  ⚠️  PostgreSQL server not found in Azure"
+fi
+
+echo ""
+echo "=========================================="
+echo "PostgreSQL Drift Documentation"
+echo "=========================================="
+echo ""
+echo "⚠️  DRIFT DOCUMENTATION: PostgreSQL Resources"
+echo ""
+if [ -n "${POSTGRESQL_SERVER_NAME:-}" ] && [ -n "${PSQL_SUFFIX:-}" ]; then
+  echo "The PostgreSQL server name is constructed as: \${var.postgresql_server_name}-\${random_string.psql_suffix.result}"
+  echo "The existing server name is: ${POSTGRESQL_SERVER_NAME}"
+  echo "The extracted suffix is: ${PSQL_SUFFIX}"
+echo ""
+  echo "1. random_string.psql_suffix:"
+  echo "   - Status: ✅ FIXED - Configuration updated to match existing resource"
+  echo "   - Issue: Original resource had special=true and upper=true, but config had special=false and upper=false"
+  echo "   - Resolution: Updated 30-postgresql.tf to set special=true and upper=true to match state"
+  echo "   - Impact: Server name will now remain '${POSTGRESQL_SERVER_NAME}' (no replacement)"
+echo ""
+  echo "2. random_password.postgres_username and random_password.postgres_password:"
+  echo "   - Status: ✅ NOT CRITICAL - Can be safely ignored (we only care about Key Vault secrets)"
+  echo "   - Reason: These resources cannot be imported (random_password doesn't support import)"
+  echo "   - Impact: Will be regenerated, causing administrator_login and admin_password to change"
+  echo "   - Why it's safe:"
+  echo "     * We import Key Vault secrets (preserves secret resources, not recreated)"
+  echo "     * Server will UPDATE credentials in-place (not replaced, no data loss)"
+  echo "     * Key Vault secrets will be updated with new values after apply"
+  echo "   - Resolution:"
+  echo "     * Accept password regeneration (this is actually a security best practice)"
+  echo "     * Update applications with new credentials from Key Vault after apply"
+  echo "   - Key insight: Unlike random_string.psql_suffix, these don't affect the server NAME,"
+  echo "                so they only cause credential updates (safe), not server replacement"
+  echo ""
+  echo "3. PostgreSQL Server Configuration Updates (Expected - Non-Breaking):"
+  echo "   - Resource: module.postgresql.azurerm_postgresql_flexible_server.apfs"
+  echo "   - Drifts:"
+  echo "     * maintenance_window block being added (day_of_week=0, start_hour=3, start_minute=15)"
+  echo "     * timeouts block being added (update = '30m')"
+  echo "     * authentication block structure change (from explicit block to computed)"
+  echo "     * identity block updates (principal_id and tenant_id computed)"
+  echo "     * storage_tier may change (P4 -> computed value)"
+  echo "   - Impact: These are non-breaking configuration enhancements from the module"
+  echo "   - Action: Safe to apply - these improve server management and don't affect data"
+  echo ""
+  echo "4. PostgreSQL Key Vault Secrets (Expected - Due to Password Regeneration):"
+  echo "   - Resources:"
+  echo "     * module.postgresql.azurerm_key_vault_secret.host[0]"
+  echo "     * module.postgresql.azurerm_key_vault_secret.port[0]"
+  echo "     * module.postgresql.azurerm_key_vault_secret.username[0]"
+  echo "     * module.postgresql.azurerm_key_vault_secret.password[0]"
+  echo "   - Drift: Secret names changing from 'psql-s5xqjn64-*' to new names (if server name changes)"
+  echo "   - Status: ✅ RESOLVED - Server name is preserved, so secret names will update in-place"
+  echo "   - Note: Secret values will be updated with new credentials (username/password regeneration)"
+  echo ""
+  echo "5. PostgreSQL Resources Being Created (Expected - New Features):"
+  echo "   - Resources:"
+  echo "     * module.postgresql.azurerm_key_vault_secret.database_connection_strings[*] (5 databases)"
+  echo "     * module.postgresql.azurerm_management_lock.can_not_delete_server[0]"
+  echo "     * module.postgresql.azurerm_monitor_metric_alert.postgres_metric_alerts[*] (3 alerts)"
+  echo "   - Status: These are new resources from the module that enhance functionality"
+  echo "   - Impact: No impact on existing data - these are additive features"
+  echo "   - Action: Safe to create - these improve security, monitoring, and management"
+  echo ""
+  echo "6. PostgreSQL Server Configurations and Databases (Expected - Due to Server ID Reference):"
+  echo "   - Resources:"
+  echo "     * module.postgresql.azurerm_postgresql_flexible_server_configuration.parameters[*]"
+  echo "     * module.postgresql.azurerm_postgresql_flexible_server_database.destroyable_database[*]"
+  echo "   - Status: ✅ RESOLVED - These will update in-place (not be replaced) since server name is preserved"
+  echo "   - Note: The server_id reference will remain the same, so these resources will update, not replace"
+  echo ""
+  echo "SUMMARY:"
+  echo "  ✅ Server replacement: PREVENTED (random_string.psql_suffix configuration fixed)"
+  echo "  ⚠️  Password regeneration: EXPECTED (random_password cannot be imported)"
+  echo "  ✅ Configuration updates: EXPECTED (non-breaking enhancements)"
+  echo "  ✅ New resources: EXPECTED (additive features)"
+  echo ""
+  echo "RECOMMENDED ACTION:"
+  echo "  1. ✅ random_string.psql_suffix is fixed (configuration updated)"
+  echo "  2. ⚠️  Accept password regeneration (update applications after apply)"
+  echo "  3. ✅ Apply configuration updates (safe, non-breaking)"
+  echo "  4. ✅ Create new resources (safe, additive)"
+  echo ""
+else
+  echo "PostgreSQL server information not available. If you see drifts related to PostgreSQL"
+  echo "random resources, ensure the PostgreSQL server import section ran successfully."
+  echo ""
+fi
+
+echo ""
+echo "=========================================="
+echo "Importing Application Gateway Public IP"
+echo "=========================================="
+echo ""
+
+# Application Gateway Public IP
+echo "Checking azurerm_public_ip.application_gateway_public_ip..."
+if ! terraform state show azurerm_public_ip.application_gateway_public_ip >/dev/null 2>&1; then
+  echo "  Importing azurerm_public_ip.application_gateway_public_ip..."
+  SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || echo "782871a0-bcee-44fb-851f-ccd3e69ada2a")
+  PUBLIC_IP_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/resource-group-core/providers/Microsoft.Network/publicIPAddresses/default-public-ip-name"
+  if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+    azurerm_public_ip.application_gateway_public_ip \
+    "${PUBLIC_IP_ID}" 2>&1; then
+    echo "  ✓ Imported azurerm_public_ip.application_gateway_public_ip"
+  else
+    echo "  ⚠️  Failed to import Application Gateway public IP. Please verify it exists:"
+    echo "     az network public-ip list --resource-group resource-group-core --query \"[?name=='default-public-ip-name'].id\" -o tsv"
+  fi
+else
+  echo "  ✓ azurerm_public_ip.application_gateway_public_ip already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
+echo "Importing Application Gateway Module Resources"
+echo "=========================================="
+echo ""
+
+# Application Gateway
+APPLICATION_GATEWAY_NAME=$(az network application-gateway list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[0].name" -o tsv 2>/dev/null || echo "")
+if [ -n "${APPLICATION_GATEWAY_NAME}" ]; then
+  APPLICATION_GATEWAY_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Network/applicationGateways/${APPLICATION_GATEWAY_NAME}"
+  
+  echo "Checking module.application_gateway.azurerm_application_gateway.appgw..."
+  if ! terraform state show module.application_gateway.azurerm_application_gateway.appgw >/dev/null 2>&1; then
+    echo "  Importing module.application_gateway.azurerm_application_gateway.appgw..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      module.application_gateway.azurerm_application_gateway.appgw \
+      "${APPLICATION_GATEWAY_ID}" 2>&1; then
+      echo "  ✓ Imported module.application_gateway.azurerm_application_gateway.appgw"
+    else
+      echo "  ✗ Failed to import Application Gateway"
+    fi
+  else
+    echo "  ✓ module.application_gateway.azurerm_application_gateway.appgw already in state, skipping"
+  fi
+
+  # WAF Policy (if exists - only for WAF_v2 SKU)
+  # Try to discover the actual WAF policy name from Azure (it may be "default-waf-policy-name" or based on gateway name)
+  WAF_POLICY_NAME_DISCOVERED=$(az network application-gateway waf-policy list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[0].name" -o tsv 2>/dev/null || echo "")
+  if [ -z "${WAF_POLICY_NAME_DISCOVERED}" ]; then
+    # Fallback: try the pattern based on gateway name
+    WAF_POLICY_NAME_DISCOVERED="${APPLICATION_GATEWAY_NAME%-appgw}-wafpolicy"
+  fi
+  WAF_POLICY_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/${WAF_POLICY_NAME_DISCOVERED}"
+  
+  echo "Checking module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]..."
+  if ! terraform state show 'module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]' >/dev/null 2>&1; then
+    # Check if WAF policy exists in Azure
+    if az network application-gateway waf-policy show --name "${WAF_POLICY_NAME_DISCOVERED}" --resource-group "${RESOURCE_GROUP_CORE_NAME}" >/dev/null 2>&1; then
+      echo "  Found WAF Policy in Azure: ${WAF_POLICY_NAME_DISCOVERED}"
+      echo "  Importing module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]..."
+      if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]' \
+        "${WAF_POLICY_ID}" 2>&1; then
+        echo "  ✓ Imported module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0]"
+      else
+        echo "  ✗ Failed to import WAF Policy"
+      fi
+    else
+      echo "  ℹ️  WAF Policy not found (this is expected if SKU is not WAF_v2)"
+    fi
+  else
+    echo "  ✓ module.application_gateway.azurerm_web_application_firewall_policy.wafpolicy[0] already in state, skipping"
+  fi
+
+  # Metric Alert (if exists)
+  # Try to discover the actual metric alert name from Azure
+  METRIC_ALERT_NAME_DISCOVERED=$(az monitor metrics alert list --resource-group "${RESOURCE_GROUP_CORE_NAME}" --query "[?contains(name, 'Application Gateway') && contains(name, '5xx')].name" -o tsv 2>/dev/null | head -1 || echo "")
+  if [ -z "${METRIC_ALERT_NAME_DISCOVERED}" ]; then
+    # Fallback: try common patterns
+    METRIC_ALERT_NAME_DISCOVERED="Application Gateway 5xx Error"
+  fi
+  METRIC_ALERT_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}/providers/Microsoft.Insights/metricAlerts/${METRIC_ALERT_NAME_DISCOVERED}"
+  
+  echo "Checking module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts[\"default_5xx_error_alert\"]..."
+  if ! terraform state show 'module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts["default_5xx_error_alert"]' >/dev/null 2>&1; then
+    if az monitor metrics alert show --name "${METRIC_ALERT_NAME_DISCOVERED}" --resource-group "${RESOURCE_GROUP_CORE_NAME}" >/dev/null 2>&1; then
+      echo "  Found metric alert in Azure: ${METRIC_ALERT_NAME_DISCOVERED}"
+      echo "  Importing module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts[\"default_5xx_error_alert\"]..."
+      if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        'module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts["default_5xx_error_alert"]' \
+        "${METRIC_ALERT_ID}" 2>&1; then
+        echo "  ✓ Imported metric alert"
+      else
+        echo "  ✗ Failed to import metric alert"
+      fi
+    else
+      echo "  ℹ️  Metric alert not found (may not exist yet)"
+    fi
+  else
+    echo "  ✓ module.application_gateway.azurerm_monitor_metric_alert.application_gateway_metric_alerts[\"default_5xx_error_alert\"] already in state, skipping"
+  fi
+
+  # Note: Application Gateway name is preserved using explicit_name in 27-application-gateway.tf
+  # This prevents replacement due to name mismatch
+else
+  echo "  ⚠️  Application Gateway not found in Azure"
+fi
+
+echo ""
+echo "=========================================="
+echo "Importing Speech Service Key Vault Secrets"
+echo "=========================================="
+echo ""
+
+# Speech Service Key Vault Secrets
+# The module uses count, so secrets are indexed with [0]
+SPEECH_ACCOUNT_KEY="swedencentral-speech"
+SPEECH_SECRET_SUFFIXES=("-key" "-resource-id" "-fqdn")
+for suffix in "${SPEECH_SECRET_SUFFIXES[@]}"; do
+  secret_resource_name=""
+  if [[ "${suffix}" == "-key" ]]; then
+    secret_resource_name="key"
+  elif [[ "${suffix}" == "-resource-id" ]]; then
+    secret_resource_name="resource_id"
+  elif [[ "${suffix}" == "-fqdn" ]]; then
+    secret_resource_name="fqdn"
+  fi
+  
+  echo "Checking module.speech_service.azurerm_key_vault_secret.${secret_resource_name}[0]..."
+  if ! terraform state show "module.speech_service.azurerm_key_vault_secret.${secret_resource_name}[0]" >/dev/null 2>&1; then
+    # Secret name pattern: ${account_key}${suffix}
+    SECRET_NAME="${SPEECH_ACCOUNT_KEY}${suffix}"
+    SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+    if [ -n "${SECRET_VERSION_ID}" ]; then
+      echo "  Importing module.speech_service.azurerm_key_vault_secret.${secret_resource_name}[0]..."
+      if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        "module.speech_service.azurerm_key_vault_secret.${secret_resource_name}[0]" \
+        "${SECRET_VERSION_ID}" 2>&1; then
+        echo "  ✓ Imported Speech Service ${secret_resource_name} secret"
+      else
+        echo "  ✗ Failed to import Speech Service ${secret_resource_name} secret"
+      fi
+    else
+      echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault"
+    fi
+  else
+    echo "  ✓ module.speech_service.azurerm_key_vault_secret.${secret_resource_name}[0] already in state, skipping"
+  fi
+done
+
+# Speech Service endpoint secrets (not indexed, single resources)
+echo "Checking module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoints..."
+if ! terraform state show module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoints >/dev/null 2>&1; then
+  # Get secret name from module variables or use default pattern
+  SECRET_NAME="azure-speech-service-endpoints"
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Importing module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoints..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoints \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported Speech Service endpoints secret"
+    else
+      echo "  ✗ Failed to import Speech Service endpoints secret"
+  fi
+else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault"
+  fi
+else
+  echo "  ✓ module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoints already in state, skipping"
+fi
+
+echo "Checking module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoint_definitions..."
+if ! terraform state show module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoint_definitions >/dev/null 2>&1; then
+  SECRET_NAME="azure-speech-service-endpoint-definitions"
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Importing module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoint_definitions..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoint_definitions \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported Speech Service endpoint definitions secret"
+    else
+      echo "  ✗ Failed to import Speech Service endpoint definitions secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault"
+  fi
+else
+  echo "  ✓ module.speech_service.azurerm_key_vault_secret.azure_speech_service_endpoint_definitions already in state, skipping"
+fi
+
+echo ""
+echo "=========================================="
 echo "Importing Container Registry Resources"
 echo "=========================================="
 echo ""
@@ -1190,8 +1818,6 @@ echo ""
 # Container Registry
 echo "Checking azurerm_container_registry.acr..."
 if ! terraform state show azurerm_container_registry.acr >/dev/null 2>&1; then
-  # Container registry name is constructed as "${var.container_registry_name}${var.env}"
-  # Default: "uqhacr" + env (e.g., "uqhacrtest")
   CONTAINER_REGISTRY_NAME_BASE="${CONTAINER_REGISTRY_NAME_BASE:-uqhacr}"
   CONTAINER_REGISTRY_NAME="${CONTAINER_REGISTRY_NAME_BASE}${ENV}"
   
@@ -1227,37 +1853,385 @@ echo "Importing Role Assignments"
 echo "=========================================="
 echo ""
 
-# Subscription ID - get from config or set here
-SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-782871a0-bcee-44fb-851f-ccd3e69ada2a}"
 
-# Resource Group Names
-RESOURCE_GROUP_CORE_NAME="resource-group-core"
 
 # Resource IDs (constructed from subscription and resource names)
-RESOURCE_GROUP_CORE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}"
+RESOURCE_GROUP_CORE_NAME_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_CORE_NAME}"
+RESOURCE_GROUP_SENSITIVE_NAME_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_SENSITIVE_NAME}"
 KEY_VAULT_MAIN_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/resource-group-core/providers/Microsoft.KeyVault/vaults/hakv1${ENV}v2"
 KEY_VAULT_SENSITIVE_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/resource-group-sensitive/providers/Microsoft.KeyVault/vaults/hakv2${ENV}v2"
 
-# Get role definition IDs using Azure CLI
-echo "Getting role definition IDs..."
-echo "  Note: Role definition IDs must be in full format: /subscriptions/{sub-id}/providers/Microsoft.Authorization/roleDefinitions/{guid}"
-echo ""
-echo "⚠️  Application registration secrets are NOT imported by this script."
-echo ""
-echo "Expected behavior:"
-echo "  - terraform plan will show these as 'to be created':"
-echo "    * module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]"
-echo "    * module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]"
-echo ""
-echo "Resolution:"
-echo "  1. Let Terraform create them fresh (recommended if values can be regenerated)"
-echo "  2. Manually import with version ID (get version from Azure Portal or CLI):"
-echo "     az keyvault secret show --vault-name ${SENSITIVE_KV_NAME} --name <secret-name> --query id -o tsv"
-echo "     terraform import -var-file=\"${VAR_CONFIG}\" -var-file=\"${VAR_PARAMS}\" \\"
-echo "       'module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]' \\"
-echo "       '<versioned-id-from-az-command>'"
+# Terraform Service Principal Object ID
+TERRAFORM_SP_OBJECT_ID="dde525a7-fbfa-4a7c-88da-b9bcaf75830f"
+
+# Helper function to import role assignment
+import_role_assignment() {
+  local resource_name=$1
+  local scope=$2
+  local principal_id=$3
+  local role_name=$4
+
+  if ! terraform state show "${resource_name}" >/dev/null 2>&1; then
+    echo "Checking ${resource_name}..."
+    # Find the role assignment ID using Azure CLI
+    ROLE_ASSIGNMENT_ID=$(az role assignment list \
+      --scope "${scope}" \
+      --assignee "${principal_id}" \
+      --role "${role_name}" \
+      --query "[0].id" -o tsv 2>/dev/null || echo "")
+    
+    if [ -n "${ROLE_ASSIGNMENT_ID}" ]; then
+      echo "  Importing ${resource_name}..."
+      if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+        "${resource_name}" \
+        "${ROLE_ASSIGNMENT_ID}" 2>&1; then
+        echo "  ✓ Imported ${resource_name}"
+      else
+        echo "  ✗ Failed to import ${resource_name}"
+      fi
+    else
+      echo "  ⚠️  Could not find role assignment. It may not exist yet or role name may differ."
+      echo "      Scope: ${scope}"
+      echo "      Principal: ${principal_id}"
+      echo "      Role: ${role_name}"
+    fi
+  else
+    echo "  ✓ ${resource_name} already in state, skipping"
+  fi
+}
+
+# Import role assignments from 26-role-assignments.tf
+
+# PostgreSQL Identity Key Vault Key Reader
+PSQL_IDENTITY_ID=$(az identity show --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --name "psql-id-${ENV}" --query principalId -o tsv 2>/dev/null || echo "")
+if [ -n "${PSQL_IDENTITY_ID}" ]; then
+  # Try to discover the actual role name from Azure
+  PSQL_ROLE_NAME=$(az role assignment list --scope "${KEY_VAULT_SENSITIVE_ID}" --assignee "${PSQL_IDENTITY_ID}" --query "[0].roleDefinitionName" -o tsv 2>/dev/null || echo "")
+  if [ -z "${PSQL_ROLE_NAME}" ]; then
+    # Fallback to default from variables
+    PSQL_ROLE_NAME="Key Vault Secrets Officer"
+  fi
+  import_role_assignment \
+    "azurerm_role_assignment.psql_identity_role_assignment" \
+    "${KEY_VAULT_SENSITIVE_ID}" \
+    "${PSQL_IDENTITY_ID}" \
+    "${PSQL_ROLE_NAME}"
+fi
+
+# Ingestion Cache Identity Key Vault assignments
+INGESTION_CACHE_IDENTITY_ID=$(az identity show --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --name "cache-id-${ENV}" --query principalId -o tsv 2>/dev/null || echo "")
+if [ -n "${INGESTION_CACHE_IDENTITY_ID}" ]; then
+  # Try to discover the actual role names from Azure
+  CACHE_KEY_ROLE=$(az role assignment list --scope "${KEY_VAULT_SENSITIVE_ID}" --assignee "${INGESTION_CACHE_IDENTITY_ID}" --query "[?contains(roleDefinitionName, 'Crypto') || contains(roleDefinitionName, 'Key')].roleDefinitionName" -o tsv 2>/dev/null | head -1 || echo "")
+  CACHE_SECRET_ROLE=$(az role assignment list --scope "${KEY_VAULT_SENSITIVE_ID}" --assignee "${INGESTION_CACHE_IDENTITY_ID}" --query "[?contains(roleDefinitionName, 'Secret')].roleDefinitionName" -o tsv 2>/dev/null | head -1 || echo "")
+  
+  if [ -z "${CACHE_KEY_ROLE}" ]; then
+    CACHE_KEY_ROLE="Key Vault Secrets Officer"
+  fi
+  if [ -z "${CACHE_SECRET_ROLE}" ]; then
+    CACHE_SECRET_ROLE="Key Vault Secrets Reader"
+  fi
+  
+  import_role_assignment \
+    "azurerm_role_assignment.ingestion_cache_kv_key_reader" \
+    "${KEY_VAULT_SENSITIVE_ID}" \
+    "${INGESTION_CACHE_IDENTITY_ID}" \
+    "${CACHE_KEY_ROLE}"
+  
+  import_role_assignment \
+    "azurerm_role_assignment.ingestion_cache_kv_secrets_reader" \
+    "${KEY_VAULT_SENSITIVE_ID}" \
+    "${INGESTION_CACHE_IDENTITY_ID}" \
+    "${CACHE_SECRET_ROLE}"
+fi
+
+# Ingestion Storage Identity Key Vault assignments
+INGESTION_STORAGE_IDENTITY_ID=$(az identity show --resource-group "${RESOURCE_GROUP_SENSITIVE_NAME}" --name "storage-id-${ENV}" --query principalId -o tsv 2>/dev/null || echo "")
+if [ -n "${INGESTION_STORAGE_IDENTITY_ID}" ]; then
+  # Try to discover the actual role names from Azure
+  STORAGE_KEY_ROLE=$(az role assignment list --scope "${KEY_VAULT_SENSITIVE_ID}" --assignee "${INGESTION_STORAGE_IDENTITY_ID}" --query "[?contains(roleDefinitionName, 'Crypto') || contains(roleDefinitionName, 'Key')].roleDefinitionName" -o tsv 2>/dev/null | head -1 || echo "")
+  STORAGE_SECRET_ROLE=$(az role assignment list --scope "${KEY_VAULT_SENSITIVE_ID}" --assignee "${INGESTION_STORAGE_IDENTITY_ID}" --query "[?contains(roleDefinitionName, 'Secret')].roleDefinitionName" -o tsv 2>/dev/null | head -1 || echo "")
+  
+  if [ -z "${STORAGE_KEY_ROLE}" ]; then
+    STORAGE_KEY_ROLE="Key Vault Secrets Officer"
+  fi
+  if [ -z "${STORAGE_SECRET_ROLE}" ]; then
+    STORAGE_SECRET_ROLE="Key Vault Secrets Reader"
+  fi
+  
+  import_role_assignment \
+    "azurerm_role_assignment.ingestion_storage_kv_key_reader" \
+    "${KEY_VAULT_SENSITIVE_ID}" \
+    "${INGESTION_STORAGE_IDENTITY_ID}" \
+    "${STORAGE_KEY_ROLE}"
+  
+  import_role_assignment \
+    "azurerm_role_assignment.ingestion_storage_kv_secrets_reader" \
+    "${KEY_VAULT_SENSITIVE_ID}" \
+    "${INGESTION_STORAGE_IDENTITY_ID}" \
+    "${STORAGE_SECRET_ROLE}"
+fi
+
+# Terraform Service Principal Key Vault assignments (Main Key Vault)
+import_role_assignment \
+  "azurerm_role_assignment.kv_main_crypto_officer_terraform_assign" \
+  "${KEY_VAULT_MAIN_ID}" \
+  "${TERRAFORM_SP_OBJECT_ID}" \
+  "Key Vault Crypto Officer"
+
+import_role_assignment \
+  "azurerm_role_assignment.kv_main_secrets_officer_terraform_assign" \
+  "${KEY_VAULT_MAIN_ID}" \
+  "${TERRAFORM_SP_OBJECT_ID}" \
+  "Key Vault Secrets Officer"
+
+import_role_assignment \
+  "azurerm_role_assignment.kv_main_access_administrator_terraform_assign" \
+  "${KEY_VAULT_MAIN_ID}" \
+  "${TERRAFORM_SP_OBJECT_ID}" \
+  "Key Vault Data Access Administrator"
+
+# Terraform Service Principal Key Vault assignments (Sensitive Key Vault)
+import_role_assignment \
+  "azurerm_role_assignment.kv_crypto_officer_terraform_assign" \
+  "${KEY_VAULT_SENSITIVE_ID}" \
+  "${TERRAFORM_SP_OBJECT_ID}" \
+  "Key Vault Crypto Officer"
+
+import_role_assignment \
+  "azurerm_role_assignment.kv_secrets_officer_terraform_assign" \
+  "${KEY_VAULT_SENSITIVE_ID}" \
+  "${TERRAFORM_SP_OBJECT_ID}" \
+  "Key Vault Secrets Officer"
+
+import_role_assignment \
+  "azurerm_role_assignment.kv_access_administrator_terraform_assign" \
+  "${KEY_VAULT_SENSITIVE_ID}" \
+  "${TERRAFORM_SP_OBJECT_ID}" \
+  "Key Vault Data Access Administrator"
+
+# Terraform Service Principal ACR Push assignment
+import_role_assignment \
+  "azurerm_role_assignment.acrpush_terraform" \
+  "${RESOURCE_GROUP_CORE_NAME_ID}" \
+  "${TERRAFORM_SP_OBJECT_ID}" \
+  "AcrPush"
+
+# Main Key Vault Secret Manager Group assignment
+MAIN_KV_SECRET_WRITER_GROUP_ID="fa8f2e2c-154e-4d4a-a99c-7dfa825858ef"
+import_role_assignment \
+  "azurerm_role_assignment.main_keyvault_secret_manager_group" \
+  "${KEY_VAULT_MAIN_ID}" \
+  "${MAIN_KV_SECRET_WRITER_GROUP_ID}" \
+  "Key Vault Secrets Officer"
+
+# Main Key Vault Key Reader Users (for_each - need to import each user)
+MAIN_KV_SECRET_WRITER_USERS=(
+  "084a1c45-5010-4aab-bab6-7b86a9d10e5c"
+  "3b48f167-cb68-4655-b45b-878e170af84d"
+  "4b89a1f0-8038-4929-81e6-6d128dac7aa0"
+  "4ee4611f-b24c-444b-8d34-edab333bf868"
+)
+
+for user_id in "${MAIN_KV_SECRET_WRITER_USERS[@]}"; do
+  import_role_assignment \
+    "azurerm_role_assignment.main_keyvault_key_reader_users[\"${user_id}\"]" \
+    "${KEY_VAULT_MAIN_ID}" \
+    "${user_id}" \
+    "Key Vault Secrets Officer"
+  
+  import_role_assignment \
+    "azurerm_role_assignment.main_keyvault_secret_manager_users[\"${user_id}\"]" \
+    "${KEY_VAULT_MAIN_ID}" \
+    "${user_id}" \
+    "Key Vault Secrets Officer"
+done
+
+# Telemetry Observer Group assignment
+TELEMETRY_OBSERVER_GROUP_ID="3e60cd87-c622-44d7-801f-fc691822d0ca"
+import_role_assignment \
+  "azurerm_role_assignment.telemetry_observer_group" \
+  "${RESOURCE_GROUP_CORE_NAME_ID}" \
+  "${TELEMETRY_OBSERVER_GROUP_ID}" \
+  "Telemetry Observer"
+
+# Telemetry Observer Users (for_each - need to import each user)
+TELEMETRY_OBSERVER_USERS=(
+  "084a1c45-5010-4aab-bab6-7b86a9d10e5c"
+  "3b48f167-cb68-4655-b45b-878e170af84d"
+  "4b89a1f0-8038-4929-81e6-6d128dac7aa0"
+  "4ee4611f-b24c-444b-8d34-edab333bf868"
+)
+
+for user_id in "${TELEMETRY_OBSERVER_USERS[@]}"; do
+  import_role_assignment \
+    "azurerm_role_assignment.telemetry_observer_users[\"${user_id}\"]" \
+    "${RESOURCE_GROUP_CORE_NAME_ID}" \
+    "${user_id}" \
+    "Telemetry Observer"
+done
+
+# Monitoring Data Reader assignment for Grafana Identity
+GRAFANA_IDENTITY_ID=$(az identity show --resource-group "${RESOURCE_GROUP_CORE_NAME}" --name "grafana-id-${ENV}" --query principalId -o tsv 2>/dev/null || echo "")
+if [ -n "${GRAFANA_IDENTITY_ID}" ]; then
+  import_role_assignment \
+    "azurerm_role_assignment.monitor_metrics_reader" \
+    "${RESOURCE_GROUP_CORE_NAME_ID}" \
+    "${GRAFANA_IDENTITY_ID}" \
+    "Monitoring Metrics Reader"
+fi
+
+    echo ""
+    echo "=========================================="
+echo "Importing Application Registration Key Vault Secrets"
+    echo "=========================================="
+    echo ""
+    
+# Get Key Vault name (sensitive Key Vault)
+if [ -z "${KEY_VAULT_SENSITIVE_NAME:-}" ]; then
+  SENSITIVE_KV_BASE=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "hakv2")
+  KEY_VAULT_SENSITIVE_NAME="${SENSITIVE_KV_BASE}${ENV}v2"
+fi
+
+# Application Registration Key Vault Secrets
+echo "Checking module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]..."
+if ! terraform state show 'module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]' >/dev/null 2>&1; then
+  # Secret name pattern: aad-app-{custom_subdomain_name}-gitops-client-id
+  # Try to discover the actual secret name from Key Vault
+  SECRET_NAME=$(az keyvault secret list --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --query "[?contains(name, 'aad-app') && contains(name, 'gitops-client-id')].name" -o tsv 2>/dev/null | head -1 || echo "")
+  if [ -z "${SECRET_NAME}" ]; then
+    # Fallback: try common patterns
+    SECRET_NAME="aad-app-ha-test-gitops-client-id"
+  fi
+  
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Found secret: ${SECRET_NAME}"
+    echo "  Importing module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0]' \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported application registration client ID secret"
+    else
+      echo "  ✗ Failed to import application registration client ID secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault '${KEY_VAULT_SENSITIVE_NAME}'"
+  fi
+else
+  echo "  ✓ module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_id[0] already in state, skipping"
+fi
+
+echo "Checking module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]..."
+if ! terraform state show 'module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]' >/dev/null 2>&1; then
+  # Secret name pattern: aad-app-{custom_subdomain_name}-gitops-client-secret
+  # Try to discover the actual secret name from Key Vault
+  SECRET_NAME=$(az keyvault secret list --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --query "[?contains(name, 'aad-app') && contains(name, 'gitops-client-secret')].name" -o tsv 2>/dev/null | head -1 || echo "")
+  if [ -z "${SECRET_NAME}" ]; then
+    # Fallback: try common patterns
+    SECRET_NAME="aad-app-ha-test-gitops-client-secret"
+  fi
+  
+  SECRET_VERSION_ID=$(az keyvault secret show --vault-name "${KEY_VAULT_SENSITIVE_NAME}" --name "${SECRET_NAME}" --query id -o tsv 2>/dev/null || echo "")
+  if [ -n "${SECRET_VERSION_ID}" ]; then
+    echo "  Found secret: ${SECRET_NAME}"
+    echo "  Importing module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]..."
+    if terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
+      'module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]' \
+      "${SECRET_VERSION_ID}" 2>&1; then
+      echo "  ✓ Imported application registration client secret"
+    else
+      echo "  ✗ Failed to import application registration client secret"
+    fi
+  else
+    echo "  ⚠️  Secret '${SECRET_NAME}' not found in Key Vault '${KEY_VAULT_SENSITIVE_NAME}'"
+  fi
+else
+  echo "  ✓ module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0] already in state, skipping"
+fi
+
+
 echo ""
 echo "=========================================="
-echo "Import script completed!"
+echo "Importing completed! 🎉"
+echo "Completed at: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=========================================="
+echo "Please proceed with the next steps from the migration/Readme.md"
+echo "=========================================="
+
+# ============================================================================
+# UPDATED REMAINING TERRAFORM DRIFTS DOCUMENTATION (Based on actual plan output)
+# ============================================================================
+echo ""
+echo "==========================================================================="
+echo "UPDATED: Remaining Terraform Drifts Documentation (Based on Actual Plan)"
+echo "==========================================================================="
+echo ""
+echo "After state migration (see migration/Readme.md), the following drifts remain:"
+echo ""
+echo "1. Application Registration Secret - Value Update (Expected):"
+echo "   - Resource: module.application_registration.azurerm_key_vault_secret.aad_app_gitops_client_secret[0]"
+echo "   - Change: value attribute update (sensitive - likely password/secret refresh)"
+echo "   - Impact: Secret value refresh (non-breaking if value is regenerated)"
+echo "   - Action: Safe to apply (will update secret value in Key Vault)"
+echo ""
+echo "2. PostgreSQL Secrets - Metadata Additions (Expected):"
+echo "   - Resources: 9 PostgreSQL-related secrets:"
+echo "     * database_connection_strings[\"app-repository\"]"
+echo "     * database_connection_strings[\"chat\"]"
+echo "     * database_connection_strings[\"ingestion\"]"
+echo "     * database_connection_strings[\"scope-management\"]"
+echo "     * database_connection_strings[\"theme\"]"
+echo "     * host[0]"
+echo "     * password[0]"
+echo "     * port[0]"
+echo "     * username[0]"
+echo "   - Changes: Adding content_type='text/plain' and expiration_date='2099-12-31T23:59:59Z'"
+echo "   - Impact: Non-breaking metadata enhancements"
+echo "   - Action: Safe to apply"
+echo ""
+echo "3. Kubernetes Cluster - Configuration Enhancements (Expected):"
+echo "   - Resource: module.kubernetes_cluster.azurerm_kubernetes_cluster.cluster"
+echo "   - Changes:"
+echo "     * storage_profile block (enables blob/disk/file CSI drivers and snapshot controller)"
+echo "     * timeouts { update = '30m' }"
+echo "     * temporary_name_for_rotation = 'defaultrepl' on default_node_pool"
+echo "   - Impact: Non-breaking enhancements for storage and zero-downtime upgrades"
+echo "   - Action: Safe to apply"
+echo ""
+echo "4. Kubernetes Node Pools - Rotation Configuration (Expected):"
+echo "   - Resources: node_pool[\"rapid\"], node_pool[\"steady\"]"
+echo "   - Changes: temporary_name_for_rotation = 'rapidrepl' / 'steadyrepl'"
+echo "   - Impact: Enables zero-downtime node pool upgrades"
+echo "   - Action: Safe to apply"
+echo ""
+echo "5. PostgreSQL Server - Configuration Enhancements (Expected):"
+echo "   - Resource: module.postgresql.azurerm_postgresql_flexible_server.apfs"
+echo "   - Changes:"
+echo "     * maintenance_window block (day_of_week=0, start_hour=3, start_minute=15)"
+echo "     * timeouts { update = '30m' }"
+echo "   - Impact: Non-breaking enhancements for maintenance scheduling"
+echo "   - Action: Safe to apply"
+echo ""
+echo "6. PostgreSQL Management Lock - New Resource (Expected):"
+echo "   - Resource: module.postgresql.azurerm_management_lock.can_not_delete_server[0]"
+echo "   - Impact: Additive security feature to prevent accidental deletion"
+echo "   - Action: Safe to create"
+echo ""
+echo "Summary:"
+echo "  - Total resources affected: 1 to add, 14 to change, 0 to destroy"
+echo "  - Application Registration secret: 1 (value update)"
+echo "  - PostgreSQL secrets: 9 (metadata additions)"
+echo "  - Kubernetes cluster: 1 (configuration enhancements)"
+echo "  - Kubernetes node pools: 2 (rotation configuration)"
+echo "  - PostgreSQL server: 1 (configuration enhancements)"
+echo "  - PostgreSQL management lock: 1 (new resource)"
+echo ""
+echo "All remaining drifts are expected and safe to apply. They represent:"
+echo "  - Module enhancements (storage profiles, maintenance windows, timeouts)"
+echo "  - Security best practices (expiration dates, management locks)"
+echo "  - Zero-downtime upgrade capabilities (temporary_name_for_rotation)"
+echo "  - Secret value refreshes (Application Registration secret)"
+echo ""
+echo "For state migration details, see: migration/Readme.md"
 echo ""

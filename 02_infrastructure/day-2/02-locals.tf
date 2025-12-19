@@ -8,26 +8,26 @@ locals {
   speech_service_custom_subdomain_name = "${var.speech_service_custom_subdomain_name}-${var.env}"
 
   # OpenAI service names
-  document_intelligence_name                  = "${var.document_intelligence_name}-${var.env}"
-  speech_service_name                         = "${var.speech_service_name}-${var.env}"
+  document_intelligence_name                  = var.document_intelligence_name
   custom_subdomain_name                       = "${var.custom_subdomain_name}-${var.env}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"
 
   # Resource names
-  log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
-  aks_user_assigned_identity_name     = "${var.aks_user_assigned_identity_name}-${var.env}"
-  cluster_name                        = "${var.cluster_name}-${var.env}"
-  application_gateway_name            = "${var.custom_subdomain_name}-${var.env}-${var.application_gateway_name}"
-  document_intelligence_identity_name = "${var.document_intelligence_identity_name}-${var.env}"
-  ingestion_cache_identity_name       = "${var.ingestion_cache_identity_name}-${var.env}"
-  ingestion_storage_identity_name     = "${var.ingestion_storage_identity_name}-${var.env}"
-  psql_user_assigned_identity_name    = "${var.psql_user_assigned_identity_name}-${var.env}"
-  csi_identity_name                   = "${var.csi_identity_name}-${var.env}"
-  grafana_identity_name               = "${var.grafana_identity_name}-${var.env}"
-  container_registry_name             = "${var.container_registry_name}${var.env}"
-  redis_name                          = "${var.redis_name}-${var.env}"
-  ingestion_cache_sa_name             = "${var.ingestion_cache_sa_name}${var.env}"
-  ingestion_storage_sa_name           = "${var.ingestion_storage_sa_name}${var.env}"
+  log_analytics_workspace_name                       = "${var.log_analytics_workspace_name}-${var.env}"
+  aks_user_assigned_identity_name                    = "${var.aks_user_assigned_identity_name}-${var.env}"
+  cluster_name                                       = "${var.cluster_name}-${var.env}"
+  application_gateway_name                           = "${var.custom_subdomain_name}-${var.env}-${var.application_gateway_name}"
+  application_gateway_frontend_ip_configuration_name = "${var.custom_subdomain_name}-${var.env}-${var.application_gateway_frontend_ip_configuration_name}"
+  document_intelligence_identity_name                = "${var.document_intelligence_identity_name}-${var.env}"
+  ingestion_cache_identity_name                      = "${var.ingestion_cache_identity_name}-${var.env}"
+  ingestion_storage_identity_name                    = "${var.ingestion_storage_identity_name}-${var.env}"
+  psql_user_assigned_identity_name                   = "${var.psql_user_assigned_identity_name}-${var.env}"
+  csi_identity_name                                  = "${var.csi_identity_name}-${var.env}"
+  grafana_identity_name                              = "${var.grafana_identity_name}-${var.env}"
+  container_registry_name                            = "${var.container_registry_name}${var.env}"
+  redis_name                                         = "${var.redis_name}-${var.env}"
+  ingestion_cache_sa_name                            = "${var.ingestion_cache_sa_name}${var.env}"
+  ingestion_storage_sa_name                          = "${var.ingestion_storage_sa_name}${var.env}"
 
   key_vault_core = {
     name                = "${var.main_kv_name}${var.env}v2" #TODO: remove v2 when we have a new key vault
@@ -56,11 +56,10 @@ locals {
   application_secret_display_name = "${var.custom_subdomain_name}-${var.env}-${var.application_secret_display_name}"
 
   # Dynamic DNS records - will be populated after application gateway is created
-  # This is a placeholder that will be updated in a later phase when application gateway is created
   dns_subdomain_records_with_ip = {
     for k, v in var.dns_subdomain_records : k => {
       name    = v.name
-      records = [] # Will be populated dynamically after application gateway is created
+      records = []
     }
   }
 
@@ -74,5 +73,15 @@ locals {
 
   # Azure AD Service Principal
   terraform_service_principal_name = "terraform"
+
+  # Key Vault Role Names
+  key_reader_key_vault_role_name                     = var.key_reader_key_vault_role_name
+  secret_reader_key_vault_role_name                  = var.secret_reader_key_vault_role_name
+  key_manager_key_vault_role_name                    = var.key_manager_key_vault_role_name
+  secret_manager_key_vault_role_name                 = var.secret_manager_key_vault_role_name
+  access_manager_key_vault_role_name                 = var.access_manager_key_vault_role_name
+  cluster_user_role_name                             = var.cluster_user_role_name
+  cluster_rbac_admin_role_name                       = var.cluster_rbac_admin_role_name
+  key_vault_crypto_service_encryption_user_role_name = var.key_vault_crypto_service_encryption_user_role_name
 }
 

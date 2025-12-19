@@ -4,6 +4,11 @@ env = "test"
 # Network configuration
 subnet_agw_cidr = "10.202.3.0/28"
 
+# Application Gateway configuration
+# Use explicit name to preserve existing gateway IP configuration name and avoid replacement
+# Existing name is "ha-test-gwip", but default would be "gateway-ip-configuration"
+application_gateway_gateway_ip_configuration_name = "ha-test-gwip"
+
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
 
@@ -169,7 +174,7 @@ document_intelligence_accounts = {
     location                      = "swedencentral"
     custom_subdomain_name         = "di-hello-azure-unique"
     public_network_access_enabled = true
-    local_auth_enabled            = false
+    local_auth_enabled            = true
   }
 }
 
@@ -180,7 +185,7 @@ speech_service_accounts = {
     location              = "swedencentral"
     account_kind          = "SpeechServices"
     account_sku_name      = "S0"
-    custom_subdomain_name = "ss-hello-azure-unique"
+    custom_subdomain_name = "ss-hello-azure-test"
     private_endpoint      = true
   }
 }
@@ -190,7 +195,7 @@ rabbitmq_password_chat_secret_name        = "rabbitmq-password-chat"
 zitadel_db_user_password_secret_name      = "zitadel-db-user-password"
 zitadel_master_key_secret_name            = "zitadel-master-key"
 encryption_key_app_repository_secret_name = "encryption-key-app-repository"
-encryption_key_node_chat_lxm_secret_name  = "encryption-key-node-chat-lxm"
+encryption_key_node_chat_lxm_secret_name  = "encryption-key-chat-lxm"
 encryption_key_ingestion_secret_name      = "encryption-key-ingestion"
 zitadel_pat_secret_name                   = "manual-zitadel-scope-mgmt-pat"
 

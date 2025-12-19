@@ -105,7 +105,7 @@ document_intelligence_accounts = {
     location                      = "swedencentral"
     custom_subdomain_name         = "di-hello-azure-unique"
     public_network_access_enabled = true
-    local_auth_enabled            = false
+    local_auth_enabled            = true
   }
 }
 
@@ -116,7 +116,7 @@ speech_service_accounts = {
     location              = "swedencentral"
     account_kind          = "SpeechServices"
     account_sku_name      = "S0"
-    custom_subdomain_name = "ss-hello-azure-unique"
+    custom_subdomain_name = "ss-hello-azure-dev"
     private_endpoint      = true
   }
 }

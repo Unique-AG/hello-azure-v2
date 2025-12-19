@@ -2,9 +2,9 @@
 # Using the azure-postgresql module from terraform-modules
 
 resource "random_string" "psql_suffix" {
-  length  = 8
-  special = false
-  upper   = false
+    length = var.postgres_suffix.length
+    special = var.postgres_suffix.special
+    upper   = var.postgres_suffix.upper
 }
 
 resource "random_password" "postgres_username" {
@@ -47,5 +47,9 @@ module "postgresql" {
   postgresql_server_tags = var.postgresql_server_tags
 
   metric_alerts_external_action_group_ids = var.postgresql_metric_alerts_external_action_group_ids
+
+  # Configure metric alerts to match existing alerts in Azure
+  metric_alerts = var.postgresql_metric_alerts
+
 }
 

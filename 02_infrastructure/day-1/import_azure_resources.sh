@@ -206,12 +206,9 @@ VNET_RG_NAME="rg-vnet-002"
 VNET_NAME="vnet-001"
 
 # The VNet module uses azapi_resource, not azurerm_virtual_network
-# NOTE: azapi_resource import may not work reliably. If import fails, the resource may already exist
-# or may need to be managed differently. Check terraform plan after running this script.
 echo "Checking module.vnet.azapi_resource.vnet..."
 if ! terraform state show module.vnet.azapi_resource.vnet >/dev/null 2>&1; then
   echo "  Attempting to import module.vnet.azapi_resource.vnet..."
-  # Get with: az network vnet show --name vnet-001 --resource-group rg-vnet-002 --query id -o tsv
   VNET_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${VNET_RG_NAME}/providers/Microsoft.Network/virtualNetworks/${VNET_NAME}"
   set +e  # Temporarily disable exit on error for this import attempt
   IMPORT_OUTPUT=$(terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -253,8 +250,6 @@ for subnet_pair in "${SUBNETS[@]}"; do
   RESOURCE_ADDRESS="module.vnet.module.subnet[\"${subnet_key}\"].azapi_resource.subnet"
   if ! terraform state show "${RESOURCE_ADDRESS}" >/dev/null 2>&1; then
     echo "  Attempting to import ${RESOURCE_ADDRESS}..."
-    # Get with: az network vnet subnet show --vnet-name vnet-001 --resource-group rg-vnet-002 --name ${subnet_name} --query id -o tsv
-    # Note: Use actual Azure subnet name, not the terraform key
     SUBNET_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${VNET_RG_NAME}/providers/Microsoft.Network/virtualNetworks/${VNET_NAME}/subnets/${subnet_name}"
     set +e  # Temporarily disable exit on error for this import attempt
     IMPORT_OUTPUT=$(terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
@@ -547,8 +542,6 @@ fi
 
 # Import subdomain A records
 echo "Checking azurerm_dns_a_record.adnsar_sub_domains..."
-# The keys in the original state are: api, argo, zitadel
-# Note: zitadel has name "id" but key "zitadel"
 
 # Function to map subdomain keys to DNS record names
 get_subdomain_name() {
@@ -563,8 +556,6 @@ for subdomain_key in api argo zitadel; do
   echo "Checking azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]..."
   if ! terraform state show "azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]" >/dev/null 2>&1; then
     echo "  Importing azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]..."
-    # Get the actual subdomain name (DNS record name, not the key)
-    # Try to get from variable first, otherwise use the mapping
     SUBDOMAIN_NAME=$(grep -A 10 "dns_zone_sub_domain_records\|dns_subdomain_records" "${VAR_PARAMS}" 2>/dev/null | grep -A 5 "${subdomain_key}" | grep "name" | cut -d'"' -f2 | head -1)
     if [ -z "${SUBDOMAIN_NAME}" ]; then
       SUBDOMAIN_NAME=$(get_subdomain_name "${subdomain_key}")
@@ -625,7 +616,6 @@ SENSITIVE_KV_NAME_PREFIX=$(grep "^sensitive_kv_name" "${VAR_PARAMS}" | cut -d'"'
 
 # Compute full Key Vault names (matching local.main_kv_name and local.sensitive_kv_name pattern)
 # Pattern: ${var.main_kv_name}${var.env}v2
-# We need to get env from VAR_CONFIG or VAR_PARAMS
 ENV_VALUE=$(grep "^env" "${VAR_CONFIG}" "${VAR_PARAMS}" 2>/dev/null | head -1 | cut -d'"' -f2 || echo "${ENV}")
 MAIN_KV_NAME="${MAIN_KV_NAME_PREFIX}${ENV_VALUE}v2"
 SENSITIVE_KV_NAME="${SENSITIVE_KV_NAME_PREFIX}${ENV_VALUE}v2"
@@ -669,8 +659,6 @@ echo ""
 echo "Checking azurerm_log_analytics_workspace.this..."
 if ! terraform state show azurerm_log_analytics_workspace.this >/dev/null 2>&1; then
   echo "  Importing azurerm_log_analytics_workspace.this..."
-  # Read log_analytics_workspace_name from VAR_PARAMS and construct the full name with env suffix
-  # The actual workspace name in Azure includes the environment suffix (e.g., "la-test")
   LOG_ANALYTICS_WORKSPACE_BASE_NAME=$(grep "^log_analytics_workspace_name" "${VAR_PARAMS}" | cut -d'"' -f2 || echo "la")
   LOG_ANALYTICS_WORKSPACE_NAME="${LOG_ANALYTICS_WORKSPACE_BASE_NAME}-${ENV}"
   # Get with: az monitor log-analytics workspace show --resource-group <resource_group_core_name> --workspace-name <log_analytics_workspace_name> --query id -o tsv
@@ -695,7 +683,6 @@ echo "Checking module.defender.azapi_resource.security_contact..."
 if ! terraform state show module.defender.azapi_resource.security_contact >/dev/null 2>&1; then
   echo "  Importing module.defender.azapi_resource.security_contact..."
   # Import format: /subscriptions/{subscription-id}/providers/Microsoft.Security/securityContacts/default
-  # Note: The name is "default" (not "default1")
   SECURITY_CONTACT_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Security/securityContacts/default"
   set +e  # Temporarily disable exit on error for this import attempt
   IMPORT_OUTPUT=$(terraform import -var-file="${VAR_CONFIG}" -var-file="${VAR_PARAMS}" \
