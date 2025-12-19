@@ -93,6 +93,11 @@ variable "subnet_agw_cidr" {
   type        = string
 }
 
+variable "bastion_subnet_cidr" {
+  description = "CIDR block for the Azure Bastion subnet (must be at least /26)"
+  type        = string
+}
+
 # DNS Configuration
 variable "dns_zone_name" {
   description = "The DNS zone name for the environment"
