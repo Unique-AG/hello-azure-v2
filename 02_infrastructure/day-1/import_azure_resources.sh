@@ -549,11 +549,15 @@ fi
 echo "Checking azurerm_dns_a_record.adnsar_sub_domains..."
 # The keys in the original state are: api, argo, zitadel
 # Note: zitadel has name "id" but key "zitadel"
-declare -A SUBDOMAIN_NAMES=(
-  ["api"]="api"
-  ["argo"]="argo"
-  ["zitadel"]="id"
-)
+
+# Function to map subdomain keys to DNS record names
+get_subdomain_name() {
+  case "$1" in
+    api) echo "api" ;;
+    argo) echo "argo" ;;
+    zitadel) echo "id" ;;
+  esac
+}
 
 for subdomain_key in api argo zitadel; do
   echo "Checking azurerm_dns_a_record.adnsar_sub_domains[\"${subdomain_key}\"]..."
@@ -563,7 +567,7 @@ for subdomain_key in api argo zitadel; do
     # Try to get from variable first, otherwise use the mapping
     SUBDOMAIN_NAME=$(grep -A 10 "dns_zone_sub_domain_records\|dns_subdomain_records" "${VAR_PARAMS}" 2>/dev/null | grep -A 5 "${subdomain_key}" | grep "name" | cut -d'"' -f2 | head -1)
     if [ -z "${SUBDOMAIN_NAME}" ]; then
-      SUBDOMAIN_NAME="${SUBDOMAIN_NAMES[${subdomain_key}]}"
+      SUBDOMAIN_NAME=$(get_subdomain_name "${subdomain_key}")
     fi
     # DNS A record ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/dnsZones/{zone}/A/{name}
     DNS_A_SUBDOMAIN_ID="/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_VNET_NAME}/providers/Microsoft.Network/dnsZones/${DNS_ZONE_NAME}/A/${SUBDOMAIN_NAME}"
