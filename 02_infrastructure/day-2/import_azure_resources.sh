@@ -1126,15 +1126,6 @@ echo "Importing OpenAI Resources"
 echo "=========================================="
 echo ""
 
-# WORKAROUND: The module has a bug in secrets.tf line 24 where it uses azurerm_cognitive_account.aca 
-# directly in for_each, causing "known only after apply" errors. To work around this, we set 
-# key_vault_id = null which disables the problematic secrets creation (local.create_vault_secrets = false),
-# allowing the module to work for importing and managing the main resources.
-
-# Key Vault secrets drift: The secrets exist in Azure but are not managed by Terraform due to this 
-# workaround. They can be managed manually or wait for a module fix.
-echo ""
-
 # Get subscription ID and resource group name from variables
 # Try to get subscription ID from VAR_CONFIG first, then from Azure CLI
 if [ -z "${SUBSCRIPTION_ID}" ]; then

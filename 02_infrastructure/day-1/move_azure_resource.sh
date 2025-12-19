@@ -31,5 +31,3 @@ terraform state mv -state=${OLD_STATE_PATH} -state-out=${NEW_STATE_PATH} \
 terraform state mv -state=${OLD_STATE_PATH} -state-out=${NEW_STATE_PATH} \
     module.identities.azurerm_user_assigned_identity.psql_identity \
     azurerm_user_assigned_identity.psql_identity
-
-# it might be applicable to move vnet (including subnets) resources as well but this has to be verified

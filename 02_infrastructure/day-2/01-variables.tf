@@ -434,6 +434,54 @@ variable "postgresql_metric_alerts_external_action_group_ids" {
   default     = []
 }
 
+variable "postgresql_metric_alerts" {
+  description = "Map of metric alerts for PostgreSQL server. Each alert includes name, description, severity, frequency, window_size, enabled status, and criteria."
+  type = map(object({
+    name        = string
+    description = string
+    severity    = number
+    frequency   = string
+    window_size = string
+    enabled     = bool
+    criteria = object({
+      metric_name = string
+      aggregation = string
+      operator    = string
+      threshold   = number
+    })
+  }))
+  default = {
+    default_cpu_alert = {
+      name        = "PostgreSQL High CPU Usage"
+      description = "Alert when CPU usage is above 80% for more than 30 minutes"
+      severity    = 2
+      frequency   = "PT5M"
+      window_size = "PT30M"
+      enabled     = true
+      criteria = {
+        metric_name = "cpu_percent"
+        aggregation = "Average"
+        operator    = "GreaterThan"
+        threshold   = 80
+      }
+    }
+    default_memory_alert = {
+      name        = "PostgreSQL High Memory Usage"
+      description = "Alert when memory usage is above 90% for more than 1 hour"
+      severity    = 1
+      frequency   = "PT15M"
+      window_size = "PT1H"
+      enabled     = true
+      criteria = {
+        metric_name = "memory_percent"
+        aggregation = "Average"
+        operator    = "GreaterThan"
+        threshold   = 90
+      }
+    }
+  }
+}
+
 variable "postgres_username" {
   description = "The username for the PostgreSQL server"
   type = object({
@@ -459,6 +507,20 @@ variable "postgres_password" {
     length  = 32
     special = false
     numeric = true
+  }
+}
+
+variable "postgres_suffix" {
+  description = "The suffix for the PostgreSQL server"
+  type = object({
+    length  = number
+    special = bool
+    upper   = bool
+  })
+  default = {
+    length  = 8
+    special = true
+    upper   = true
   }
 }
 

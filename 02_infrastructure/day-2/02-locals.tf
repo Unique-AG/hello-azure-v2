@@ -56,11 +56,10 @@ locals {
   application_secret_display_name = "${var.custom_subdomain_name}-${var.env}-${var.application_secret_display_name}"
 
   # Dynamic DNS records - will be populated after application gateway is created
-  # This is a placeholder that will be updated in a later phase when application gateway is created
   dns_subdomain_records_with_ip = {
     for k, v in var.dns_subdomain_records : k => {
       name    = v.name
-      records = [] # Will be populated dynamically after application gateway is created
+      records = []
     }
   }
 

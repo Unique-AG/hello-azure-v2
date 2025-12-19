@@ -39,16 +39,6 @@ module "application_gateway" {
   # Preserve existing WAF policy name to avoid replacement
   waf_policy_settings = var.application_gateway_waf_policy_settings
 
-  # Ensure diagnostics are configured so the resource is not planned for destroy (count stays = 1)
-  # TODO: Uncomment once diagnostic setting exists in Azure (currently causes drift)
-  # monitor_diagnostic_setting = {
-  #   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.log_analytics.id
-  #   enabled_log = [
-  #     {
-  #       category_group = "allLogs"
-  #     }
-  #   ]
-  # }
 
   tags = var.tags
 

@@ -2,11 +2,9 @@
 # Using the azure-postgresql module from terraform-modules
 
 resource "random_string" "psql_suffix" {
-  length = 8
-  # Note: These values match the existing resource in state to prevent replacement
-  # The existing resource was created with special=true and upper=true
-  special = true
-  upper   = true
+    length = var.postgres_suffix.length
+    special = var.postgres_suffix.special
+    upper   = var.postgres_suffix.upper
 }
 
 resource "random_password" "postgres_username" {
@@ -51,38 +49,7 @@ module "postgresql" {
   metric_alerts_external_action_group_ids = var.postgresql_metric_alerts_external_action_group_ids
 
   # Configure metric alerts to match existing alerts in Azure
-  # Only include CPU and Memory alerts (exclude absence alert which doesn't exist yet)
-  metric_alerts = {
-    default_cpu_alert = {
-      name        = "PostgreSQL High CPU Usage"
-      description = "Alert when CPU usage is above 80% for more than 30 minutes"
-      severity    = 2
-      frequency   = "PT5M"
-      window_size = "PT30M"
-      enabled     = true
-      criteria = {
-        metric_name = "cpu_percent"
-        aggregation = "Average"
-        operator    = "GreaterThan"
-        threshold   = 80
-      }
-    }
-    default_memory_alert = {
-      name        = "PostgreSQL High Memory Usage"
-      description = "Alert when memory usage is above 90% for more than 1 hour"
-      severity    = 1
-      frequency   = "PT15M"
-      window_size = "PT1H"
-      enabled     = true
-      criteria = {
-        metric_name = "memory_percent"
-        aggregation = "Average"
-        operator    = "GreaterThan"
-        threshold   = 90
-      }
-    }
-
-  }
+  metric_alerts = var.postgresql_metric_alerts
 
 }
 

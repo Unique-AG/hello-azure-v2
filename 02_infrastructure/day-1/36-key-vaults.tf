@@ -1,5 +1,4 @@
 # Key Vaults
-# These Key Vaults are used for storing secrets and keys for the infrastructure
 
 resource "azurerm_key_vault" "sensitive_kv" {
   name                        = local.key_vault_sensitive.name
