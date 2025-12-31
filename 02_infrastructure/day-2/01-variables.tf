@@ -1205,3 +1205,34 @@ variable "key_vault_crypto_service_encryption_user_role_name" {
   type        = string
   default     = "Key Vault Crypto Service Encryption User"
 }
+
+variable "dns_zone_id" {
+  description = "ID of the DNS zone"
+  type        = string
+}
+
+variable "scope_management_encryption_key_1_version" {
+  description = "To rotate this SCOPE MANAGEMENT encryption key increase the version."
+  default     = "1"
+}
+
+variable "scope_management_encryption_key_2_version" {
+  description = "To rotate this SCOPE MANAGEMENT encryption key increase the version."
+  default     = "1"
+}
+
+variable "audit_storage_user_assigned_identity_name" {
+  description = "The name of the audit storage user-assigned identity."
+  type        = string
+  default     = "audit-storage-identity"
+}
+
+variable "audit_storage_user_assigned_identity_id" {
+  description = "The ID of the audit storage user-assigned identity."
+  type        = string
+}
+
+variable "audit_storage_sa_name" {
+  type    = string
+  default = "helloazureaudit"
+}

@@ -111,6 +111,49 @@ resource "azurerm_key_vault_secret" "encryption_key_ingestion" {
 }
 
 # ============================================================================
+# Scope Management Encryption Keys (SCIM)
+# ============================================================================
+
+resource "random_id" "scope_management_encryption_key_1" {
+  byte_length = 32
+  keepers = {
+    version = var.scope_management_encryption_key_1_version
+  }
+}
+
+resource "azurerm_key_vault_secret" "scope_management_encryption_key_1" {
+  name            = "scope-management-encryption-key-1"
+  value           = random_id.scope_management_encryption_key_1.hex
+  key_vault_id    = data.azurerm_key_vault.key_vault_sensitive.id
+  expiration_date = var.secret_expiration_date
+}
+
+resource "random_id" "scope_management_encryption_key_2" {
+  byte_length = 32
+  keepers = {
+    version = var.scope_management_encryption_key_2_version
+  }
+}
+
+resource "azurerm_key_vault_secret" "scope_management_encryption_key_2" {
+  name            = "scope-management-encryption-key-2"
+  value           = random_id.scope_management_encryption_key_2.hex
+  key_vault_id    = data.azurerm_key_vault.key_vault_sensitive.id
+  expiration_date = var.secret_expiration_date
+}
+
+# ============================================================================
+# Azure Document Intelligence Endpoint Definitions
+# ============================================================================
+
+resource "azurerm_key_vault_secret" "azure_document_intelligence_endpoint_definitions" {
+  name            = "azure-document-intelligence-endpoint-definitions"
+  value           = jsonencode(local.azure_document_intelligence_endpoint_definitions)
+  key_vault_id    = data.azurerm_key_vault.key_vault_sensitive.id
+  expiration_date = var.secret_expiration_date
+}
+
+# ============================================================================
 # Manual Secrets (Placeholders)
 # ============================================================================
 

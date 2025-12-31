@@ -83,5 +83,16 @@ locals {
   cluster_user_role_name                             = var.cluster_user_role_name
   cluster_rbac_admin_role_name                       = var.cluster_rbac_admin_role_name
   key_vault_crypto_service_encryption_user_role_name = var.key_vault_crypto_service_encryption_user_role_name
-}
 
+
+  azure_document_intelligence_endpoints = [
+    for key, value in var.speech_service_accounts : azurerm_cognitive_account.aca[key].endpoint
+  ]
+  azure_document_intelligence_endpoint_definitions = [
+    for key, value in var.speech_service_accounts : {
+      name     = key
+      endpoint = azurerm_cognitive_account.aca[key].endpoint
+      location = azurerm_cognitive_account.aca[key].location
+    }
+  ]
+}
