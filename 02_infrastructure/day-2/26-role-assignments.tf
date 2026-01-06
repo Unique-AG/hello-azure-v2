@@ -115,3 +115,82 @@ resource "azurerm_role_assignment" "monitor_metrics_reader" {
   principal_id         = data.azurerm_user_assigned_identity.grafana_identity.principal_id
 }
 
+resource "azurerm_role_assignment" "aks_workload_identity_cognitive_services_user" {
+  scope                            = data.azurerm_resource_group.core.id
+  role_definition_name             = "Cognitive Services User" # matches both OpenAI and Document Intelligence / FormRecognizer
+  principal_id                     = data.azurerm_user_assigned_identity.aks_workload_identity.principal_id
+  skip_service_principal_aad_check = true
+}
+
+resource "azurerm_role_assignment" "application_gateway_ingres_controller_contributor_role" {
+  scope                = data.azurerm_application_gateway.application_gateway.id
+  role_definition_name = "Contributor"
+  principal_id         = data.azurerm_kubernetes_cluster.cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+  depends_on = [
+    data.azurerm_application_gateway.application_gateway,
+    data.azurerm_kubernetes_cluster.cluster
+  ]
+}
+
+resource "azurerm_role_assignment" "application_gateway_ingres_controller_reader_role" {
+  scope                = data.azurerm_resource_group.core.id
+  role_definition_name = "Reader"
+  principal_id         = data.azurerm_kubernetes_cluster.cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+  depends_on = [
+    data.azurerm_resource_group.core,
+    data.azurerm_kubernetes_cluster.cluster
+  ]
+}
+
+resource "azurerm_role_assignment" "application_gateway_ingres_controller_vnet_subnet_access" {
+  scope                = data.azurerm_resource_group.vnet.id
+  role_definition_name = data.azurerm_role_definition.vnet_subnet_access.name
+  principal_id         = data.azurerm_kubernetes_cluster.cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+  depends_on = [
+    data.azurerm_resource_group.vnet,
+    data.azurerm_kubernetes_cluster.cluster
+  ]
+}
+
+resource "azurerm_role_assignment" "audit_storage_kv_key_reader" {
+  principal_id         = data.azurerm_user_assigned_identity.audit_storage_identity.principal_id
+  scope                = data.azurerm_key_vault.key_vault_sensitive.id
+  role_definition_name = local.key_reader_key_vault_role_name
+}
+
+resource "azurerm_role_assignment" "audit_storage_kv_secrets_reader" {
+  principal_id         = data.azurerm_user_assigned_identity.audit_storage_identity.principal_id
+  scope                = data.azurerm_key_vault.key_vault_sensitive.id
+  role_definition_name = local.secret_reader_key_vault_role_name
+}
+
+resource "azurerm_role_assignment" "cluster_rbac_admin_terraform" {
+  principal_id         = data.azuread_service_principal.terraform.object_id
+  role_definition_name = local.cluster_rbac_admin_role_name
+  scope                = data.azurerm_kubernetes_cluster.cluster.id
+}
+
+resource "azurerm_role_assignment" "cluster_user_terraform" {
+  principal_id         = data.azuread_service_principal.terraform.object_id
+  role_definition_name = local.cluster_user_role_name
+  scope                = data.azurerm_kubernetes_cluster.cluster.id
+}
+
+resource "azurerm_role_assignment" "csi_identity_secret_reader" {
+  principal_id         = data.azurerm_kubernetes_cluster.cluster.key_vault_secrets_provider[0].secret_identity[0].object_id
+  role_definition_name = local.secret_reader_key_vault_role_name
+  scope                = data.azurerm_key_vault.key_vault_sensitive.id
+}
+
+resource "azurerm_role_assignment" "csi_identity_secret_reader_main_kv" {
+  principal_id         = data.azurerm_kubernetes_cluster.cluster.key_vault_secrets_provider[0].secret_identity[0].object_id
+  role_definition_name = local.secret_reader_key_vault_role_name
+  scope                = data.azurerm_key_vault.key_vault_core.id
+}
+
+resource "azurerm_role_assignment" "dns_contributor" {
+  scope                            = data.azurerm_dns_zone.dns_zone.id
+  role_definition_name             = "DNS Zone Contributor"
+  principal_id                     = data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id
+  skip_service_principal_aad_check = true
+}

@@ -340,6 +340,12 @@ variable "grafana_identity_name" {
   default     = "grafana-id"
 }
 
+variable "audit_storage_user_assigned_identity_name" {
+  description = "Name of the audit storage identity"
+  type        = string
+  default     = "audit-storage-id"
+}
+
 variable "psql_user_assigned_identity_name" {
   description = "The name of the PostgreSQL user-assigned identity"
   type        = string
@@ -1204,4 +1210,23 @@ variable "key_vault_crypto_service_encryption_user_role_name" {
   description = "Role name for Key Vault Crypto Service Encryption User"
   type        = string
   default     = "Key Vault Crypto Service Encryption User"
+}
+
+variable "audit_storage_sa_name" {
+  type    = string
+  default = "helloazureaudit"
+}
+
+variable "audit_containers" {
+  description = "List of storage container names for audit logs"
+  type        = list(string)
+  default = [
+    "backend-service-chat",
+    "backend-service-ingestion",
+    "backend-service-ingestion-worker",
+    "backend-service-ingestion-worker-chat",
+    "backend-service-app-repository",
+    "backend-service-scope-management",
+    "backend-service-configuration"
+  ]
 }

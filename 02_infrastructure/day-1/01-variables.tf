@@ -257,6 +257,12 @@ variable "csi_identity_name" {
   default     = "csi-id"
 }
 
+variable "audit_storage_user_assigned_identity_name" {
+  description = "Name of the audit storage identity"
+  type        = string
+  default     = "audit-storage-id"
+}
+
 # GitOps Configuration
 variable "gitops_display_name" {
   description = "Display name for GitOps application registration"

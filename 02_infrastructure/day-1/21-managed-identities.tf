@@ -36,3 +36,9 @@ resource "azurerm_user_assigned_identity" "grafana_identity" {
   location            = azurerm_resource_group.core.location
   resource_group_name = azurerm_resource_group.core.name
 }
+
+resource "azurerm_user_assigned_identity" "audit_storage_identity" {
+  name                = local.audit_storage_user_assigned_identity_name
+  location            = azurerm_resource_group.sensitive.location
+  resource_group_name = azurerm_resource_group.sensitive.name
+}
