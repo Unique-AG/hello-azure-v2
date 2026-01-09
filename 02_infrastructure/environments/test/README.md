@@ -23,7 +23,8 @@ terraform init -backend-config=../environments/test/backend-config-day-1.hcl
 # Plan/Apply day-1
 terraform plan \
   -var-file=../environments/test/00-config-day-1.auto.tfvars \
-  -var-file=../environments/test/00-parameters-day-1.auto.tfvars
+  -var-file=../environments/test/00-parameters-day-1.auto.tfvars \
+  -var-file=../environments/test/prometheus-rules.auto.tfvars
 
 # Initialize backend for day-2
 cd ../day-2
@@ -32,7 +33,8 @@ terraform init -backend-config=../environments/test/backend-config-day-2.hcl
 # Plan/Apply day-2
 terraform plan \
   -var-file=../environments/test/00-config-day-2.auto.tfvars \
-  -var-file=../environments/test/00-parameters-day-2.auto.tfvars
+  -var-file=../environments/test/00-parameters-day-2.auto.tfvars \
+  -var-file=../environments/test/prometheus-rules.auto.tfvars
 ```
 
 See the main [README.md](../README.md) for more details.

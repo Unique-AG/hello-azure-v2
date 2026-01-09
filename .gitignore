@@ -21,7 +21,7 @@ CURSOR_RESEARCH.md
 *.log
 
 # Ignore .tfvars files
-*.tfvars
+# *.tfvars
 *.tfvars.json
 
 # Exception: Track configuration and parameter files (they are part of the repository structure)
