@@ -52,9 +52,7 @@ locals {
     psql_private_dns_zone = {
       name = var.psql_private_dns_zone_name
     }
-    speech_service_private_dns_zone = {
-      name = var.speech_service_private_dns_zone_name
-    }
+
     dns_zone_sub_domain_records = var.dns_zone_sub_domain_records
 
     dns_zone_root_records = var.dns_zone_root_records

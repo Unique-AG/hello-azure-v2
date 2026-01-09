@@ -49,8 +49,8 @@ module "audit_storage" {
   self_cmk = {
     key_vault_id              = data.azurerm_key_vault.key_vault_sensitive.id
     key_name                  = "audit-storage-cmk"
-    user_assigned_identity_id = data.azurerm_user_assigned_identity.audit_storage_identity.principal_id
+    user_assigned_identity_id = data.azurerm_user_assigned_identity.audit_storage_identity.id
   }
 
-  identity_ids = [data.azurerm_user_assigned_identity.audit_storage_identity.principal_id]
+  identity_ids = [data.azurerm_user_assigned_identity.audit_storage_identity.id]
 }

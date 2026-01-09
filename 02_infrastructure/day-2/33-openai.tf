@@ -5,7 +5,7 @@ module "openai" {
 
   resource_group_name         = data.azurerm_resource_group.core.name
   endpoint_secret_name_suffix = var.openai_endpoint_secret_name_suffix
-  key_vault_id                = null
+  key_vault_id                = data.azurerm_key_vault.key_vault_core.id #data.azurerm_key_vault.key_vault_sensitive.id
 
   cognitive_accounts = {
     for k, v in var.openai_cognitive_accounts : k => {
@@ -15,6 +15,11 @@ module "openai" {
       custom_subdomain_name         = local.custom_subdomain_name
       public_network_access_enabled = v.public_network_access_enabled
       cognitive_deployments         = v.cognitive_deployments
+
+      private_endpoint = v.openai_private_endpoint_enabled ? {
+        subnet_id           = data.azurerm_subnet.subnet_cognitive_services_day_1.id
+        private_dns_zone_id = data.azurerm_private_dns_zone.openai_day_1[0].id
+      } : null
     }
   }
 
@@ -30,7 +35,7 @@ module "document_intelligence" {
   doc_intelligence_name = local.document_intelligence_name
   resource_group_name   = data.azurerm_resource_group.core.name
 
-  key_vault_id = null
+  key_vault_id = data.azurerm_key_vault.key_vault_core.id #data.azurerm_key_vault.key_vault_sensitive.id 
 
   accounts = {
     for k, v in var.document_intelligence_accounts : k => {
@@ -51,6 +56,7 @@ module "speech_service" {
 
   key_vault_id        = data.azurerm_key_vault.key_vault_sensitive.id
   resource_group_name = data.azurerm_resource_group.core.name
+
   # Use var.speech_service_name directly (without env suffix) to match existing resource names
 
   speech_service_name = var.speech_service_name

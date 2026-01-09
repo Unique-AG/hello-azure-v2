@@ -41,7 +41,7 @@ locals {
   }
 
   aks = {
-    name                = var.cluster_name
+    name                = local.cluster_name # Uses "aks-{env}" to match the actual cluster name
     resource_group_name = var.resource_group_core_name
   }
 
