@@ -17,7 +17,20 @@ kv_sku = "premium"
 
 # Terraform Service Principal (created in day-0/bootstrap)
 # To get the object_id, run: az ad sp list --display-name "terraform" --query "[].{objectId:id,displayName:displayName}" -o table, or go to Azure Portal -> Enterprise Applications -> Terraform -> Object ID
-terraform_service_principal_object_id = "dde525a7-fbfa-4a7c-88da-b9bcaf75830f" # 
+terraform_service_principal_object_id = "dde525a7-fbfa-4a7c-88da-b9bcaf75830f"
+
+# Kubelet Identity Object ID (from AKS cluster)
+# To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'identityProfile.kubeletidentity.objectId' -o tsv
+# This is set explicitly to avoid drift when the AKS cluster data source returns a different value
+kubelet_identity_object_id = "46ff3669-ff01-4730-94b5-75f738a06f04"
+
+# AKS Cluster ID (for role assignment scopes)
+# To get the ID, run: az aks show -n aks-test -g resource-group-core --query 'id' -o tsv
+aks_cluster_id = "/subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/resource-group-core/providers/Microsoft.ContainerService/managedClusters/aks-test"
+
+# CSI Identity Object ID (Key Vault Secrets Provider identity from AKS cluster)
+# To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'addonProfiles.azureKeyvaultSecretsProvider.identity.objectId' -o tsv
+csi_identity_object_id = "24ea03fb-b738-4f5c-baa4-8baa8ba6dd6a" 
 
 # GitOps configuration
 gitops_display_name = "GitOps"
@@ -71,9 +84,6 @@ telemetry_observer_user_ids = [
   "084a1c45-5010-4aab-bab6-7b86a9d10e5c",
   "3b48f167-cb68-4655-b45b-878e170af84d",
 ]
-
-# Speech Service configuration (private DNS zone name is not environment-specific)
-speech_service_private_dns_zone_name = "privatelink.cognitiveservices.azure.com"
 
 # Resource Group Names (created in day-0)
 resource_group_core_name      = "resource-group-core"
@@ -141,6 +151,7 @@ openai_cognitive_accounts = {
     location                      = "swedencentral"
     local_auth_enabled            = false
     custom_subdomain_name         = "hello-azure-unique"
+    openai_private_endpoint_enabled = false
     public_network_access_enabled = true
     cognitive_deployments = [
       {
@@ -188,6 +199,30 @@ speech_service_accounts = {
     custom_subdomain_name = "ss-hello-azure-test"
     private_endpoint      = true
   }
+}
+
+# DNS Zones 
+dns_zones = {
+  name_client_consented = "client-consented.unique.dev"
+  resource_group_name = "rg-vnet-002"
+  private_zones = {
+    cognitive_services = {
+      name = "privatelink.cognitiveservices.azure.com"
+    }
+    aoi = {
+      name = "privatelink.openai.azure.com"
+    }
+    storage = {
+      name = "privatelink.blob.core.windows.net"
+    }
+    psql = {
+      name = "privatelink.postgres.database.azure.com"
+    }
+    redis = {
+      name = "privatelink.redis.cache.windows.net"
+    }
+  }
+
 }
 
 # Secrets

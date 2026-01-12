@@ -27,4 +27,26 @@ terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.workloads.random_id.encryption_key_node_chat_lxm' 'random_id.encryption_key_node_chat_lxm'
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.telemetry_observer_users' 'azurerm_role_assignment.telemetry_observer_users'
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.telemetry_observer_group' 'azurerm_role_assignment.telemetry_observer_group'
-terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.monitor_metrics_reader' 'azurerm_role_assignment.monitor_metrics_reader'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.monitor_metrics_reader' 'azurerm_role_assignment.monitor_metrics_reader' 
+#NOTE: this was missing when compared with dev hello-azure state file
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["assistants-core"]' 'azurerm_federated_identity_credential.afic_workloads["assistants-core"]'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["backend-service-chat"]' 'azurerm_federated_identity_credential.afic_workloads["backend-service-chat"]'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion"]' 'azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion"]'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion-worker"]' 'azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion-worker"]'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion-worker-chat"]' 'azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion-worker-chat"]'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["backend-service-speech"]' 'azurerm_federated_identity_credential.afic_workloads["backend-service-speech"]'
+
+
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.audit_storage_kv_key_reader' 'azurerm_role_assignment.audit_storage_kv_key_reader'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.audit_storage_kv_secrets_reader' 'azurerm_role_assignment.audit_storage_kv_secrets_reader'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.aks_workload_identity_cognitive_services_user' 'azurerm_role_assignment.aks_workload_identity_cognitive_services_user'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.application_gateway_ingres_controller_contributor_role' 'azurerm_role_assignment.application_gateway_ingres_controller_contributor_role'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.application_gateway_ingres_controller_reader_role' 'azurerm_role_assignment.application_gateway_ingres_controller_reader_role'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.application_gateway_ingres_controller_vnet_subnet_access' 'azurerm_role_assignment.application_gateway_ingres_controller_vnet_subnet_access'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.cluster_rbac_admin_terraform' 'azurerm_role_assignment.cluster_rbac_admin_terraform'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.cluster_user_terraform' 'azurerm_role_assignment.cluster_user_terraform'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.csi_identity_secret_reader' 'azurerm_role_assignment.csi_identity_secret_reader'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.csi_identity_secret_reader_main_kv' 'azurerm_role_assignment.csi_identity_secret_reader_main_kv'
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.dns_contributor' 'azurerm_role_assignment.dns_contributor'
+
+terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.workloads.module.audit_storage.azurerm_key_vault_key.storage-account-byok[0]' 'module.audit_storage.azurerm_key_vault_key.storage-account-byok[0]'

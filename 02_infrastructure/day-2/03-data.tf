@@ -65,8 +65,14 @@ data "azurerm_subnet" "subnet_cognitive_services_day_1" {
 
 # Private DNS Zone data source for speech service (created in day-1)
 data "azurerm_private_dns_zone" "speech_service_day_1" {
-  name                = var.speech_service_private_dns_zone_name
-  resource_group_name = var.resource_group_name_vnet
+  name                = var.dns_zones.private_zones.cognitive_services.name
+  resource_group_name = var.dns_zones.resource_group_name
+}
+
+data "azurerm_private_dns_zone" "openai_day_1" {
+  count               = var.openai_cognitive_accounts.cognitive-account-swedencentral.openai_private_endpoint_enabled ? 1 : 0
+  name                = var.dns_zones.private_zones.aoi.name
+  resource_group_name = var.dns_zones.resource_group_name
 }
 
 # Managed Identity data sources (created in day-1)
@@ -93,6 +99,11 @@ data "azurerm_user_assigned_identity" "aks_workload_identity" {
 data "azurerm_user_assigned_identity" "grafana_identity" {
   name                = local.grafana_identity_name
   resource_group_name = data.azurerm_resource_group.core.name
+}
+
+data "azurerm_user_assigned_identity" "audit_storage_identity" {
+  name                = local.audit_storage_user_assigned_identity_name
+  resource_group_name = data.azurerm_resource_group.sensitive.name
 }
 
 # Custom Role Definition data sources (created in day-1)
@@ -145,10 +156,13 @@ data "azuread_user" "telemetry_observer" {
 # Note: This may not exist during initial import, so role assignments that depend on it
 # should be imported after the cluster is created
 # COMMENTED OUT - AKS cluster related imports are disabled
-# data "azurerm_kubernetes_cluster" "cluster" {
-#   name                = local.aks.name
-#   resource_group_name = local.aks.resource_group_name
-# }
+data "azurerm_kubernetes_cluster" "cluster" {
+  name                = local.aks.name
+  resource_group_name = local.aks.resource_group_name
+  depends_on = [
+    module.kubernetes_cluster.kubernetes_cluster_id
+  ]
+}
 
 # Log Analytics Workspace data source (created in day-1)
 data "azurerm_log_analytics_workspace" "log_analytics" {

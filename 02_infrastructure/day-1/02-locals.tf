@@ -9,19 +9,20 @@ locals {
 
   # Resource names
 
-  log_analytics_workspace_name        = "${var.log_analytics_workspace_name}-${var.env}"
-  aks_user_assigned_identity_name     = "${var.aks_user_assigned_identity_name}-${var.env}"
-  cluster_name                        = "${var.cluster_name}-${var.env}"
-  document_intelligence_identity_name = "${var.document_intelligence_identity_name}-${var.env}"
-  ingestion_cache_identity_name       = "${var.ingestion_cache_identity_name}-${var.env}"
-  ingestion_storage_identity_name     = "${var.ingestion_storage_identity_name}-${var.env}"
-  psql_user_assigned_identity_name    = "${var.psql_user_assigned_identity_name}-${var.env}"
-  csi_identity_name                   = "${var.csi_identity_name}-${var.env}"
-  grafana_identity_name               = "${var.grafana_identity_name}-${var.env}"
-  container_registry_name             = "${var.container_registry_name}${var.env}"
-  redis_name                          = "${var.redis_name}-${var.env}"
-  ingestion_cache_sa_name             = "${var.ingestion_cache_sa_name}-${var.env}"
-  ingestion_storage_sa_name           = "${var.ingestion_storage_sa_name}-${var.env}"
+  log_analytics_workspace_name              = "${var.log_analytics_workspace_name}-${var.env}"
+  aks_user_assigned_identity_name           = "${var.aks_user_assigned_identity_name}-${var.env}"
+  cluster_name                              = "${var.cluster_name}-${var.env}"
+  document_intelligence_identity_name       = "${var.document_intelligence_identity_name}-${var.env}"
+  ingestion_cache_identity_name             = "${var.ingestion_cache_identity_name}-${var.env}"
+  ingestion_storage_identity_name           = "${var.ingestion_storage_identity_name}-${var.env}"
+  psql_user_assigned_identity_name          = "${var.psql_user_assigned_identity_name}-${var.env}"
+  csi_identity_name                         = "${var.csi_identity_name}-${var.env}"
+  grafana_identity_name                     = "${var.grafana_identity_name}-${var.env}"
+  audit_storage_user_assigned_identity_name = "${var.audit_storage_user_assigned_identity_name}-${var.env}"
+  container_registry_name                   = "${var.container_registry_name}${var.env}"
+  redis_name                                = "${var.redis_name}-${var.env}"
+  ingestion_cache_sa_name                   = "${var.ingestion_cache_sa_name}-${var.env}"
+  ingestion_storage_sa_name                 = "${var.ingestion_storage_sa_name}-${var.env}"
 
   # Link names
   speech_service_private_dns_zone_virtual_network_link_name = "${var.speech_service_private_dns_zone_virtual_network_link_name}-${var.env}"
@@ -51,9 +52,7 @@ locals {
     psql_private_dns_zone = {
       name = var.psql_private_dns_zone_name
     }
-    speech_service_private_dns_zone = {
-      name = var.speech_service_private_dns_zone_name
-    }
+
     dns_zone_sub_domain_records = var.dns_zone_sub_domain_records
 
     dns_zone_root_records = var.dns_zone_root_records

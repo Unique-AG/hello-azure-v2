@@ -187,6 +187,24 @@ variable "cluster_name" {
   default     = "aks"
 }
 
+variable "kubelet_identity_object_id" {
+  description = "Object ID of the AKS kubelet identity."
+  type        = string
+  default     = null
+}
+
+variable "aks_cluster_id" {
+  description = "Resource ID of the AKS cluster."
+  type        = string
+  default     = null
+}
+
+variable "csi_identity_object_id" {
+  description = "Object ID of the AKS CSI (Key Vault Secrets Provider) identity."
+  type        = string
+  default     = null
+}
+
 # Managed Identities
 variable "aks_user_assigned_identity_name" {
   description = "The name of the AKS user-assigned identity"
@@ -640,12 +658,6 @@ variable "ingestion_storage_connection_string_2_secret_name" {
   default     = "ingestion-storage-connection-string-2"
 }
 
-variable "speech_service_private_dns_zone_name" {
-  description = "The name of the private DNS zone for the speech service"
-  type        = string
-  default     = "privatelink.cognitiveservices.azure.com"
-}
-
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
   description = "The name of the virtual network link for the speech service private DNS zone"
   type        = string
@@ -668,11 +680,12 @@ variable "openai_endpoint_secret_name_suffix" {
 variable "openai_cognitive_accounts" {
   description = "Map of Azure OpenAI cognitive accounts configuration"
   type = map(object({
-    name                          = string
-    location                      = string
-    local_auth_enabled            = bool
-    custom_subdomain_name         = optional(string)
-    public_network_access_enabled = bool
+    name                            = string
+    location                        = string
+    local_auth_enabled              = bool
+    custom_subdomain_name           = optional(string)
+    openai_private_endpoint_enabled = optional(bool, false)
+    public_network_access_enabled   = bool
     cognitive_deployments = list(object({
       name          = string
       model_name    = string
@@ -1205,3 +1218,83 @@ variable "key_vault_crypto_service_encryption_user_role_name" {
   type        = string
   default     = "Key Vault Crypto Service Encryption User"
 }
+
+variable "scope_management_encryption_key_1_version" {
+  description = "To rotate this SCOPE MANAGEMENT encryption key increase the version."
+  default     = "1"
+}
+
+variable "scope_management_encryption_key_2_version" {
+  description = "To rotate this SCOPE MANAGEMENT encryption key increase the version."
+  default     = "1"
+}
+
+variable "audit_storage_user_assigned_identity_name" {
+  description = "The name of the audit storage user-assigned identity."
+  type        = string
+  default     = "audit-storage-id"
+}
+
+variable "audit_storage_sa_name" {
+  type    = string
+  default = "helloazureaudit"
+}
+
+variable "audit_containers" {
+  description = "List of storage container names for audit logs"
+  type        = list(string)
+  default = [
+    "backend-service-chat",
+    "backend-service-ingestion",
+    "backend-service-ingestion-worker",
+    "backend-service-ingestion-worker-chat",
+    "backend-service-app-repository",
+    "backend-service-scope-management",
+    "backend-service-configuration"
+  ]
+}
+
+variable "dns_zones" {
+  description = "DNS zones"
+  type = object({
+    name_client_consented = optional(string, "client-consented.unique.ag")
+    resource_group_name   = optional(string, "rg-vnet-002")
+    private_zones = optional(object({
+      redis = object({
+        name = string
+      })
+      psql = object({
+        name = string
+      })
+      cognitive_services = object({
+        name = string
+      })
+      aoi = object({
+        name = string
+      })
+      storage = object({
+        name = string
+      })
+      }), {
+      redis = {
+        name = "privatelink.redis.cache.windows.net"
+      }
+      psql = {
+        name = "privatelink.postgres.database.azure.com"
+      }
+      cognitive_services = {
+        name = "privatelink.cognitiveservices.azure.com"
+      }
+      storage = {
+        name = "privatelink.blob.core.windows.net"
+      }
+      aoi = {
+        name = "privatelink.openai.azure.com"
+      }
+    })
+  })
+
+  default = {}
+}
+
+

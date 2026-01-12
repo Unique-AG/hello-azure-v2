@@ -88,7 +88,6 @@ custom_subdomain_name                       = "hello-azure"
 document_intelligence_custom_subdomain_name = "di-hello-azure"
 
 # Speech Service configuration
-speech_service_private_dns_zone_name                      = "privatelink.cognitiveservices.azure.com"
 speech_service_private_dns_zone_virtual_network_link_name = "speech-service-private-dns-zone-vnet-link"
 
 # Application Registration

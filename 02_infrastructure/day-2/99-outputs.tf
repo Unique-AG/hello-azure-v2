@@ -214,3 +214,8 @@ output "application_gateway_id" {
   description = "The ID of the Application Gateway"
   value       = module.application_gateway.appgw_id
 }
+
+output "audit_storage_user_assigned_identity_id" {
+  value       = azurerm_user_assigned_identity.audit_storage_identity.id
+  description = "The ID of the user-assigned identity for audit storage."
+}

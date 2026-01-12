@@ -24,6 +24,7 @@ locals {
   psql_user_assigned_identity_name                   = "${var.psql_user_assigned_identity_name}-${var.env}"
   csi_identity_name                                  = "${var.csi_identity_name}-${var.env}"
   grafana_identity_name                              = "${var.grafana_identity_name}-${var.env}"
+  audit_storage_user_assigned_identity_name          = "${var.audit_storage_user_assigned_identity_name}-${var.env}"
   container_registry_name                            = "${var.container_registry_name}${var.env}"
   redis_name                                         = "${var.redis_name}-${var.env}"
   ingestion_cache_sa_name                            = "${var.ingestion_cache_sa_name}${var.env}"
@@ -40,7 +41,7 @@ locals {
   }
 
   aks = {
-    name                = var.cluster_name
+    name                = local.cluster_name # Uses "aks-{env}" to match the actual cluster name
     resource_group_name = var.resource_group_core_name
   }
 

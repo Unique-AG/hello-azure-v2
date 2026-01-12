@@ -257,6 +257,12 @@ variable "csi_identity_name" {
   default     = "csi-id"
 }
 
+variable "audit_storage_user_assigned_identity_name" {
+  description = "Name of the audit storage identity"
+  type        = string
+  default     = "audit-storage-id"
+}
+
 # GitOps Configuration
 variable "gitops_display_name" {
   description = "Display name for GitOps application registration"
@@ -385,11 +391,6 @@ variable "ingestion_storage_sa_name" {
   default     = "uqhastorage"
 }
 
-variable "speech_service_private_dns_zone_name" {
-  description = "The name of the private DNS zone for the speech service."
-  type        = string
-  default     = "privatelink.cognitiveservices.azure.com"
-}
 
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
   description = "The name of the virtual network link for the speech service private DNS zone"
@@ -519,4 +520,43 @@ variable "defender_storage_accounts_extensions" {
       name = "SensitiveDataDiscovery"
     }
   ]
+}
+
+variable "dns_private_endpoints" {
+  description = "Private DNS endpoints"
+  type = object({
+    private_zones = optional(object({
+      redis = object({
+        name = string
+      })
+      psql = object({
+        name = string
+      })
+      cognitive_services = object({
+        name = string
+      })
+      aoi = object({
+        name = string
+      })
+      storage = object({
+        name = string
+      })
+      }), {
+      redis = {
+        name = "privatelink.redis.cache.windows.net"
+      }
+      psql = {
+        name = "privatelink.postgres.database.azure.com"
+      }
+      cognitive_services = {
+        name = "privatelink.cognitiveservices.azure.com"
+      }
+      storage = {
+        name = "privatelink.blob.core.windows.net"
+      }
+      aoi = {
+        name = "privatelink.openai.azure.com"
+      }
+    })
+  })
 }

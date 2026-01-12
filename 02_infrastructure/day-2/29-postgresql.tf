@@ -2,9 +2,9 @@
 # Using the azure-postgresql module from terraform-modules
 
 resource "random_string" "psql_suffix" {
-    length = var.postgres_suffix.length
-    special = var.postgres_suffix.special
-    upper   = var.postgres_suffix.upper
+  length  = var.postgres_suffix.length
+  special = var.postgres_suffix.special
+  upper   = var.postgres_suffix.upper
 }
 
 resource "random_password" "postgres_username" {
