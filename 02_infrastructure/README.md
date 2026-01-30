@@ -50,8 +50,8 @@ terraform init -backend-config=../environments/test/backend-config-day-2.hcl
 ```
 
 **Note:** Each day-X has its own state file:
-- day-1: `terraform-infra-day-1.tfstate`
-- day-2: `terraform-infra-day-2.tfstate`
+- day-1: `terraform-day-1-test.tfstate` (test) or `terraform-day-1-dev.tfstate` (dev)
+- day-2: `terraform-day-2-test.tfstate` (test) or `terraform-day-2-dev.tfstate` (dev)
 
 This ensures state isolation and prevents conflicts between different deployment phases.
 
@@ -98,12 +98,12 @@ terraform apply \
 
 1. **day-1**: Deploy foundational infrastructure first
    - Creates resource groups, key vaults, networking, managed identities, etc.
-   - State stored in: `terraform-infra-day-1.tfstate`
+   - State stored in: `terraform-day-1-test.tfstate` (test) or `terraform-day-1-dev.tfstate` (dev)
 
 2. **day-2**: Deploy identity/governance resources (depends on resources from day-1)
    - Uses data sources to look up day-1 resources by name and resource group
    - Creates Azure AD groups, application registrations, federated credentials
-   - State stored in: `terraform-infra-day-2.tfstate`
+   - State stored in: `terraform-day-2-test.tfstate` (test) or `terraform-day-2-dev.tfstate` (dev)
 
 ## Cross-Day Dependencies
 
@@ -197,8 +197,8 @@ terraform plan -var-file=../environments/test/00-config-day-2.auto.tfvars -var-f
 
 - **Day-1 must be imported before day-2**: Day-2 resources depend on resources created in day-1 (e.g., key vaults, resource groups)
 - **Separate state files**: Each day-X uses its own state file:
-  - Day-1: `terraform-infra-day-1.tfstate`
-  - Day-2: `terraform-infra-day-2.tfstate`
+  - Day-1: `terraform-day-1-test.tfstate` (test) or `terraform-day-1-dev.tfstate` (dev)
+  - Day-2: `terraform-day-2-test.tfstate` (test) or `terraform-day-2-dev.tfstate` (dev)
 - **Idempotent**: The import scripts will skip resources that are already in state
 - **Expected drifts**: After import, running `terraform plan` will show cosmetic drifts (API version differences, module-internal changes). These are safe and documented in the script output
 

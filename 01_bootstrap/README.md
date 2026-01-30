@@ -85,14 +85,24 @@ terraform apply \
 
 Next, populate the `client_id` in the environment's `00-config.auto.tfvars` from the newly created application:
 ```bash
+# Test environment example
+cd day-0
 var_value=$(terraform output client_id)
 # MacOS
 sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config-day-0.auto.tfvars
+sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-1.auto.tfvars
+sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-2.auto.tfvars
 # Linux
 sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config-day-0.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-1.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-2.auto.tfvars
 # Windows
 sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config-day-0.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-1.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-2.auto.tfvars
 ```
+
+**Note:** For the dev environment, replace `test` with `dev` in all the paths above. The `client_id` must be consistent across all environment config files (day-0, day-1, and day-2) as they all authenticate using the same Azure AD Application created during bootstrap.
 
 ### Phase 2: Migrate to Remote State
 
