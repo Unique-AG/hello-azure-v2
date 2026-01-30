@@ -152,17 +152,6 @@ data "azuread_user" "telemetry_observer" {
   object_id = each.value
 }
 
-# Kubernetes Cluster data source (will be created in day-2, but referenced here)
-# Note: This may not exist during initial import, so role assignments that depend on it
-# should be imported after the cluster is created
-# COMMENTED OUT - AKS cluster related imports are disabled
-data "azurerm_kubernetes_cluster" "cluster" {
-  name                = local.aks.name
-  resource_group_name = local.aks.resource_group_name
-  depends_on = [
-    module.kubernetes_cluster.kubernetes_cluster_id
-  ]
-}
 
 # Log Analytics Workspace data source (created in day-1)
 data "azurerm_log_analytics_workspace" "log_analytics" {
@@ -194,12 +183,6 @@ data "azurerm_subnet" "aks_pods" {
   name                 = "snet-aks-pods"
   virtual_network_name = "vnet-001"
   resource_group_name  = data.azurerm_resource_group.vnet.name
-}
-
-# Application Gateway data source (created in day-2, referenced here for role assignments)
-data "azurerm_application_gateway" "application_gateway" {
-  name                = local.application_gateway_name
-  resource_group_name = data.azurerm_resource_group.core.name
 }
 
 # PostgreSQL data sources (created in day-1)

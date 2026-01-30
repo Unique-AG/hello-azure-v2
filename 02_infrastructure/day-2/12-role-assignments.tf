@@ -86,21 +86,21 @@ resource "azurerm_role_assignment" "aks_workload_identity_cognitive_services_use
 resource "azurerm_role_assignment" "application_gateway_ingres_controller_reader_role" {
   scope                = data.azurerm_resource_group.core.id
   role_definition_name = "Reader"
-  principal_id         = data.azurerm_kubernetes_cluster.cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+  principal_id         = module.kubernetes_cluster.agic_identity_object_id
 }
 
 # AGIC Identity needs at least 'Contributor' access to Application Gateway
 resource "azurerm_role_assignment" "application_gateway_ingres_controller_contributor_role" {
   scope                = module.application_gateway.appgw_id
   role_definition_name = "Contributor"
-  principal_id         = data.azurerm_kubernetes_cluster.cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+  principal_id         = module.kubernetes_cluster.agic_identity_object_id
 }
 
 # AGIC Identity needs at least 'Read and join' access to Subnet
 resource "azurerm_role_assignment" "application_gateway_ingres_controller_vnet_subnet_access" {
   scope                = data.azurerm_resource_group.vnet.id
   role_definition_name = data.azurerm_role_definition.vnet_subnet_access.name
-  principal_id         = data.azurerm_kubernetes_cluster.cluster.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+  principal_id         = module.kubernetes_cluster.agic_identity_object_id
 }
 
 resource "azurerm_role_assignment" "main_keyvault_secret_manager_group" {
@@ -144,42 +144,42 @@ resource "azurerm_role_assignment" "monitor_metrics_reader" {
 }
 
 # Terraform Service Principal Kubernetes assignments
-# Tries to use explicit scope from variable first, then falls back to the data source value
+# Tries to use explicit scope from variable first, then falls back to the module.kubernetes_cluster module output
 resource "azurerm_role_assignment" "cluster_user_terraform" {
   principal_id         = data.azuread_service_principal.terraform.object_id
   role_definition_name = local.cluster_user_role_name
-  scope                = coalesce(var.aks_cluster_id, data.azurerm_kubernetes_cluster.cluster.id)
+  scope                = coalesce(var.aks_cluster_id, module.kubernetes_cluster.kubernetes_cluster_id)
 }
 
 # Terraform Service Principal Kubernetes RBAC assignments
-# Tries to use explicit scope from variable first, then falls back to the data source value
+# Tries to use explicit scope from variable first, then falls back to the module.kubernetes_cluster module output
 resource "azurerm_role_assignment" "cluster_rbac_admin_terraform" {
   principal_id         = data.azuread_service_principal.terraform.object_id
   role_definition_name = local.cluster_rbac_admin_role_name
-  scope                = coalesce(var.aks_cluster_id, data.azurerm_kubernetes_cluster.cluster.id)
+  scope                = coalesce(var.aks_cluster_id, module.kubernetes_cluster.kubernetes_cluster_id)
 }
 
 # Terraform Service Principal CSI Identity Key Vault assignments
-# Tries to use explicit principal_id from variable first, then falls back to the data source value
+# Tries to use explicit principal_id from variable first, then falls back to the module.kubernetes_cluster module output
 resource "azurerm_role_assignment" "csi_identity_secret_reader_main_kv" {
-  principal_id         = coalesce(var.csi_identity_object_id, data.azurerm_kubernetes_cluster.cluster.key_vault_secrets_provider[0].secret_identity[0].object_id)
+  principal_id         = coalesce(var.csi_identity_object_id, module.kubernetes_cluster.csi_identity_object_id)
   role_definition_name = local.secret_reader_key_vault_role_name
   scope                = data.azurerm_key_vault.key_vault_core.id
 }
 
-# Tries to use explicit principal_id from variable first, then falls back to the data source value
+# Tries to use explicit principal_id from variable first, then falls back to the module.kubernetes_cluster module output
 resource "azurerm_role_assignment" "csi_identity_secret_reader" {
-  principal_id         = coalesce(var.csi_identity_object_id, data.azurerm_kubernetes_cluster.cluster.key_vault_secrets_provider[0].secret_identity[0].object_id)
+  principal_id         = coalesce(var.csi_identity_object_id, module.kubernetes_cluster.csi_identity_object_id)
   role_definition_name = local.secret_reader_key_vault_role_name
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
 }
 
 # DNS Zone Contributor assignment for Kubelet Identity
-# Tries to use explicit principal_id from variable first, then falls back to the data source value
+# Tries to use explicit principal_id from variable first, then falls back to the module.kubernetes_cluster module output
 resource "azurerm_role_assignment" "dns_contributor" {
   scope                            = data.azurerm_dns_zone.dns_zone.id
   role_definition_name             = "DNS Zone Contributor"
-  principal_id                     = coalesce(var.kubelet_identity_object_id, data.azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id)
+  principal_id                     = coalesce(var.kubelet_identity_object_id, module.kubernetes_cluster.kublet_identity_object_id)
   skip_service_principal_aad_check = true
 }
 
