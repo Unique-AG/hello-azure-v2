@@ -59,8 +59,8 @@ terraform init -backend-config=../environments/test/backend-config-day-0.hcl
 ```
 
 **Note:** The state file is stored at:
-- Test: `terraform-init-test-v2.tfstate`
-- Dev: `terraform-init-dev-v2.tfstate`
+- Test: `terraform-init-test.tfstate`
+- Dev: `terraform-init-dev.tfstate`
 
 ### Running Terraform Plan/Apply
 
@@ -175,7 +175,7 @@ This bootstrap step (day-0) must be completed **before** deploying infrastructur
    - Creates Azure AD application and service principal
    - Sets up federated credentials for GitHub Actions
    - Assigns necessary roles and permissions
-   - State stored in: `terraform-init-test-v2.tfstate` (test) or `terraform-init-dev-v2.tfstate` (dev)
+   - State stored in: `terraform-init-test.tfstate` (test) or `terraform-init-dev.tfstate` (dev)
 
 2. **02_infrastructure/day-1**: Deploy foundational infrastructure (depends on day-0)
 3. **02_infrastructure/day-2**: Deploy identity/governance resources (depends on day-1)

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 export LEGACY_STATE_FILE="terraform-infra.tfstate"
-export NEW_STATE_FILE="terraform-infra-test-v2-day-2.tfstate"
+export NEW_STATE_FILE="terraform-infra-test-day-2.tfstate"
 
 # After each terraform state mv command, inccrement "serial": value in the NEW_STATE_FILE and run terraform state push to propagate the changes
 # (cd .. && terraform state push ./migration/$NEW_STATE_FILE)
@@ -35,7 +35,6 @@ terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion-worker"]' 'azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion-worker"]'
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion-worker-chat"]' 'azurerm_federated_identity_credential.afic_workloads["backend-service-ingestion-worker-chat"]'
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.azurerm_federated_identity_credential.afic_workloads["backend-service-speech"]' 'azurerm_federated_identity_credential.afic_workloads["backend-service-speech"]'
-
 
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.audit_storage_kv_key_reader' 'azurerm_role_assignment.audit_storage_kv_key_reader'
 terraform state mv -state=$LEGACY_STATE_FILE -state-out=$NEW_STATE_FILE 'module.identities.azurerm_role_assignment.audit_storage_kv_secrets_reader' 'azurerm_role_assignment.audit_storage_kv_secrets_reader'
