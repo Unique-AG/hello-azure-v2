@@ -560,22 +560,5 @@ variable "dns_private_endpoints" {
     })
   })
   default = {
-    private_zones = {
-      redis = {
-        name = "privatelink.redis.cache.windows.net"
-      }
-      psql = {
-        name = "privatelink.postgres.database.azure.com"
-      }
-      cognitive_services = {
-        name = "privatelink.cognitiveservices.azure.com"
-      }
-      storage = {
-        name = "privatelink.blob.core.windows.net"
-      }
-      aoi = {
-        name = "privatelink.openai.azure.com"
-      }
-    }
   }
 }
