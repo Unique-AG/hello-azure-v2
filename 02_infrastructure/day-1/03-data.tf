@@ -23,10 +23,3 @@ data "azuread_user" "gitops_maintainer" {
   for_each  = toset(var.gitops_maintainer_user_ids)
   object_id = each.value
 }
-
-# Kubernetes cluster data source (will be populated after AKS cluster is created)
-data "azurerm_kubernetes_cluster" "cluster" {
-  name                = local.cluster_name
-  resource_group_name = azurerm_resource_group.core.name
-}
-
