@@ -3,19 +3,6 @@ data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
 
-# Role definitions for custom roles
-data "azurerm_role_definition" "contributor" {
-  name = local.contributor_role_name
-}
-
-data "azurerm_role_definition" "reader" {
-  name = local.reader_role_name
-}
-
-data "azurerm_role_definition" "acr_pull" {
-  name = local.acr_pull_role_name
-}
-
 # Azure AD data sources
 data "azuread_client_config" "current" {}
 
@@ -137,11 +124,6 @@ data "azuread_service_principal" "terraform" {
 }
 
 # Azure AD Users
-data "azuread_user" "cluster_admin" {
-  for_each  = toset(var.cluster_admin_user_ids)
-  object_id = each.value
-}
-
 data "azuread_user" "main_keyvault_secret_writer" {
   for_each  = toset(var.keyvault_secret_writer_user_ids)
   object_id = each.value
@@ -188,7 +170,7 @@ data "azurerm_subnet" "aks_pods" {
 # PostgreSQL data sources (created in day-1)
 data "azurerm_subnet" "postgresql" {
   name                 = var.postgresql_subnet_name
-  virtual_network_name = var.virtual_network_name
+  virtual_network_name = data.azurerm_virtual_network.vnet_day_1.name
   resource_group_name  = data.azurerm_resource_group.vnet.name
 }
 
