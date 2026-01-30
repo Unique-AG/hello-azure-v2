@@ -30,7 +30,7 @@ aks_cluster_id = "/subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGr
 
 # CSI Identity Object ID (Key Vault Secrets Provider identity from AKS cluster)
 # To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'addonProfiles.azureKeyvaultSecretsProvider.identity.objectId' -o tsv
-csi_identity_object_id = "24ea03fb-b738-4f5c-baa4-8baa8ba6dd6a" 
+csi_identity_object_id = "8f6d5aff-a056-4073-8b99-0dfdbe5e25dd" 
 
 # GitOps configuration
 gitops_display_name = "GitOps"
@@ -160,13 +160,6 @@ openai_cognitive_accounts = {
         model_version = "2"
         sku_name      = null
         sku_capacity  = 350
-      },
-      {
-        name          = "gpt-35-turbo-0125"
-        model_name    = "gpt-35-turbo"
-        model_version = "0125"
-        sku_name      = null
-        sku_capacity  = 120
       },
       {
         name          = "gpt-4o-2024-11-20"

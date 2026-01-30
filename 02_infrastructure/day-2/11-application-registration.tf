@@ -5,7 +5,9 @@ locals {
   maintainers_principal_object_ids = [for user in values(data.azuread_user.gitops_maintainer) : user.object_id]
 }
 
-resource "azuread_service_principal" "msgraph" {
+# Reference the existing Microsoft Graph service principal (well-known Azure AD app)
+# This is a shared resource that already exists - we only need to reference it
+data "azuread_service_principal" "msgraph" {
   client_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
 }
 
@@ -24,19 +26,19 @@ module "application_registration" {
   required_resource_access_list = {
     (data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph) = [
       {
-        id   = azuread_service_principal.msgraph.oauth2_permission_scope_ids["profile"]
+        id   = data.azuread_service_principal.msgraph.oauth2_permission_scope_ids["profile"]
         type = "Scope"
       },
       {
-        id   = azuread_service_principal.msgraph.oauth2_permission_scope_ids["User.Read"]
+        id   = data.azuread_service_principal.msgraph.oauth2_permission_scope_ids["User.Read"]
         type = "Scope"
       },
       {
-        id   = azuread_service_principal.msgraph.oauth2_permission_scope_ids["openid"]
+        id   = data.azuread_service_principal.msgraph.oauth2_permission_scope_ids["openid"]
         type = "Scope"
       },
       {
-        id   = azuread_service_principal.msgraph.oauth2_permission_scope_ids["email"]
+        id   = data.azuread_service_principal.msgraph.oauth2_permission_scope_ids["email"]
         type = "Scope"
       },
     ],

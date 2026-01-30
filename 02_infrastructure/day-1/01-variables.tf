@@ -309,6 +309,19 @@ variable "keyvault_secret_writer_user_ids" {
   type        = list(string)
 }
 
+# Key Vault Role Names
+variable "key_vault_crypto_service_encryption_user_role_name" {
+  description = "Role name for Key Vault Crypto Service Encryption User"
+  type        = string
+  default     = "Key Vault Crypto Service Encryption User"
+}
+
+variable "secret_reader_key_vault_role_name" {
+  description = "Role name for the secret reader key vault"
+  type        = string
+  default     = "Key Vault Secrets User"
+}
+
 variable "keyvault_core_network_acls" {
   description = "Network ACLs for the core key vault"
   type = object({

@@ -123,11 +123,8 @@ data "azuread_service_principal" "terraform" {
   object_id = var.terraform_service_principal_object_id
 }
 
-# Azure AD Users
-data "azuread_user" "main_keyvault_secret_writer" {
-  for_each  = toset(var.keyvault_secret_writer_user_ids)
-  object_id = each.value
-}
+# NOTE: This data source has been moved to day-1/38-role-assignments.tf
+# to support role assignments created in day-1.
 
 data "azuread_user" "telemetry_observer" {
   for_each  = toset(var.telemetry_observer_user_ids)

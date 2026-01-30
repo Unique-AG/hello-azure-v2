@@ -23,3 +23,9 @@ data "azuread_user" "gitops_maintainer" {
   for_each  = toset(var.gitops_maintainer_user_ids)
   object_id = each.value
 }
+
+# Data source to look up users
+data "azuread_user" "keyvault_secret_writer" {
+  for_each  = toset(var.keyvault_secret_writer_user_ids)
+  object_id = each.value
+}

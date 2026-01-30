@@ -5,31 +5,8 @@ resource "azurerm_role_assignment" "psql_identity_role_assignment" {
   scope                = data.azurerm_key_vault.key_vault_sensitive.id
 }
 
-# Ingestion Cache Identity Key Vault assignments
-resource "azurerm_role_assignment" "ingestion_cache_kv_key_reader" {
-  principal_id         = data.azurerm_user_assigned_identity.ingestion_cache_identity.principal_id
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.secret_reader_key_vault_role_name
-}
-
-resource "azurerm_role_assignment" "ingestion_cache_kv_secrets_reader" {
-  principal_id         = data.azurerm_user_assigned_identity.ingestion_cache_identity.principal_id
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.secret_reader_key_vault_role_name
-}
-
-# Ingestion Storage Identity Key Vault assignments
-resource "azurerm_role_assignment" "ingestion_storage_kv_key_reader" {
-  principal_id         = data.azurerm_user_assigned_identity.ingestion_storage_identity.principal_id
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.key_vault_crypto_service_encryption_user_role_name
-}
-
-resource "azurerm_role_assignment" "ingestion_storage_kv_secrets_reader" {
-  principal_id         = data.azurerm_user_assigned_identity.ingestion_storage_identity.principal_id
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.secret_reader_key_vault_role_name
-}
+# NOTE: CMK-related role assignments have been moved to day-1/38-role-assignments.tf
+# to ensure RBAC propagation completes before day-2 attempts to use CMK
 
 # Terraform Service Principal Key Vault assignments
 resource "azurerm_role_assignment" "kv_main_crypto_officer_terraform_assign" {
@@ -115,19 +92,9 @@ resource "azurerm_role_assignment" "telemetry_observer_group" {
   role_definition_name = data.azurerm_role_definition.telemetry_observer.name
 }
 
-resource "azurerm_role_assignment" "main_keyvault_key_reader_users" {
-  for_each             = data.azuread_user.main_keyvault_secret_writer
-  principal_id         = each.value.object_id
-  role_definition_name = local.key_reader_key_vault_role_name
-  scope                = data.azurerm_key_vault.key_vault_core.id
-}
-
-resource "azurerm_role_assignment" "main_keyvault_secret_manager_users" {
-  for_each             = data.azuread_user.main_keyvault_secret_writer
-  principal_id         = each.value.object_id
-  role_definition_name = local.secret_manager_key_vault_role_name
-  scope                = data.azurerm_key_vault.key_vault_core.id
-}
+# NOTE: These role assignments have been moved to day-1/38-role-assignments.tf
+# to ensure users have Key Vault access before day-2 runs.
+# Keeping this comment for reference.
 
 resource "azurerm_role_assignment" "telemetry_observer_users" {
   for_each             = data.azuread_user.telemetry_observer
@@ -183,22 +150,5 @@ resource "azurerm_role_assignment" "dns_contributor" {
   skip_service_principal_aad_check = true
 }
 
-# Audit Storage Identity Key Vault assignments
-resource "azurerm_user_assigned_identity" "audit_storage_identity" {
-  name                = var.audit_storage_user_assigned_identity_name
-  location            = data.azurerm_resource_group.sensitive.location
-  resource_group_name = data.azurerm_resource_group.sensitive.name
-}
-
-# Audit Storage Identity Key Vault assignments
-resource "azurerm_role_assignment" "audit_storage_kv_key_reader" {
-  principal_id         = azurerm_user_assigned_identity.audit_storage_identity.principal_id
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.key_reader_key_vault_role_name
-}
-
-resource "azurerm_role_assignment" "audit_storage_kv_secrets_reader" {
-  principal_id         = azurerm_user_assigned_identity.audit_storage_identity.principal_id
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-  role_definition_name = local.secret_reader_key_vault_role_name
-}
+# NOTE: audit_storage_identity is created in day-1/21-managed-identities.tf
+# NOTE: CMK-related role assignments have been moved to day-1/38-role-assignments.tf

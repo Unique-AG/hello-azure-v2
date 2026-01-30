@@ -47,3 +47,26 @@ resource "azurerm_key_vault" "main_kv" {
   }
 }
 
+# Core Key Vault - Secrets Officer
+resource "azurerm_role_assignment" "core_kv_secrets_officer_users" {
+  for_each             = data.azuread_user.keyvault_secret_writer
+  principal_id         = each.value.object_id
+  role_definition_name = "Key Vault Secrets Officer"
+  scope                = azurerm_key_vault.main_kv.id
+}
+
+# Sensitive Key Vault - Secrets Officer
+resource "azurerm_role_assignment" "sensitive_kv_secrets_officer_users" {
+  for_each             = data.azuread_user.keyvault_secret_writer
+  principal_id         = each.value.object_id
+  role_definition_name = "Key Vault Secrets Officer"
+  scope                = azurerm_key_vault.sensitive_kv.id
+}
+
+# Sensitive Key Vault - Crypto Officer (for CMK operations)
+resource "azurerm_role_assignment" "sensitive_kv_crypto_officer_users" {
+  for_each             = data.azuread_user.keyvault_secret_writer
+  principal_id         = each.value.object_id
+  role_definition_name = "Key Vault Crypto Officer"
+  scope                = azurerm_key_vault.sensitive_kv.id
+}

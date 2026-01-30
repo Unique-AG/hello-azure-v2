@@ -63,7 +63,7 @@ locals {
   # Key Vaults
   key_vault_core = {
     tenant_id                   = data.azurerm_subscription.current.tenant_id
-    name                        = "${var.main_kv_name}${var.env}v2" #TODO: remove v2 suffix when we have a new key vault
+    name                        = "${var.main_kv_name}${var.env}"
     resource_group_name         = var.resource_group_core_name
     enabled_for_disk_encryption = var.keyvault_core_enabled_for_disk_encryption
     soft_delete_retention_days  = var.keyvault_core_soft_delete_retention_days
@@ -76,7 +76,7 @@ locals {
 
   key_vault_sensitive = {
     tenant_id                   = data.azurerm_subscription.current.tenant_id
-    name                        = "${var.sensitive_kv_name}${var.env}v2" #TODO: remove v2 suffix when we have a new key vault
+    name                        = "${var.sensitive_kv_name}${var.env}"
     resource_group_name         = var.resource_group_sensitive_name
     enabled_for_disk_encryption = var.keyvault_sensitive_enabled_for_disk_encryption
     soft_delete_retention_days  = var.keyvault_sensitive_soft_delete_retention_days
