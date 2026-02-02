@@ -2,8 +2,9 @@ name: '[tf] Lint & Secure 🤨'
 on:
   pull_request:
     paths:
-      - governance/**/*.tf"
-      - infrastructure/**/*.tf"
+      - 01_bootstrap/**/*.tf"
+      - 02_infrastructure/**/*.tf"
+      - 03_applications/**/*.tf"
       - .github/workflows/tf.validate.yaml
       - .github/configs/**
       - scripts/**

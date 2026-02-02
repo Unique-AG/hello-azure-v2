@@ -10,7 +10,7 @@ on:
       - chore/enable-test-workflows
     paths:
       - .github/workflows/test.argocd-bootstrap.yaml
-      - applications/argo-bootstrap.yaml
+      - 03_applications/argo-bootstrap.yaml.gotmpl
       - .github/workflows/test.helm.yaml
   workflow_dispatch:
     inputs:
@@ -29,6 +29,6 @@ jobs:
     if: github.ref == 'refs/heads/chore/enable-test-workflows'
     uses: ./.github/workflows/test.helm.yaml
     with:
-      file_name: applications/argo-bootstrap.yaml
+      file_name: 03_applications/argo-bootstrap.yaml.gotmpl
       action: ${{ inputs.action || 'apply' }}
     secrets: inherit
