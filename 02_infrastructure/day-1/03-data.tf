@@ -29,3 +29,10 @@ data "azuread_user" "keyvault_secret_writer" {
   for_each  = toset(var.keyvault_secret_writer_user_ids)
   object_id = each.value
 }
+
+# Terraform Service Principal - needed for Key Vault role assignments
+# Uses object_id to uniquely identify the SP (multiple SPs may have the same display name)
+# To find the correct object_id, run: az ad sp list --display-name "terraform" --query "[].{objectId:id,displayName:displayName}" -o table
+data "azuread_service_principal" "terraform" {
+  object_id = var.terraform_service_principal_object_id
+}

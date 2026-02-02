@@ -8,42 +8,15 @@ resource "azurerm_role_assignment" "psql_identity_role_assignment" {
 # NOTE: CMK-related role assignments have been moved to day-1/38-role-assignments.tf
 # to ensure RBAC propagation completes before day-2 attempts to use CMK
 
-# Terraform Service Principal Key Vault assignments
-resource "azurerm_role_assignment" "kv_main_crypto_officer_terraform_assign" {
-  principal_id         = data.azuread_service_principal.terraform.object_id
-  role_definition_name = local.key_manager_key_vault_role_name
-  scope                = data.azurerm_key_vault.key_vault_core.id
-}
-
-resource "azurerm_role_assignment" "kv_main_secrets_officer_terraform_assign" {
-  principal_id         = data.azuread_service_principal.terraform.object_id
-  role_definition_name = local.secret_manager_key_vault_role_name
-  scope                = data.azurerm_key_vault.key_vault_core.id
-}
-
-resource "azurerm_role_assignment" "kv_main_access_administrator_terraform_assign" {
-  principal_id         = data.azuread_service_principal.terraform.object_id
-  role_definition_name = local.access_manager_key_vault_role_name
-  scope                = data.azurerm_key_vault.key_vault_core.id
-}
-
-resource "azurerm_role_assignment" "kv_crypto_officer_terraform_assign" {
-  principal_id         = data.azuread_service_principal.terraform.object_id
-  role_definition_name = local.key_manager_key_vault_role_name
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-}
-
-resource "azurerm_role_assignment" "kv_secrets_officer_terraform_assign" {
-  principal_id         = data.azuread_service_principal.terraform.object_id
-  role_definition_name = local.secret_manager_key_vault_role_name
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-}
-
-resource "azurerm_role_assignment" "kv_access_administrator_terraform_assign" {
-  principal_id         = data.azuread_service_principal.terraform.object_id
-  role_definition_name = local.access_manager_key_vault_role_name
-  scope                = data.azurerm_key_vault.key_vault_sensitive.id
-}
+# NOTE: Terraform Service Principal Key Vault role assignments have been moved to
+# day-1/38-role-assignments.tf so Terraform has Key Vault access before day-2 runs.
+# Moved resources (same names for easy tracking):
+#   - kv_main_crypto_officer_terraform_assign
+#   - kv_main_secrets_officer_terraform_assign
+#   - kv_main_access_administrator_terraform_assign
+#   - kv_crypto_officer_terraform_assign
+#   - kv_secrets_officer_terraform_assign
+#   - kv_access_administrator_terraform_assign
 
 # Terraform Service Principal ACR Push assignment
 resource "azurerm_role_assignment" "acrpush_terraform" {

@@ -47,20 +47,20 @@ resource "azurerm_key_vault" "main_kv" {
   }
 }
 
-# Core Key Vault - Secrets Officer
-resource "azurerm_role_assignment" "core_kv_secrets_officer_users" {
+# Core Key Vault - Key Reader (matches original main branch naming)
+resource "azurerm_role_assignment" "main_keyvault_key_reader_users" {
   for_each             = data.azuread_user.keyvault_secret_writer
   principal_id         = each.value.object_id
-  role_definition_name = "Key Vault Secrets Officer"
+  role_definition_name = var.key_reader_key_vault_role_name
   scope                = azurerm_key_vault.main_kv.id
 }
 
-# Sensitive Key Vault - Secrets Officer
-resource "azurerm_role_assignment" "sensitive_kv_secrets_officer_users" {
+# Core Key Vault - Secrets Manager (matches original main branch naming)
+resource "azurerm_role_assignment" "main_keyvault_secret_manager_users" {
   for_each             = data.azuread_user.keyvault_secret_writer
   principal_id         = each.value.object_id
-  role_definition_name = "Key Vault Secrets Officer"
-  scope                = azurerm_key_vault.sensitive_kv.id
+  role_definition_name = var.secret_manager_key_vault_role_name
+  scope                = azurerm_key_vault.main_kv.id
 }
 
 # Sensitive Key Vault - Crypto Officer (for CMK operations)
@@ -68,5 +68,13 @@ resource "azurerm_role_assignment" "sensitive_kv_crypto_officer_users" {
   for_each             = data.azuread_user.keyvault_secret_writer
   principal_id         = each.value.object_id
   role_definition_name = "Key Vault Crypto Officer"
+  scope                = azurerm_key_vault.sensitive_kv.id
+}
+
+# Sensitive Key Vault - Secrets Officer (for reading/writing secrets)
+resource "azurerm_role_assignment" "sensitive_kv_secrets_officer_users" {
+  for_each             = data.azuread_user.keyvault_secret_writer
+  principal_id         = each.value.object_id
+  role_definition_name = var.secret_manager_key_vault_role_name
   scope                = azurerm_key_vault.sensitive_kv.id
 }

@@ -309,6 +309,12 @@ variable "keyvault_secret_writer_user_ids" {
   type        = list(string)
 }
 
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap). Required for Key Vault role assignments."
+  type        = string
+}
+
 # Key Vault Role Names
 variable "key_vault_crypto_service_encryption_user_role_name" {
   description = "Role name for Key Vault Crypto Service Encryption User"
@@ -320,6 +326,30 @@ variable "secret_reader_key_vault_role_name" {
   description = "Role name for the secret reader key vault"
   type        = string
   default     = "Key Vault Secrets User"
+}
+
+variable "key_reader_key_vault_role_name" {
+  description = "Role name for the key reader key vault"
+  type        = string
+  default     = "Key Vault Crypto User"
+}
+
+variable "secret_manager_key_vault_role_name" {
+  description = "Role name for the secret manager key vault"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "key_manager_key_vault_role_name" {
+  description = "Role name for the key manager key vault (Crypto Officer)"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "access_manager_key_vault_role_name" {
+  description = "Role name for the access manager key vault (Data Access Administrator)"
+  type        = string
+  default     = "Key Vault Data Access Administrator"
 }
 
 variable "keyvault_core_network_acls" {
