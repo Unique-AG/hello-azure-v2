@@ -97,7 +97,7 @@ For more information, see the [official GitHub documentation](https://docs.githu
 | Name | Version |
 |------|---------|
 | <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.2.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >=4.14.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.58.0 |
 
 ## Modules
 
@@ -120,7 +120,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_client_id"></a> [client\_id](#input\_client\_id) | The client ID for OIDC | `string` | n/a | yes |
 | <a name="input_container_name"></a> [container\_name](#input\_container\_name) | The resource group name for the tfstate container name | `string` | n/a | yes |
-| <a name="input_github_org_id"></a> [github\_org\_id](#input\_github\_org\_id) | n/a | `any` | n/a | yes |
+| <a name="input_github_org_id"></a> [github\_org\_id](#input\_github\_org\_id) | The GitHub organization database ID (numeric). Find it using: gh api orgs/{org} --jq .id | `number` | n/a | yes |
 | <a name="input_key"></a> [key](#input\_key) | The key for the tfstate | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The resource group name for the tfstate. | `string` | n/a | yes |
 | <a name="input_resource_group_vnet_name"></a> [resource\_group\_vnet\_name](#input\_resource\_group\_vnet\_name) | n/a | `any` | n/a | yes |

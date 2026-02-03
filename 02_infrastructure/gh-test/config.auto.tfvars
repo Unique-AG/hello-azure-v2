@@ -1,3 +1,3 @@
-tenant_id            = "aeade8c4-d4f7-4ae7-9149-4975fa3a7f91"
-client_id            = "93b817fa-3d2c-407f-9a93-3bd40d0029ac"
-use_oidc             = true
+tenant_id = "aeade8c4-d4f7-4ae7-9149-4975fa3a7f91"
+client_id = "93b817fa-3d2c-407f-9a93-3bd40d0029ac"
+use_oidc  = true
