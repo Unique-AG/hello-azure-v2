@@ -80,7 +80,7 @@ cd day-0
 terraform init
 terraform apply \
   -var-file=../environments/test/00-config-day-0.auto.tfvars \
-  -var-file=../environments/test/00-parameters-day-0.auto.tfvars
+  -var-file=../environments/test/00-parameters-day-0.auto.tfvarsgit s
 ```
 
 Next, populate the `client_id` in the environment's `00-config.auto.tfvars` from the newly created application:
