@@ -24,6 +24,7 @@ permissions:
   id-token: write
 
 jobs:
+  # The Sync Waves are a bit a fake to mimic and make sure the cluster is updated in a controlled way.
   argo-bootstrap:
     if: github.ref == 'refs/heads/chore/refactor-workflows-and-applications'
     uses: ./.github/workflows/test.helm.yaml
