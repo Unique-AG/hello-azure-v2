@@ -31,6 +31,9 @@ jobs:
 
       - name: Format & Docs
         run: |
+          # ensure the lock file is generated
+          terraform init
+          # run the docs and fmt scripts
           ./scripts/tf-docs.sh
           ./scripts/tf-fmt.sh
           if [[ $(git diff --stat) != '' ]]; then
