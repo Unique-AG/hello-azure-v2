@@ -19,12 +19,15 @@ This document provides information on deploying Kubernetes workloads. These work
             }
           }' \
     https://api.github.com/graphql
+
+    # set the databaseId
+    export databaseId=<<databaseId>>
     ```
 
 2. **Set the Terraform Variable `github_org_id`**: Use the acquired `databaseId`.
     ```bash
-    bearerToken=<<bearer token>>
-    orgName="Unique-AG"
+    export bearerToken=<<bearer token>>
+    export orgName="Unique-AG"
     databaseId=$(curl -s -H "Authorization: Bearer $bearerToken" -X POST \
       -d '{ "query": "query($login: String!) { organization (login: $login) { login databaseId } }" ,
             "variables": {
@@ -32,10 +35,35 @@ This document provides information on deploying Kubernetes workloads. These work
             }
           }' \
     https://api.github.com/graphql | jq -r '.data.organization.databaseId')
+
+    # make sure you are inside gh-<env> folder
+
+    # Linux
+    sed -ri "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
+    # MacOS
     sed -r -i '' "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
+    # Windows
+    sed -r -i "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
     ```
 
 3. **Apply the Terraform Configuration**: The `network_settings_id` will be returned as an output.
+
+```bash
+terraform init -backend-config=../environments/test/backend-config-gh-test.hcl
+
+# plan
+terraform plan \
+  -var-file=../environments/test/00-config-gh.auto.tfvars \
+  -var-file=../environments/test/00-parameters-gh.auto.tfvars
+
+# apply
+terraform apply \
+  -var-file=../environments/test/00-config-gh.auto.tfvars \
+  -var-file=../environments/test/00-parameters-gh.auto.tfvars
+
+# network_settings_id should be outputted
+terraform output network_settings_id
+```
 
 As a GitHub admin, perform the following steps through the GitHub UI (ClickOps):
 
