@@ -17,7 +17,7 @@ kv_sku = "premium"
 
 # Terraform Service Principal (created in day-0/bootstrap)
 # To get the object_id, run: az ad sp list --display-name "terraform" --query "[].{objectId:id,displayName:displayName}" -o table, or go to Azure Portal -> Enterprise Applications -> Terraform -> Object ID
-terraform_service_principal_object_id = "dde525a7-fbfa-4a7c-88da-b9bcaf75830f"
+terraform_service_principal_object_id = "b5016fe4-421b-4dd3-bc65-c9abf3dfad8b"
 
 # Kubelet Identity Object ID (from AKS cluster)
 # To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'identityProfile.kubeletidentity.objectId' -o tsv

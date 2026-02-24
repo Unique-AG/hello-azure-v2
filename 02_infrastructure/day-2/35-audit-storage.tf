@@ -27,7 +27,7 @@ module "audit_storage" {
       data.azurerm_subnet.aks_pods.id
     ]
     private_link_accesses = [{
-      endpoint_resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Security/datascanners/StorageDataScanner"
+      endpoint_resource_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Security/datascanners/storageDataScanner"
       endpoint_tenant_id   = var.tenant_id
     }]
   }
