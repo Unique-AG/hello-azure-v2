@@ -46,13 +46,13 @@ locals {
   # DNS Zones and Records
   dns_zones_and_records = {
     dns_zone = {
-      name                = var.dns_zone_name
+      name = var.dns_zone_name
     }
     psql_private_dns_zone = {
-      name                = var.psql_private_dns_zone_name
+      name = var.psql_private_dns_zone_name
     }
     speech_service_private_dns_zone = {
-      name                = var.speech_service_private_dns_zone_name
+      name = var.speech_service_private_dns_zone_name
     }
     dns_zone_sub_domain_records = var.dns_zone_sub_domain_records
 

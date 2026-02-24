@@ -390,8 +390,8 @@ variable "ingestion_cache_backup_vault" {
   type = object({
     name = string
   })
-  default     = null
-  nullable    = true
+  default  = null
+  nullable = true
 }
 
 variable "ingestion_cache_public_network_access_enabled" {
@@ -461,8 +461,8 @@ variable "ingestion_storage_backup_vault" {
   type = object({
     name = string
   })
-  default     = null
-  nullable    = true
+  default  = null
+  nullable = true
 }
 
 variable "ingestion_storage_public_network_access_enabled" {

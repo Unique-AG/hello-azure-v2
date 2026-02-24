@@ -8,21 +8,10 @@ resource "azurerm_monitor_diagnostic_setting" "bastion" {
 
   enabled_log {
     category = "BastionAuditLogs"
-
-    retention_policy {
-      enabled = true
-      days    = 30
-    }
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
-    enabled  = true
-
-    retention_policy {
-      enabled = true
-      days    = 30
-    }
   }
 }
 

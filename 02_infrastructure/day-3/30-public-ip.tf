@@ -7,6 +7,7 @@ resource "azurerm_public_ip" "bastion" {
   location            = var.resource_group_core_location
   resource_group_name = var.resource_group_core_name
   allocation_method   = "Static"
+  zones               = ["1", "2", "3"]
   tags                = local.tags
 }
 

@@ -24,9 +24,8 @@ name_prefix = "ha"
 log_analytics_workspace_name = "la"
 
 # Bastion Configuration
-bastion_name                              = "bastion"
-bastion_sku                               = "Standard"
-bastion_tunneling_enabled                 = true
-bastion_native_client_support_enabled     = true
-bastion_public_ip_name                    = "bastion-pip"
+bastion_name              = "bastion"
+bastion_sku               = "Standard"
+bastion_tunneling_enabled = true
+bastion_public_ip_name    = "bastion-pip"
 

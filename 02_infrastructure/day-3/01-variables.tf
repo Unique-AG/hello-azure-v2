@@ -107,12 +107,6 @@ variable "bastion_tunneling_enabled" {
   default     = true
 }
 
-variable "bastion_native_client_support_enabled" {
-  description = "Enable native client support (IP Connect) for Azure Bastion"
-  type        = bool
-  default     = true
-}
-
 variable "bastion_public_ip_name" {
   description = "Name of the public IP for Azure Bastion"
   type        = string

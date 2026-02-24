@@ -4,7 +4,8 @@ locals {
   name_prefix = "${var.name_prefix}-${var.env}"
 
   # Resource names
-  bastion_name        = "${var.bastion_name}-${local.name_prefix}"
+  bastion_name           = "${var.bastion_name}-${local.name_prefix}"
+  bastion_nsg_name       = "nsg-${local.name_prefix}-bastion"
   bastion_public_ip_name = "pip-${local.name_prefix}-${var.bastion_public_ip_name}-001"
 
   # Log Analytics workspace (from day-1)

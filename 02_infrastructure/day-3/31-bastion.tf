@@ -6,9 +6,14 @@ resource "azurerm_bastion_host" "this" {
   location            = var.resource_group_core_location
   resource_group_name = var.resource_group_core_name
 
-  sku                        = var.bastion_sku
-  tunneling_enabled          = var.bastion_tunneling_enabled
-  native_client_support_enabled = var.bastion_native_client_support_enabled
+  sku                       = var.bastion_sku
+  tunneling_enabled         = var.bastion_tunneling_enabled
+  file_copy_enabled         = true  # allows secure file transfer via Bastion (Standard/Premium only)
+  ip_connect_enabled        = true  # connect to VMs by private IP, not just Azure resource - useful for non-Azure VMs in the VNET
+  copy_paste_enabled        = true  # allows copy/paste from/to VMs
+  session_recording_enabled = false # audit trail of Bastion sessions (Premium only)
+
+
 
   ip_configuration {
     name                 = "${local.bastion_name}-ipconfig"

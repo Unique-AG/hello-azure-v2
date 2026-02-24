@@ -6,4 +6,3 @@ key                  = "terraform-infra-test-day-3.tfstate"
 tenant_id            = "aeade8c4-d4f7-4ae7-9149-4975fa3a7f91"
 client_id            = "08e66108-3bbf-4749-a1ef-ab9b28bda043"
 use_oidc             = true
-

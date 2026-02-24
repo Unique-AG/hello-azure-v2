@@ -30,3 +30,13 @@ output "bastion_public_ip_address" {
   value       = azurerm_public_ip.bastion.ip_address
 }
 
+output "bastion_nsg_id" {
+  description = "The ID of the NSG attached to the AzureBastionSubnet"
+  value       = azurerm_network_security_group.bastion.id
+}
+
+output "bastion_nsg_name" {
+  description = "The name of the NSG attached to the AzureBastionSubnet"
+  value       = azurerm_network_security_group.bastion.name
+}
+

@@ -24,9 +24,8 @@ name_prefix = "hello-azure"
 log_analytics_workspace_name = "loganalytics"
 
 # Bastion Configuration
-bastion_name                              = "bastion"
-bastion_sku                               = "Standard"
-bastion_tunneling_enabled                 = true
-bastion_native_client_support_enabled     = true
-bastion_public_ip_name                    = "bastion-pip"
+bastion_name              = "bastion"
+bastion_sku               = "Standard"
+bastion_tunneling_enabled = true
+bastion_public_ip_name    = "bastion-pip"
 
