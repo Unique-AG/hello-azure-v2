@@ -44,6 +44,81 @@ locals {
     }
   }
 
+  # VNET
+  vnet = {
+    name                = var.vnet_name
+    address_space       = var.vnet_address_space
+    location            = azurerm_resource_group.vnet.location
+    resource_group_name = azurerm_resource_group.vnet.name
+
+    subnets = {
+      "snet-aks-pods" = {
+        name              = "snet-aks-pods"
+        address_prefixes  = [var.subnet_aks_pods_cidr]
+        service_endpoints = ["Microsoft.Storage"]
+        delegation = [{
+          name = "aks-delegation"
+          service_delegation = {
+            name    = "Microsoft.ContainerService/managedClusters"
+            actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+          }
+        }]
+      }
+      "snet-aks-nodes" = {
+        name              = var.subnet_aks_nodes_name
+        address_prefixes  = [var.subnet_aks_nodes_cidr]
+        service_endpoints = ["Microsoft.Storage"]
+      }
+      "snet-agw" = {
+        name             = var.subnet_agw_name
+        address_prefixes = [var.subnet_agw_cidr]
+      }
+      "snet-cognitive" = {
+        name             = var.subnet_cognitive_name
+        address_prefixes = [var.subnet_cognitive_cidr]
+      }
+      "snet-kv" = {
+        name             = var.subnet_kv_name
+        address_prefixes = [var.subnet_kv_cidr]
+      }
+      "snet-psql" = {
+        name             = var.subnet_psql_name
+        address_prefixes = [var.subnet_psql_cidr]
+        delegation = [{
+          name = "psql-delegation"
+          service_delegation = {
+            name    = "Microsoft.DBforPostgreSQL/flexibleServers"
+            actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+          }
+        }]
+      }
+      "snet-redis" = {
+        name             = var.subnet_redis_name
+        address_prefixes = [var.subnet_redis_cidr]
+      }
+      "snet-storage" = {
+        name             = var.subnet_storage_name
+        address_prefixes = [var.subnet_storage_cidr]
+      }
+      "snet-github" = {
+        name                                          = var.subnet_github_name
+        address_prefixes                              = [var.subnet_github_cidr]
+        private_link_service_network_policies_enabled = true
+        private_endpoint_network_policies             = "Disabled"
+        default_outbound_access_enabled               = true
+        delegation = [{
+          name = "delegation"
+          service_delegation = {
+            name = "GitHub.Network/networkSettings"
+            actions = [
+              "Microsoft.Network/virtualNetworks/subnets/join/action",
+            ]
+          }
+        }]
+      }
+    }
+  }
+
   # DNS Zones and Records
   dns_zones_and_records = {
     dns_zone = {

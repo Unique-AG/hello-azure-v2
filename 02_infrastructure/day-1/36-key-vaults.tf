@@ -67,7 +67,7 @@ resource "azurerm_role_assignment" "main_keyvault_secret_manager_users" {
 resource "azurerm_role_assignment" "sensitive_kv_crypto_officer_users" {
   for_each             = data.azuread_user.keyvault_secret_writer
   principal_id         = each.value.object_id
-  role_definition_name = "Key Vault Crypto Officer"
+  role_definition_name = var.sensitive_crypto_officer_key_vault_role_name
   scope                = azurerm_key_vault.sensitive_kv.id
 }
 

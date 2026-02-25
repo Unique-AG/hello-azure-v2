@@ -52,6 +52,16 @@ variable "resource_group_sensitive_location" {
   type        = string
 }
 
+variable "vnet_name" {
+  description = "The name of the virtual network"
+  type        = string
+}
+
+variable "vnet_address_space" {
+  description = "The address space of the virtual network"
+  type        = list(string)
+}
+
 variable "resource_vnet_location" {
   description = "The location for virtual network resources"
   type        = string
@@ -87,9 +97,94 @@ variable "tags" {
   type        = map(string)
 }
 
-# Network Configuration
+# Network Configuration - VNET Subnet CIDRs
+variable "subnet_aks_pods_name" {
+  description = "The name of the AKS pods subnet"
+  type        = string
+}
+
+variable "subnet_aks_nodes_name" {
+  description = "The name of the AKS nodes subnet"
+  type        = string
+}
+
+variable "subnet_agw_name" {
+  description = "The name of the Application Gateway subnet"
+  type        = string
+}
+
+variable "subnet_cognitive_name" {
+  description = "The name of the Cognitive Services subnet"
+  type        = string
+}
+
+variable "subnet_kv_name" {
+  description = "The name of the Key Vault subnet"
+  type        = string
+}
+
+variable "subnet_psql_name" {
+  description = "The name of the PostgreSQL subnet"
+  type        = string
+}
+
+variable "subnet_redis_name" {
+  description = "The name of the Redis subnet"
+  type        = string
+}
+
+variable "subnet_storage_name" {
+  description = "The name of the Storage subnet"
+  type        = string
+}
+
+variable "subnet_github_name" {
+  description = "The name of the GitHub runners subnet"
+  type        = string
+}
+  
+variable "subnet_aks_pods_cidr" {
+  description = "CIDR block for the AKS pods subnet"
+  type        = string
+}
+
+variable "subnet_aks_nodes_cidr" {
+  description = "CIDR block for the AKS nodes subnet"
+  type        = string
+}
+
 variable "subnet_agw_cidr" {
   description = "CIDR block for the Application Gateway subnet"
+  type        = string
+}
+
+variable "subnet_cognitive_cidr" {
+  description = "CIDR block for the Cognitive Services subnet"
+  type        = string
+}
+
+variable "subnet_kv_cidr" {
+  description = "CIDR block for the Key Vault subnet"
+  type        = string
+}
+
+variable "subnet_psql_cidr" {
+  description = "CIDR block for the PostgreSQL subnet"
+  type        = string
+}
+
+variable "subnet_redis_cidr" {
+  description = "CIDR block for the Redis subnet"
+  type        = string
+}
+
+variable "subnet_storage_cidr" {
+  description = "CIDR block for the Storage subnet"
+  type        = string
+}
+
+variable "subnet_github_cidr" {
+  description = "CIDR block for the GitHub runners subnet"
   type        = string
 }
 
@@ -342,6 +437,12 @@ variable "secret_manager_key_vault_role_name" {
 
 variable "key_manager_key_vault_role_name" {
   description = "Role name for the key manager key vault (Crypto Officer)"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "sensitive_crypto_officer_key_vault_role_name" {
+  description = "Role name for the crypto officer key vault (Crypto Officer)"
   type        = string
   default     = "Key Vault Crypto Officer"
 }

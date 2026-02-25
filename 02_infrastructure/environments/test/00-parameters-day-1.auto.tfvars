@@ -1,8 +1,29 @@
 # Environment-specific configuration
 env = "test"
 
-# Network configuration
-subnet_agw_cidr = "10.202.3.0/28"
+# VNET configuration
+vnet_name = "vnet-001"
+vnet_address_space = ["10.202.0.0/22"]
+
+# Network configuration - VNET subnet CIDRs
+subnet_aks_pods_name   = "snet-aks-pods"
+subnet_aks_pods_cidr   = "10.202.0.0/23"
+subnet_aks_nodes_name  = "snet-aks-nodes"
+subnet_aks_nodes_cidr   = "10.202.2.0/24"
+subnet_agw_name        = "snet-application-gateway"
+subnet_agw_cidr        = "10.202.3.0/28"
+subnet_cognitive_name  = "snet-cognitive-services"
+subnet_cognitive_cidr  = "10.202.3.16/28"
+subnet_kv_name         = "snet-key-vault"
+subnet_kv_cidr         = "10.202.3.32/28"
+subnet_psql_name       = "snet-postgres"
+subnet_psql_cidr       = "10.202.3.48/28"
+subnet_redis_name      = "snet-redis"
+subnet_redis_cidr      = "10.202.3.64/28"
+subnet_storage_name    = "snet-storage"
+subnet_storage_cidr    = "10.202.3.80/28"
+subnet_github_name     = "snet-github-runners"
+subnet_github_cidr     = "10.202.3.96/28"
 
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
