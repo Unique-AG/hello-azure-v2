@@ -53,7 +53,7 @@ locals {
 
     subnets = {
       "snet-aks-pods" = {
-        name              = "snet-aks-pods"
+        name              = var.subnet_aks_pods_name
         address_prefixes  = [var.subnet_aks_pods_cidr]
         service_endpoints = ["Microsoft.Storage"]
         delegation = [{
