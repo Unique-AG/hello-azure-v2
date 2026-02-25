@@ -46,4 +46,4 @@ jobs:
       - name: Mirror Unique release artifacts
         timeout-minutes: 15
         run: |
-          qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UNIQUECR_PASSWORD }}
+          qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UQHACRTEST_PASSWORD }}
