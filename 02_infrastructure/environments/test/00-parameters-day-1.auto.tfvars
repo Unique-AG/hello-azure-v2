@@ -123,4 +123,4 @@ dns_zone_name = "test-hello.azure.unique.dev"
 application_registration_gitops_display_name = "GitOps"
 
 # Terraform Service Principal (same as day-2)
-terraform_service_principal_object_id = "dde525a7-fbfa-4a7c-88da-b9bcaf75830f"
+terraform_service_principal_object_id = "b5016fe4-421b-4dd3-bc65-c9abf3dfad8b"
