@@ -22,7 +22,7 @@ terraform_service_principal_object_id = "b5016fe4-421b-4dd3-bc65-c9abf3dfad8b"
 # Kubelet Identity Object ID (from AKS cluster)
 # To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'identityProfile.kubeletidentity.objectId' -o tsv
 # This is set explicitly to avoid drift when the AKS cluster data source returns a different value
-kubelet_identity_object_id = "46ff3669-ff01-4730-94b5-75f738a06f04"
+kubelet_identity_object_id = "776cc853-f337-48a2-a934-42fe4f342f7b"
 
 # AKS Cluster ID (for role assignment scopes)
 # To get the ID, run: az aks show -n aks-test -g resource-group-core --query 'id' -o tsv

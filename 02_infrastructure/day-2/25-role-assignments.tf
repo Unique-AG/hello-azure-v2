@@ -53,6 +53,15 @@ resource "azurerm_role_assignment" "application_gateway_ingres_controller_vnet_s
   principal_id         = module.kubernetes_cluster.agic_identity_object_id
 }
 
+# AKS Kubelet Identity ACR Pull assignment
+# Required for nodes to pull container images from the cluster's ACR (e.g. cert-manager, busybox)
+resource "azurerm_role_assignment" "acrpull_kubelet" {
+  principal_id                     = coalesce(var.kubelet_identity_object_id, module.kubernetes_cluster.kublet_identity_object_id)
+  role_definition_name             = local.acr_pull_role_name
+  scope                            = azurerm_container_registry.acr.id
+  skip_service_principal_aad_check = true
+}
+
 resource "azurerm_role_assignment" "main_keyvault_secret_manager_group" {
   principal_id         = azuread_group.main_keyvault_secret_writer.object_id
   role_definition_name = local.secret_manager_key_vault_role_name
