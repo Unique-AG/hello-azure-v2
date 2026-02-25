@@ -30,11 +30,6 @@ locals {
   # Application registration
   application_secret_display_name = "${var.custom_subdomain_name}-${var.env}-${var.application_secret_display_name}"
 
-  # Backend config (for use in config files)
-  backend_resource_group_name = "rg-terraform-state-${var.env}"
-  backend_key_day1            = "terraform-infra-${var.env}-day-1.tfstate"
-  backend_key_day2            = "terraform-infra-${var.env}-day-2.tfstate"
-
   # Dynamic DNS records - will be populated after application gateway is created
   # This is a placeholder that will be updated in a later phase when application gateway is created
   dns_subdomain_records_with_ip = {
