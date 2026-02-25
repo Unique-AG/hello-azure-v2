@@ -16,7 +16,10 @@ All applications are deployed in a Kubernetes cluster and managed through ArgoCD
 Installation requires just a single step - launching the `argo-bootstrap.yaml`:
 
 ```bash
-helmfile apply -e dev -f applications/argo-bootstrap.yaml
+# dev environment
+helmfile apply -e dev -f argo-bootstrap.yaml.gotmpl
+# test environment
+helmfile apply -e test -f argo-bootstrap.yaml.gotmpl
 ```
 
-Alternatively, in this repository, you can simply run the `[dev][bootstrap ArgoCD] 🐙` workflow.
+Alternatively, in this repository, you can simply run the `[dev][bootstrap ArgoCD] 🐙` or `[test][bootstrap ArgoCD] 🐙` workflow.
