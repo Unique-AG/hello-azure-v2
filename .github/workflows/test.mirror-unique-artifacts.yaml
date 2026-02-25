@@ -43,7 +43,7 @@ jobs:
       - name: Install unique-ag/cli
         run: npm install -g @unique-ag/cli@0.5.1
 
-      - name: Mirror public artifacts
+      - name: Mirror Unique release artifacts
         timeout-minutes: 15
         run: |
           qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UNIQUECR_PASSWORD }}
