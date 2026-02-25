@@ -50,4 +50,4 @@ jobs:
         timeout-minutes: 15
         run: |
           qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UNIQUECR_PASSWORD }}
-          # NOTE: this might be a bit misleading as credentials being used are for the source registry, not the target registry (defined in the app.unique.yaml file).
+          # NOTE: this might be a bit misleading as the credentials being used are for the source registry, not the target registry (defined in the app.unique.yaml file).
