@@ -3,5 +3,5 @@ image:
   tag: "2025.44.1"
 secretProvider:
   vaults:
-    hakv2testv2:
+    hakv2test:
       DATABASE_URL: database-url-theme
