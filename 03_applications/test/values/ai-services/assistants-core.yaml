@@ -16,7 +16,7 @@ resources:
 secretProvider:
   useVMManagedIdentity: "true"
   tenantId: aeade8c4-d4f7-4ae7-9149-4975fa3a7f91
-  userAssignedIdentityID: 8f6d5aff-a056-4073-8b99-0dfdbe5e25dd # azurekeyvaultsecretsprovider-aks-test
+  userAssignedIdentityID: 1f10df87-9938-4fe9-87c4-b3170f6e9611 # azurekeyvaultsecretsprovider-aks-test (client ID)
   vaults:
     hakv1testv2:
       AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT_DEFINITIONS: azure-document-intelligence-endpoint-definitions
