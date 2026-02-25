@@ -16,7 +16,10 @@ permissions:
   pull-requests: write # To write comments
 
 env:
-  UNIQUECR_USERNAME: ext-hello-azure-v2
+  UNIQUECR_USERNAME: ext-hello-azure-v2 
+  # NOTE: This is the token name for the Azure Container Registy (ACR) called "uniquecr" inside of "Unique AG Subscription to Azure" subscription ("Unique AG" directory).
+  # UNIQUECR_PASSWORD is configured as a GitHub secret on the hello-azure-v2 repository, and holds a value for the ext-hello-azure-v2 token.
+  # Please note how uniquecr does not have admin user enabled, so instead ACR tokens are used to authenticate.
 
 jobs:
   clone-release:
@@ -47,3 +50,4 @@ jobs:
         timeout-minutes: 15
         run: |
           qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UNIQUECR_PASSWORD }}
+          # NOTE: this might be a bit misleading as credentials being used are for the source registry, not the target registry (defined in the app.unique.yaml file).
