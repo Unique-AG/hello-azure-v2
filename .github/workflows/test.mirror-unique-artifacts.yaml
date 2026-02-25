@@ -16,7 +16,7 @@ permissions:
   pull-requests: write # To write comments
 
 env:
-  UNIQUECR_USERNAME: uqhacrtest
+  UNIQUECR_USERNAME: ext-hello-azure
 
 jobs:
   clone-release:
@@ -46,4 +46,4 @@ jobs:
       - name: Mirror Unique release artifacts
         timeout-minutes: 15
         run: |
-          qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UQHACRTEST_PASSWORD }}
+          qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UNIQUECR_PASSWORD }}
