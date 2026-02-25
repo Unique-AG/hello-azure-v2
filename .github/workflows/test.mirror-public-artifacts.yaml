@@ -44,7 +44,7 @@ jobs:
       - name: Mirror public artifacts
         timeout-minutes: 15
         run: |
-          az acr login --name uqhacrtest
+          az acr login --name uniquehelloazure
           qcli mirror images -f io.docker.yaml
           qcli mirror images -f io.ghcr.yaml
           qcli mirror images -f io.quay.yaml
