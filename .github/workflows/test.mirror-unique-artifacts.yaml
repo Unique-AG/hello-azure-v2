@@ -16,7 +16,7 @@ permissions:
   pull-requests: write # To write comments
 
 env:
-  UNIQUECR_USERNAME: ext-hello-azure
+  UNIQUECR_USERNAME: ext-hello-azure-v2
 
 jobs:
   clone-release:
