@@ -11,4 +11,4 @@ spec:
       helm:
         releaseName: elasticsearch-ingestion
         valueFiles:
-          - $values/applications/dev/values/elasticsearch/elasticsearch.yaml
+          - $03_applications/dev/values/elasticsearch/elasticsearch.yaml

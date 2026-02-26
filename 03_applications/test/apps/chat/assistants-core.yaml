@@ -11,8 +11,8 @@ spec:
       helm:
         releaseName: assistants-core
         valueFiles:
-          - $values/applications/defaults/ai-services/assistants-core.yaml
-          - $values/applications/test/values/ai-services/assistants-core.yaml
+          - $03_applications/defaults/ai-services/assistants-core.yaml
+          - $03_applications/test/values/ai-services/assistants-core.yaml
         valuesObject: {}
 metadata:
   annotations:

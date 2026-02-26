@@ -11,9 +11,9 @@ spec:
       helm:
         releaseName: backend-service-ingestion
         valueFiles:
-          - $values/applications/defaults/backend-services/ingestion.yaml
-          - $values/applications/test/values/backend-services/_all.yaml
-          - $values/applications/test/values/backend-services/ingestion.yaml
+          - $03_applications/defaults/backend-services/ingestion.yaml
+          - $03_applications/test/values/backend-services/_all.yaml
+          - $03_applications/test/values/backend-services/ingestion.yaml
         valuesObject: {}
 metadata:
   annotations:

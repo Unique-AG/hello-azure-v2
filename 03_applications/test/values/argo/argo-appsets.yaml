@@ -9,7 +9,7 @@ applicationsets:
           repoURL: https://github.com/Unique-AG/hello-azure-v2
           revision: chore/refactor-after-migration
           files:
-          - path: "applications/test/apps/chat/*.yaml"
+          - path: "03_applications/test/apps/chat/*.yaml"
     template:
       metadata:
         name: '{{ .spec.name }}'
@@ -60,7 +60,7 @@ applicationsets:
         repoURL: https://github.com/Unique-AG/hello-azure-v2
         revision: chore/refactor-after-migration
         files:
-        - path: "applications/test/apps/system/*.yaml"
+        - path: "03_applications/test/apps/system/*.yaml"
     template:
       metadata:
         name: '{{ .spec.name }}'

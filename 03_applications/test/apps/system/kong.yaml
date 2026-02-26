@@ -11,42 +11,42 @@ spec:
       helm:
         releaseName: kong-plugins
         valueFiles:
-          - $values/applications/test/values/kong/kong-plugins.yaml
+          - $03_applications/test/values/kong/kong-plugins.yaml
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
       targetRevision: 2.0.0
       helm:
         releaseName: kong-gateway-environment
         valueFiles:
-          - $values/applications/test/values/kong/kong-gateway-environment.yaml
+          - $03_applications/test/values/kong/kong-gateway-environment.yaml
     - chart: ingress
       repoURL: https://charts.konghq.com
       targetRevision: 0.19.0
       helm:
         releaseName: kong
         valueFiles:
-          - $values/applications/test/values/kong/kong-controller.yaml
+          - $03_applications/test/values/kong/kong-controller.yaml
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
       targetRevision: 2.0.0
       helm:
         releaseName: kong-cluster-plugins
         valueFiles:
-          - $values/applications/test/values/kong/kong-cluster-plugins.yaml
+          - $03_applications/test/values/kong/kong-cluster-plugins.yaml
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
       targetRevision: 2.0.0
       helm:
         releaseName: kong-gateway
         valueFiles:
-          - $values/applications/test/values/kong/kong-gateway.yaml
+          - $03_applications/test/values/kong/kong-gateway.yaml
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
       targetRevision: 2.0.0
       helm:
         releaseName: kong-ingress
         valueFiles:
-          - $values/applications/test/values/kong/kong-ingress.yaml
+          - $03_applications/test/values/kong/kong-ingress.yaml
   ignoreDifferences:
     - group: ""
       kind: Secret

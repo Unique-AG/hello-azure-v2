@@ -11,9 +11,9 @@ spec:
       helm:
         releaseName: web-app-knowledge-upload
         valueFiles:
-          - $values/applications/defaults/web-apps/knowledge-upload.yaml
-          - $values/applications/test/values/web-apps/_all.yaml
-          - $values/applications/test/values/web-apps/knowledge-upload.yaml
+          - $03_applications/defaults/web-apps/knowledge-upload.yaml
+          - $03_applications/test/values/web-apps/_all.yaml
+          - $03_applications/test/values/web-apps/knowledge-upload.yaml
         valuesObject: {}
 metadata:
   annotations:

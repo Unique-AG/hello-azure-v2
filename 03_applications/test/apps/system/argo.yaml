@@ -11,14 +11,14 @@ spec:
       helm:
         releaseName: argo-azure-entra-secret
         valueFiles:
-          - $values/applications/test/values/argo/argo-azure-entra-secret.yaml
+          - $03_applications/test/values/argo/argo-azure-entra-secret.yaml
     - chart: argo-cd
       repoURL: https://argoproj.github.io/argo-helm
       targetRevision: 8.0.0
       helm:
         releaseName: argo
         valueFiles:
-          - $values/applications/test/values/argo/argo.yaml
+          - $03_applications/test/values/argo/argo.yaml
     - chart: argocd-apps
       repoURL: https://argoproj.github.io/argo-helm
       targetRevision: 2.0.2
@@ -26,7 +26,7 @@ spec:
       helm:
         releaseName: argo-appsets
         valueFiles:
-          - $values/applications/test/values/argo/argo-appsets.yaml
+          - $03_applications/test/values/argo/argo-appsets.yaml
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
