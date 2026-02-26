@@ -3,7 +3,7 @@ spec:
   autoSync: false
   sources:
     - repoURL: 'https://github.com/Unique-AG/hello-azure'
-      targetRevision: chore/enable-test-workflows
+      targetRevision: chore/refactor-after-migration
       ref: values
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"

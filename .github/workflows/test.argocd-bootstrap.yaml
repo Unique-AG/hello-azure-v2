@@ -7,7 +7,7 @@ concurrency:
 on:
   push:
     branches:
-      - chore/refactor-workflows-and-applications
+      - chore/refactor-after-migration
     paths:
       - .github/workflows/test.argocd-bootstrap.yaml
       - 03_applications/argo-bootstrap.yaml.gotmpl
@@ -26,7 +26,7 @@ permissions:
 jobs:
   # The Sync Waves are a bit a fake to mimic and make sure the cluster is updated in a controlled way.
   argo-bootstrap:
-    if: github.ref == 'refs/heads/chore/refactor-workflows-and-applications'
+    if: github.ref == 'refs/heads/chore/refactor-after-migration'
     uses: ./.github/workflows/test.helm.yaml
     with:
       file_name: 03_applications/argo-bootstrap.yaml.gotmpl
