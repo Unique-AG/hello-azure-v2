@@ -11,14 +11,14 @@ spec:
       helm:
         releaseName: cert-manager
         valueFiles:
-          - $03_applications/dev/values/cert-manager/cert-manager.yaml
+          - $values/03_applications/dev/values/cert-manager/cert-manager.yaml
     - chart: raw
       repoURL: https://bedag.github.io/helm-charts
       targetRevision: 2.0.0
       helm:
         releaseName: clusterissuer-azure-dns
         valueFiles:
-          - $03_applications/dev/values/cert-manager/cluster-issuer.yaml
+          - $values/03_applications/dev/values/cert-manager/cluster-issuer.yaml
   ignoreDifferences:
     - group: admissionregistration.k8s.io
       kind: ValidatingWebhookConfiguration

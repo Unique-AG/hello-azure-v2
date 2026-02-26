@@ -11,4 +11,4 @@ spec:
       helm:
         releaseName: reloader
         valueFiles:
-          - $03_applications/dev/values/reloader/reloader.yaml
+          - $values/03_applications/dev/values/reloader/reloader.yaml

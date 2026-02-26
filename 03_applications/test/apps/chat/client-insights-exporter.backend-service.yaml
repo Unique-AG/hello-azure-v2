@@ -11,9 +11,9 @@ spec:
       helm:
         releaseName: client-insights-exporter
         valueFiles:
-          - $03_applications/defaults/backend-services/client-insights-exporter.yaml
-          - $03_applications/test/values/backend-services/_all.yaml
-          - $03_applications/test/values/backend-services/client-insights-exporter.yaml
+          - $values/03_applications/defaults/backend-services/client-insights-exporter.yaml
+          - $values/03_applications/test/values/backend-services/_all.yaml
+          - $values/03_applications/test/values/backend-services/client-insights-exporter.yaml
         valuesObject: {}
 metadata:
   annotations:

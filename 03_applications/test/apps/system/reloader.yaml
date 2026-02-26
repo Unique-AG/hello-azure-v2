@@ -11,7 +11,7 @@ spec:
       helm:
         releaseName: reloader
         valueFiles:
-          - $03_applications/test/values/reloader/reloader.yaml
+          - $values/03_applications/test/values/reloader/reloader.yaml
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"

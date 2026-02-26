@@ -11,9 +11,9 @@ spec:
       helm:
         releaseName: backend-service-chat
         valueFiles:
-          - $03_applications/defaults/backend-services/chat.yaml
-          - $03_applications/test/values/backend-services/_all.yaml
-          - $03_applications/test/values/backend-services/chat.yaml
+          - $values/03_applications/defaults/backend-services/chat.yaml
+          - $values/03_applications/test/values/backend-services/_all.yaml
+          - $values/03_applications/test/values/backend-services/chat.yaml
         valuesObject: {}
 metadata:
   annotations:

@@ -11,7 +11,7 @@ spec:
       helm:
         releaseName: backend-service-webhook-worker
         valueFiles:
-          - $03_applications/defaults/backend-services/webhook-worker.yaml
-          - $03_applications/dev/values/backend-services/_all.yaml
-          - $03_applications/dev/values/backend-services/webhook-worker.yaml
+          - $values/03_applications/defaults/backend-services/webhook-worker.yaml
+          - $values/03_applications/dev/values/backend-services/_all.yaml
+          - $values/03_applications/dev/values/backend-services/webhook-worker.yaml
         valuesObject: {}

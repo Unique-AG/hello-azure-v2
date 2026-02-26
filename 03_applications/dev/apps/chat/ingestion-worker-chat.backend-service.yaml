@@ -11,9 +11,9 @@ spec:
       helm:
         releaseName: backend-service-ingestion-worker-chat
         valueFiles:
-          - $03_applications/defaults/backend-services/ingestion-worker.yaml
-          - $03_applications/dev/values/backend-services/_all.yaml
-          - $03_applications/dev/values/backend-services/ingestion-worker.yaml
+          - $values/03_applications/defaults/backend-services/ingestion-worker.yaml
+          - $values/03_applications/dev/values/backend-services/_all.yaml
+          - $values/03_applications/dev/values/backend-services/ingestion-worker.yaml
         valuesObject:
           env:
             INGESTION_QUEUE: chat_queue

@@ -11,9 +11,9 @@ spec:
       helm:
         releaseName: backend-service-speech
         valueFiles:
-          - $03_applications/defaults/backend-services/speech.yaml
-          - $03_applications/test/values/backend-services/_all.yaml
-          - $03_applications/test/values/backend-services/speech.yaml
+          - $values/03_applications/defaults/backend-services/speech.yaml
+          - $values/03_applications/test/values/backend-services/_all.yaml
+          - $values/03_applications/test/values/backend-services/speech.yaml
         valuesObject: {}
 metadata:
   annotations:
