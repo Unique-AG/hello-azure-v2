@@ -19,22 +19,22 @@ extraManifests:
     data:
       - secretKey: ZITADEL_DATABASE_POSTGRES_HOST
         remoteRef:
-          key: psql-oefyzgkn-host
+          key: psql-oefyzgkn-host # NOTE: needs to match the key in the hakv2test key-vault
       - secretKey: ZITADEL_DATABASE_POSTGRES_PORT
         remoteRef:
-          key: psql-oefyzgkn-port
+          key: psql-oefyzgkn-port # NOTE: needs to match the key in the hakv2test key-vault
       - secretKey: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
         remoteRef:
-          key: psql-oefyzgkn-username
+          key: psql-oefyzgkn-username # NOTE: needs to match the key in the hakv2test key-vault
       - secretKey: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
         remoteRef:
-          key: psql-oefyzgkn-password
+          key: psql-oefyzgkn-password # NOTE: needs to match the key in the hakv2test key-vault
       - secretKey: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
         remoteRef:
-          key: zitadel-db-user-password
+          key: zitadel-db-user-password # NOTE: needs to match the key in the hakv2test key-vault
       - secretKey: masterkey
         remoteRef:
-          key: zitadel-master-key
+          key: zitadel-master-key # NOTE: needs to match the key in the hakv2test key-vault
 
 
 - kind: Secret
