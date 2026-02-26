@@ -122,10 +122,6 @@ locals {
     psql_private_dns_zone = {
       name = var.psql_private_dns_zone_name
     }
-
-    dns_zone_sub_domain_records = var.dns_zone_sub_domain_records
-
-    dns_zone_root_records = var.dns_zone_root_records
   }
 
   azurerm_private_dns_zone_virtual_network_link_name = var.azurerm_private_dns_zone_virtual_network_link_name

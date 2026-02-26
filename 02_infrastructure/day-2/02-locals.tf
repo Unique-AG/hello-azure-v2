@@ -56,14 +56,6 @@ locals {
   # Application registration
   application_secret_display_name = "${var.custom_subdomain_name}-${var.env}-${var.application_secret_display_name}"
 
-  # Dynamic DNS records - will be populated after application gateway is created
-  dns_subdomain_records_with_ip = {
-    for k, v in var.dns_subdomain_records : k => {
-      name    = v.name
-      records = []
-    }
-  }
-
   # Azure Role Definitions
   acr_pull_principals_role_name = "AcrPull Principals${local.env_suffix}"
   vnet_subnet_access_role_name  = "VNet Subnet Access (Preview) v2${local.env_suffix}"

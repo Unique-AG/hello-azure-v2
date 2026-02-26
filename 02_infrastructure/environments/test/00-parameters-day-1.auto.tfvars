@@ -34,9 +34,6 @@ kv_sku = "premium"
 # GitOps configuration
 gitops_display_name = "GitOps"
 
-# DNS root A record (for day-1 DNS resources)
-dns_zone_root_records = ["135.225.80.201"]
-
 # DNS subdomain records
 dns_subdomain_records = {
   api = {
@@ -50,23 +47,6 @@ dns_subdomain_records = {
   zitadel = {
     name    = "id"
     records = [] # Will be populated dynamically
-  }
-}
-
-# DNS zone subdomain records (for day-1 DNS resources)
-# This maps to the for_each in azurerm_dns_a_record.adnsar_sub_domains
-dns_zone_sub_domain_records = {
-  api = {
-    name    = "api"
-    records = ["135.225.80.201"]
-  }
-  argo = {
-    name    = "argo"
-    records = ["135.225.80.201"]
-  }
-  zitadel = {
-    name    = "id"
-    records = ["135.225.80.201"]
   }
 }
 
