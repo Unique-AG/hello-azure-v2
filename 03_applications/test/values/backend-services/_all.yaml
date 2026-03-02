@@ -1,6 +1,6 @@
 env:
   CORS_ALLOWED_ORIGINS: https://test-hello.azure.unique.dev
-  ZITADEL_PROJECT_ID: "362295794721685647" # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)
+  ZITADEL_PROJECT_ID: "362295080381317263" # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)
   UNIQUE_INSTALLATION_ID: test-hello.azure.unique.dev # the hostname of the cluster
 routes:
   hostname: api.test-hello.azure.unique.dev
