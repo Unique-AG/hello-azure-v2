@@ -3,7 +3,7 @@ image:
   repository: uqhacrtest.azurecr.io/backend-service-scope-management
 env:
   ZITADEL_HOST: https://id.test-hello.azure.unique.dev
-  ZITADEL_ROOT_ORG_ID: "311155409127801468"
+  ZITADEL_ROOT_ORG_ID: "361772156100608158"
   # This can be uncommented if you want to avoid hairpinning (going outisde of the cluster to reach Zitadel which is deployed in the same cluster)
   # ZITADEL_GRPC_DEFAULT_AUTHORITY: id.test-hello.azure.unique.dev
   # ZITADEL_GRPC_SSL_TARGET_NAME_OVERRIDE: id.test-hello.azure.unique.dev
