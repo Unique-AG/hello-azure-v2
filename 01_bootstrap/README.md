@@ -46,55 +46,8 @@ Before proceeding, ensure you have the following:
 - Tenant
 - Subscription
 
-## Usage
+# Usage
 
-### Initializing Terraform Backend
-
-The backend configuration must be passed via `-backend-config` flag during `terraform init`.
-
-**Day-0 Initialization:**
-```bash
-cd day-0
-terraform init -backend-config=../environments/test/backend-config-day-0.hcl
-```
-
-**Note:** The state file is stored at:
-- Test: `terraform-init-test-v2.tfstate`
-- Dev: `terraform-init-dev-v2.tfstate`
-
-### Running Terraform Plan/Apply
-
-Use `-var-file` to load environment-specific variables:
-
-**Test Environment:**
-```bash
-cd day-0
-terraform plan \
-  -var-file=../environments/test/00-config.auto.tfvars \
-  -var-file=../environments/test/00-parameters.auto.tfvars
-
-terraform apply \
-  -var-file=../environments/test/00-config.auto.tfvars \
-  -var-file=../environments/test/00-parameters.auto.tfvars
-```
-
-**Dev Environment:**
-```bash
-cd day-0
-terraform plan \
-  -var-file=../environments/dev/00-config.auto.tfvars \
-  -var-file=../environments/dev/00-parameters.auto.tfvars
-
-terraform apply \
-  -var-file=../environments/dev/00-config.auto.tfvars \
-  -var-file=../environments/dev/00-parameters.auto.tfvars
-```
-
-### Environment-Specific Files
-
-- **00-config.auto.tfvars**: Contains provider configuration (subscription_id, tenant_id, client_id, use_oidc) and backend configuration (resource_group_name, storage_account_name, container_name, key)
-- **00-parameters.auto.tfvars**: Contains environment-specific parameters (tfstate_location)
-- **backend-config-day-0.hcl**: Backend configuration for day-0 state file (resource_group_name, storage_account_name, container_name, key)
 
 ## Manual actions
 
@@ -126,20 +79,30 @@ Navigate to day-0 and apply the Terraform changes:
 cd day-0
 terraform init
 terraform apply \
-  -var-file=../environments/test/00-config.auto.tfvars \
-  -var-file=../environments/test/00-parameters.auto.tfvars
+  -var-file=../environments/test/00-config-day-0.auto.tfvars \
+  -var-file=../environments/test/00-parameters-day-0.auto.tfvarsgit s
 ```
 
 Next, populate the `client_id` in the environment's `00-config.auto.tfvars` from the newly created application:
 ```bash
+# Test environment example
+cd day-0
 var_value=$(terraform output client_id)
 # MacOS
-sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config.auto.tfvars
+sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config-day-0.auto.tfvars
+sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-1.auto.tfvars
+sed -i '' "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-2.auto.tfvars
 # Linux
-sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config-day-0.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-1.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-2.auto.tfvars
 # Windows
-sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../environments/test/00-config-day-0.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-1.auto.tfvars
+sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-2.auto.tfvars
 ```
+
+**Note:** For the dev environment, replace `test` with `dev` in all the paths above. The `client_id` must be consistent across all environment config files (day-0, day-1, and day-2) as they all authenticate using the same Azure AD Application created during bootstrap.
 
 ### Phase 2: Migrate to Remote State
 
@@ -163,8 +126,70 @@ Now migrate the local state to the newly created storage in Azure:
 cd day-0
 terraform init -backend-config=../environments/test/backend-config-day-0.hcl -migrate-state
 ```
+You will receive the message:
+```bash
+Initializing the backend...
+Terraform detected that the backend type changed from "local" to "azurerm".
+
+Do you want to copy existing state to the new backend?
+  Pre-existing state was found while migrating the previous "local" backend to the
+  newly configured "azurerm" backend. No existing state was found in the newly
+  configured "azurerm" backend. Do you want to copy this state to the new "azurerm"
+  backend? Enter "yes" to copy and "no" to start with an empty state.
+```
+
+You should answer with "yes" to copy the state to the new backend.
 
 Now you are ready to make all the changes from within CI pipelines.
+
+### Initializing Terraform Backend
+
+The backend configuration must be passed via `-backend-config` flag during `terraform init`.
+
+**Day-0 Initialization:**
+```bash
+cd day-0
+terraform init -backend-config=../environments/test/backend-config-day-0.hcl
+```
+
+**Note:** The state file is stored at:
+- Test: `terraform-day-0-test.tfstate`
+- Dev: `terraform-day-0-dev.tfstate`
+
+### Running Terraform Plan/Apply
+
+Use `-var-file` to load environment-specific variables:
+
+**Test Environment:**
+```bash
+cd day-0
+terraform plan \
+  -var-file=../environments/test/00-config-day-0.auto.tfvars \
+  -var-file=../environments/test/00-parameters-day-0.auto.tfvars
+
+terraform apply \
+  -var-file=../environments/test/00-config-day-0.auto.tfvars \
+  -var-file=../environments/test/00-parameters-day-0.auto.tfvars
+```
+
+**Dev Environment:**
+```bash
+cd day-0
+terraform plan \
+  -var-file=../environments/dev/00-config-day-0.auto.tfvars \
+  -var-file=../environments/dev/00-parameters-day-0.auto.tfvars
+
+terraform apply \
+  -var-file=../environments/dev/00-config-day-0.auto.tfvars \
+  -var-file=../environments/dev/00-parameters-day-0.auto.tfvars
+```
+
+### Environment-Specific Files
+
+- **00-config-day-0.auto.tfvars**: Contains provider configuration (subscription_id, tenant_id, client_id, use_oidc) and backend configuration (resource_group_name, storage_account_name, container_name, key)
+- **00-parameters-day-0.auto.tfvars**: Contains environment-specific parameters (tfstate_location)
+- **backend-config-day-0.hcl**: Backend configuration for day-0 state file (resource_group_name, storage_account_name, container_name, key)
+
 
 ## Deployment Order
 
@@ -175,7 +200,7 @@ This bootstrap step (day-0) must be completed **before** deploying infrastructur
    - Creates Azure AD application and service principal
    - Sets up federated credentials for GitHub Actions
    - Assigns necessary roles and permissions
-   - State stored in: `terraform-init-test-v2.tfstate` (test) or `terraform-init-dev-v2.tfstate` (dev)
+   - State stored in: `terraform-init-test.tfstate` (test) or `terraform-init-dev.tfstate` (dev)
 
 2. **02_infrastructure/day-1**: Deploy foundational infrastructure (depends on day-0)
 3. **02_infrastructure/day-2**: Deploy identity/governance resources (depends on day-1)

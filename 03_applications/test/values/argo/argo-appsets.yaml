@@ -6,10 +6,10 @@ applicationsets:
     goTemplate: true
     generators:
       - git:
-          repoURL: https://github.com/Unique-AG/hello-azure
-          revision: chore/enable-test-workflows
+          repoURL: https://github.com/Unique-AG/hello-azure-v2
+          revision: preview
           files:
-          - path: "applications/test/apps/chat/*.yaml"
+          - path: "03_applications/test/apps/chat/*.yaml"
     template:
       metadata:
         name: '{{ .spec.name }}'
@@ -57,10 +57,10 @@ applicationsets:
     goTemplate: true
     generators:
     - git:
-        repoURL: https://github.com/Unique-AG/hello-azure
-        revision: chore/enable-test-workflows
+        repoURL: https://github.com/Unique-AG/hello-azure-v2
+        revision: preview
         files:
-        - path: "applications/test/apps/system/*.yaml"
+        - path: "03_applications/test/apps/system/*.yaml"
     template:
       metadata:
         name: '{{ .spec.name }}'

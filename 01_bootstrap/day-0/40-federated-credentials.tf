@@ -5,5 +5,5 @@ resource "azuread_application_federated_identity_credential" "github_actions_ter
   description    = "GH actions deploying Azure resources for the `${each.value}` env of hello-azure"
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = "https://token.actions.githubusercontent.com"
-  subject        = "repo:Unique-AG/hello-azure:environment:${each.value}"
+  subject        = "repo:Unique-AG/hello-azure-v2:environment:${each.value}"
 }

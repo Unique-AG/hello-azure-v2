@@ -82,13 +82,6 @@ openai_cognitive_accounts = {
         sku_capacity  = 350
       },
       {
-        name          = "gpt-35-turbo-0125"
-        model_name    = "gpt-35-turbo"
-        model_version = "0125"
-        sku_name      = null
-        sku_capacity  = 120
-      },
-      {
         name          = "gpt-4o-2024-11-20"
         model_name    = "gpt-4o"
         model_version = "2024-11-20"

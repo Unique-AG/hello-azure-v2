@@ -2,7 +2,10 @@ variable "resource_group_vnet_name" {}
 variable "tags" {}
 variable "vnet_name" {}
 variable "subnet_name" {}
-variable "github_org_id" {}
+variable "github_org_id" {
+  description = "The GitHub organization database ID (numeric). Find it using: gh api orgs/{org} --jq .id"
+  type        = number
+}
 variable "subscription_id" {
   description = "The UUID ID of the suscription (not the full Azure Resource ID)."
   type        = string

@@ -2,7 +2,7 @@ spec:
   name: kong
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: preview
       ref: values
     - chart: kong-plugins
@@ -11,42 +11,42 @@ spec:
       helm:
         releaseName: kong-plugins
         valueFiles:
-          - $values/applications/dev/values/kong/kong-plugins.yaml
+          - $values/03_applications/dev/values/kong/kong-plugins.yaml
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
       targetRevision: 2.0.0
       helm:
         releaseName: kong-gateway-environment
         valueFiles:
-          - $values/applications/dev/values/kong/kong-gateway-environment.yaml
+          - $values/03_applications/dev/values/kong/kong-gateway-environment.yaml
     - chart: ingress
       repoURL: https://charts.konghq.com
       targetRevision: 0.19.0
       helm:
         releaseName: kong
         valueFiles:
-          - $values/applications/dev/values/kong/kong-controller.yaml
+          - $values/03_applications/dev/values/kong/kong-controller.yaml
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
       targetRevision: 2.0.0
       helm:
         releaseName: kong-cluster-plugins
         valueFiles:
-          - $values/applications/dev/values/kong/kong-cluster-plugins.yaml
+          - $values/03_applications/dev/values/kong/kong-cluster-plugins.yaml
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
       targetRevision: 2.0.0
       helm:
         releaseName: kong-gateway
         valueFiles:
-          - $values/applications/dev/values/kong/kong-gateway.yaml
+          - $values/03_applications/dev/values/kong/kong-gateway.yaml
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
       targetRevision: 2.0.0
       helm:
         releaseName: kong-ingress
         valueFiles:
-          - $values/applications/dev/values/kong/kong-ingress.yaml
+          - $values/03_applications/dev/values/kong/kong-ingress.yaml
   ignoreDifferences:
     - group: ""
       kind: Secret

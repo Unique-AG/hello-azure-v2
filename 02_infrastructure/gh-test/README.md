@@ -19,12 +19,15 @@ This document provides information on deploying Kubernetes workloads. These work
             }
           }' \
     https://api.github.com/graphql
+
+    # set the databaseId
+    export databaseId=<<databaseId>>
     ```
 
 2. **Set the Terraform Variable `github_org_id`**: Use the acquired `databaseId`.
     ```bash
-    bearerToken=<<bearer token>>
-    orgName="Unique-AG"
+    export bearerToken=<<bearer token>>
+    export orgName="Unique-AG"
     databaseId=$(curl -s -H "Authorization: Bearer $bearerToken" -X POST \
       -d '{ "query": "query($login: String!) { organization (login: $login) { login databaseId } }" ,
             "variables": {
@@ -32,10 +35,35 @@ This document provides information on deploying Kubernetes workloads. These work
             }
           }' \
     https://api.github.com/graphql | jq -r '.data.organization.databaseId')
+
+    # make sure you are inside gh-<env> folder
+
+    # Linux
+    sed -ri "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
+    # MacOS
     sed -r -i '' "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
+    # Windows
+    sed -r -i "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
     ```
 
 3. **Apply the Terraform Configuration**: The `network_settings_id` will be returned as an output.
+
+```bash
+terraform init -backend-config=../environments/test/backend-config-gh-test.hcl
+
+# plan
+terraform plan \
+  -var-file=../environments/test/00-config-gh.auto.tfvars \
+  -var-file=../environments/test/00-parameters-gh.auto.tfvars
+
+# apply
+terraform apply \
+  -var-file=../environments/test/00-config-gh.auto.tfvars \
+  -var-file=../environments/test/00-parameters-gh.auto.tfvars
+
+# network_settings_id should be outputted
+terraform output network_settings_id
+```
 
 As a GitHub admin, perform the following steps through the GitHub UI (ClickOps):
 
@@ -92,7 +120,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_client_id"></a> [client\_id](#input\_client\_id) | The client ID for OIDC | `string` | n/a | yes |
 | <a name="input_container_name"></a> [container\_name](#input\_container\_name) | The resource group name for the tfstate container name | `string` | n/a | yes |
-| <a name="input_github_org_id"></a> [github\_org\_id](#input\_github\_org\_id) | n/a | `any` | n/a | yes |
+| <a name="input_github_org_id"></a> [github\_org\_id](#input\_github\_org\_id) | The GitHub organization database ID (numeric). Find it using: gh api orgs/{org} --jq .id | `number` | n/a | yes |
 | <a name="input_key"></a> [key](#input\_key) | The key for the tfstate | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The resource group name for the tfstate. | `string` | n/a | yes |
 | <a name="input_resource_group_vnet_name"></a> [resource\_group\_vnet\_name](#input\_resource\_group\_vnet\_name) | n/a | `any` | n/a | yes |

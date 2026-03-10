@@ -16,7 +16,10 @@ permissions:
   pull-requests: write # To write comments
 
 env:
-  UNIQUECR_USERNAME: ext-hello-azure
+  UNIQUECR_USERNAME: ext-hello-azure-v2 
+  # NOTE: This is the token name for the Azure Container Registy (ACR) called "uniquecr" inside of "Unique AG Subscription to Azure" subscription ("Unique AG" directory).
+  # UNIQUECR_PASSWORD is configured as a GitHub secret on the hello-azure-v2 repository, and holds a value for the ext-hello-azure-v2 token.
+  # Please note how uniquecr does not have admin user enabled, so instead ACR tokens are used to authenticate.
 
 jobs:
   clone-release:
@@ -38,12 +41,13 @@ jobs:
         with:
           subscription-id: 782871a0-bcee-44fb-851f-ccd3e69ada2a
           tenant-id: aeade8c4-d4f7-4ae7-9149-4975fa3a7f91
-          client-id: 08e66108-3bbf-4749-a1ef-ab9b28bda043 # Enterprise Application Registration (Terraform) -> Application (client) id
+          client-id: 6d1d8c4b-9d1b-4113-a91a-dac89b2717c1 # Enterprise Application Registration (Terraform) -> Application (client) id
 
       - name: Install unique-ag/cli
         run: npm install -g @unique-ag/cli@0.5.1
 
-      - name: Mirror public artifacts
+      - name: Mirror Unique release artifacts
         timeout-minutes: 15
         run: |
           qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UNIQUECR_PASSWORD }}
+          # NOTE: this might be a bit misleading as the credentials being used are for the source registry, not the target registry (defined in the app.unique.yaml file).

@@ -2,7 +2,7 @@ spec:
   name: backend-service-ingestion-worker
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: preview
       ref: values
     - repoURL: ghcr.io/unique-ag/helm-charts
@@ -11,9 +11,9 @@ spec:
       helm:
         releaseName: backend-service-ingestion-worker
         valueFiles:
-          - $values/applications/defaults/backend-services/ingestion-worker.yaml
-          - $values/applications/dev/values/backend-services/_all.yaml
-          - $values/applications/dev/values/backend-services/ingestion-worker.yaml
+          - $values/03_applications/defaults/backend-services/ingestion-worker.yaml
+          - $values/03_applications/dev/values/backend-services/_all.yaml
+          - $values/03_applications/dev/values/backend-services/ingestion-worker.yaml
         valuesObject:
           env:
             INGESTION_QUEUE: queue

@@ -216,6 +216,6 @@ output "application_gateway_id" {
 }
 
 output "audit_storage_user_assigned_identity_id" {
-  value       = azurerm_user_assigned_identity.audit_storage_identity.id
+  value       = data.azurerm_user_assigned_identity.audit_storage_identity.id
   description = "The ID of the user-assigned identity for audit storage."
 }

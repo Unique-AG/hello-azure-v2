@@ -43,7 +43,8 @@ module "application_gateway" {
   tags = var.tags
 
   depends_on = [
-    azurerm_public_ip.application_gateway_public_ip
+    azurerm_public_ip.application_gateway_public_ip,
+    data.azurerm_subnet.application_gateway
   ]
 }
 

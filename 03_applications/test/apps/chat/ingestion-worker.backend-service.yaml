@@ -2,8 +2,8 @@ spec:
   name: backend-service-ingestion-worker
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
-      targetRevision: chore/enable-test-workflows
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: preview
       ref: values
     - repoURL: ghcr.io/unique-ag/helm-charts
       chart: backend-service
@@ -11,9 +11,9 @@ spec:
       helm:
         releaseName: backend-service-ingestion-worker
         valueFiles:
-          - $values/applications/defaults/backend-services/ingestion-worker.yaml
-          - $values/applications/test/values/backend-services/_all.yaml
-          - $values/applications/test/values/backend-services/ingestion-worker.yaml
+          - $values/03_applications/defaults/backend-services/ingestion-worker.yaml
+          - $values/03_applications/test/values/backend-services/_all.yaml
+          - $values/03_applications/test/values/backend-services/ingestion-worker.yaml
         valuesObject:
           keda:
             enabled: true

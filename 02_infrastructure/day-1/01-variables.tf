@@ -52,6 +52,16 @@ variable "resource_group_sensitive_location" {
   type        = string
 }
 
+variable "vnet_name" {
+  description = "The name of the virtual network"
+  type        = string
+}
+
+variable "vnet_address_space" {
+  description = "The address space of the virtual network"
+  type        = list(string)
+}
+
 variable "resource_vnet_location" {
   description = "The location for virtual network resources"
   type        = string
@@ -87,9 +97,94 @@ variable "tags" {
   type        = map(string)
 }
 
-# Network Configuration
+# Network Configuration - VNET Subnet CIDRs
+variable "subnet_aks_pods_name" {
+  description = "The name of the AKS pods subnet"
+  type        = string
+}
+
+variable "subnet_aks_nodes_name" {
+  description = "The name of the AKS nodes subnet"
+  type        = string
+}
+
+variable "subnet_agw_name" {
+  description = "The name of the Application Gateway subnet"
+  type        = string
+}
+
+variable "subnet_cognitive_name" {
+  description = "The name of the Cognitive Services subnet"
+  type        = string
+}
+
+variable "subnet_kv_name" {
+  description = "The name of the Key Vault subnet"
+  type        = string
+}
+
+variable "subnet_psql_name" {
+  description = "The name of the PostgreSQL subnet"
+  type        = string
+}
+
+variable "subnet_redis_name" {
+  description = "The name of the Redis subnet"
+  type        = string
+}
+
+variable "subnet_storage_name" {
+  description = "The name of the Storage subnet"
+  type        = string
+}
+
+variable "subnet_github_name" {
+  description = "The name of the GitHub runners subnet"
+  type        = string
+}
+  
+variable "subnet_aks_pods_cidr" {
+  description = "CIDR block for the AKS pods subnet"
+  type        = string
+}
+
+variable "subnet_aks_nodes_cidr" {
+  description = "CIDR block for the AKS nodes subnet"
+  type        = string
+}
+
 variable "subnet_agw_cidr" {
   description = "CIDR block for the Application Gateway subnet"
+  type        = string
+}
+
+variable "subnet_cognitive_cidr" {
+  description = "CIDR block for the Cognitive Services subnet"
+  type        = string
+}
+
+variable "subnet_kv_cidr" {
+  description = "CIDR block for the Key Vault subnet"
+  type        = string
+}
+
+variable "subnet_psql_cidr" {
+  description = "CIDR block for the PostgreSQL subnet"
+  type        = string
+}
+
+variable "subnet_redis_cidr" {
+  description = "CIDR block for the Redis subnet"
+  type        = string
+}
+
+variable "subnet_storage_cidr" {
+  description = "CIDR block for the Storage subnet"
+  type        = string
+}
+
+variable "subnet_github_cidr" {
+  description = "CIDR block for the GitHub runners subnet"
   type        = string
 }
 
@@ -118,21 +213,6 @@ variable "dns_subdomain_records" {
     name    = string
     records = list(string)
   }))
-}
-
-variable "dns_zone_root_records" {
-  description = "List of IP addresses for the root A record in the DNS zone. When importing, get this value from the original terraform state using: terraform state show 'module.perimeter.azurerm_dns_a_record.adnsar_root'"
-  type        = set(string)
-  default     = []
-}
-
-variable "dns_zone_sub_domain_records" {
-  description = "Map of subdomain names to their respective A record IP addresses. When importing, get these values from the original terraform state."
-  type = map(object({
-    name    = string
-    records = set(string)
-  }))
-  default = {}
 }
 
 variable "psql_private_dns_zone_name" {
@@ -307,6 +387,55 @@ variable "keyvault_core_rbac_authorization_enabled" {
 variable "keyvault_secret_writer_user_ids" {
   description = "List of user object IDs that will be granted permissions to write secrets to Key Vault"
   type        = list(string)
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap). Required for Key Vault role assignments."
+  type        = string
+}
+
+# Key Vault Role Names
+variable "key_vault_crypto_service_encryption_user_role_name" {
+  description = "Role name for Key Vault Crypto Service Encryption User"
+  type        = string
+  default     = "Key Vault Crypto Service Encryption User"
+}
+
+variable "secret_reader_key_vault_role_name" {
+  description = "Role name for the secret reader key vault"
+  type        = string
+  default     = "Key Vault Secrets User"
+}
+
+variable "key_reader_key_vault_role_name" {
+  description = "Role name for the key reader key vault"
+  type        = string
+  default     = "Key Vault Crypto User"
+}
+
+variable "secret_manager_key_vault_role_name" {
+  description = "Role name for the secret manager key vault"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "key_manager_key_vault_role_name" {
+  description = "Role name for the key manager key vault (Crypto Officer)"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "sensitive_crypto_officer_key_vault_role_name" {
+  description = "Role name for the crypto officer key vault (Crypto Officer)"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "access_manager_key_vault_role_name" {
+  description = "Role name for the access manager key vault (Data Access Administrator)"
+  type        = string
+  default     = "Key Vault Data Access Administrator"
 }
 
 variable "keyvault_core_network_acls" {
@@ -559,4 +688,6 @@ variable "dns_private_endpoints" {
       }
     })
   })
+  default = {
+  }
 }

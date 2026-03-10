@@ -17,12 +17,12 @@ kv_sku = "premium"
 
 # Terraform Service Principal (created in day-0/bootstrap)
 # To get the object_id, run: az ad sp list --display-name "terraform" --query "[].{objectId:id,displayName:displayName}" -o table, or go to Azure Portal -> Enterprise Applications -> Terraform -> Object ID
-terraform_service_principal_object_id = "dde525a7-fbfa-4a7c-88da-b9bcaf75830f"
+terraform_service_principal_object_id = "b5016fe4-421b-4dd3-bc65-c9abf3dfad8b"
 
 # Kubelet Identity Object ID (from AKS cluster)
 # To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'identityProfile.kubeletidentity.objectId' -o tsv
 # This is set explicitly to avoid drift when the AKS cluster data source returns a different value
-kubelet_identity_object_id = "46ff3669-ff01-4730-94b5-75f738a06f04"
+kubelet_identity_object_id = "776cc853-f337-48a2-a934-42fe4f342f7b"
 
 # AKS Cluster ID (for role assignment scopes)
 # To get the ID, run: az aks show -n aks-test -g resource-group-core --query 'id' -o tsv
@@ -30,7 +30,7 @@ aks_cluster_id = "/subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGr
 
 # CSI Identity Object ID (Key Vault Secrets Provider identity from AKS cluster)
 # To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'addonProfiles.azureKeyvaultSecretsProvider.identity.objectId' -o tsv
-csi_identity_object_id = "24ea03fb-b738-4f5c-baa4-8baa8ba6dd6a" 
+csi_identity_object_id = "8f6d5aff-a056-4073-8b99-0dfdbe5e25dd"
 
 # GitOps configuration
 gitops_display_name = "GitOps"
@@ -147,12 +147,12 @@ cluster_workload_identities = {
 # OpenAI Cognitive Accounts
 openai_cognitive_accounts = {
   "cognitive-account-swedencentral" = {
-    name                          = "cognitive-account-swedencentral"
-    location                      = "swedencentral"
-    local_auth_enabled            = false
-    custom_subdomain_name         = "hello-azure-unique"
+    name                            = "cognitive-account-swedencentral"
+    location                        = "swedencentral"
+    local_auth_enabled              = false
+    custom_subdomain_name           = "hello-azure-unique"
     openai_private_endpoint_enabled = false
-    public_network_access_enabled = true
+    public_network_access_enabled   = true
     cognitive_deployments = [
       {
         name          = "text-embedding-ada-002"
@@ -160,13 +160,6 @@ openai_cognitive_accounts = {
         model_version = "2"
         sku_name      = null
         sku_capacity  = 350
-      },
-      {
-        name          = "gpt-35-turbo-0125"
-        model_name    = "gpt-35-turbo"
-        model_version = "0125"
-        sku_name      = null
-        sku_capacity  = 120
       },
       {
         name          = "gpt-4o-2024-11-20"
@@ -204,7 +197,7 @@ speech_service_accounts = {
 # DNS Zones 
 dns_zones = {
   name_client_consented = "client-consented.unique.dev"
-  resource_group_name = "rg-vnet-002"
+  resource_group_name   = "rg-vnet-002"
   private_zones = {
     cognitive_services = {
       name = "privatelink.cognitiveservices.azure.com"

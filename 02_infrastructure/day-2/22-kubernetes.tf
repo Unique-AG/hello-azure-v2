@@ -5,7 +5,7 @@ module "kubernetes_cluster" {
   source = "github.com/Unique-AG/terraform-modules.git//modules/azure-kubernetes-service?ref=azure-kubernetes-service-4.0.1"
 
   kubernetes_version                      = var.kubernetes_version
-  application_gateway_id                  = data.azurerm_application_gateway.application_gateway.id
+  application_gateway_id                  = module.application_gateway.appgw_id
   segregated_node_and_pod_subnets_enabled = var.aks_segregated_node_and_pod_subnets_enabled
   cluster_name                            = local.cluster_name
   kubernetes_default_node_size            = var.kubernetes_default_node_size

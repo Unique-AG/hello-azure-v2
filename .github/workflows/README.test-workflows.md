@@ -84,6 +84,7 @@ The following workflows can run in parallel after Phase 2, but have specific ord
 
 **6. `test.argocd-bootstrap.yaml`** - **RUNS AFTER AKS AND IMAGES ARE READY**
 - **Purpose**: Bootstraps ArgoCD in the AKS cluster
+- **Note**: You should manually run this workflow with 'apply' action to bootstrap the ArgoCD cluster.
 - **Dependencies**: 
   - ✅ `test.governance.tf.yaml` (for Azure authentication)
   - ✅ `test.infrastructure.tf.apply.yaml` (AKS cluster `aks-test` must exist)
@@ -91,7 +92,7 @@ The following workflows can run in parallel after Phase 2, but have specific ord
   - ✅ `test.mirror-unique-artifacts.yaml` (if ArgoCD uses custom images)
 - **Environment**: `20-wl`
 - **Status**: ✅ Active (workflow_dispatch only)
-- **Calls**: `test.helm.yaml` reusable workflow with `applications/argo-bootstrap.yaml`
+- **Calls**: `test.helm.yaml` reusable workflow with `03_applications/argo-bootstrap.yaml.gotmpl`
 
 **7. `test.cluster.helm.yaml`** - **RUNS AFTER ARGOCD BOOTSTRAP**
 - **Purpose**: Deploys cluster-level Helm charts (if any)

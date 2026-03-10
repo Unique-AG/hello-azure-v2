@@ -6,7 +6,7 @@ applicationsets:
     goTemplate: true
     generators:
       - git:
-          repoURL: https://github.com/Unique-AG/hello-azure
+          repoURL: https://github.com/Unique-AG/hello-azure-v2
           revision: preview
           files:
           - path: "applications/dev/apps/chat/*.yaml"
@@ -52,7 +52,7 @@ applicationsets:
     goTemplate: true
     generators:
     - git:
-        repoURL: https://github.com/Unique-AG/hello-azure
+        repoURL: https://github.com/Unique-AG/hello-azure-v2
         revision: preview
         files:
         - path: "applications/dev/apps/system/*.yaml"

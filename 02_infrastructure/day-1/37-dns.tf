@@ -20,25 +20,6 @@ resource "azurerm_dns_zone" "dns_zone" {
   tags                = local.tags
 }
 
-resource "azurerm_dns_a_record" "adnsar_root" {
-  name                = "@"
-  zone_name           = azurerm_dns_zone.dns_zone.name
-  resource_group_name = azurerm_resource_group.vnet.name
-  ttl                 = 300
-  records             = tolist(local.dns_zones_and_records.dns_zone_root_records)
-  tags                = local.tags
-}
-
-resource "azurerm_dns_a_record" "adnsar_sub_domains" {
-  for_each            = local.dns_zones_and_records.dns_zone_sub_domain_records
-  name                = each.value.name
-  zone_name           = azurerm_dns_zone.dns_zone.name
-  resource_group_name = azurerm_resource_group.vnet.name
-  ttl                 = 300
-  records             = tolist(each.value.records)
-  tags                = local.tags
-}
-
 resource "azurerm_private_dns_zone" "speech_service_private_dns_zone" {
   name                = var.dns_private_endpoints.private_zones.cognitive_services.name
   resource_group_name = azurerm_resource_group.vnet.name

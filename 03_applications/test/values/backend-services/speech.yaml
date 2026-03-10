@@ -14,5 +14,5 @@ serviceAccount:
     clientId: e5d4bdfe-f71c-4787-8918-81e58056aa23 # aks-id-test
 secretProvider:
   vaults:
-    hakv2testv2:
+    hakv2test:
       SPEECH_PRIVATE_ENDPOINT_HOST: swedencentral-speech-fqdn

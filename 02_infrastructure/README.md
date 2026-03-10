@@ -26,6 +26,13 @@ This directory contains the infrastructure Terraform configurations organized by
 
 ## Usage
 
+### Considerations When Using Terraform Cloud
+
+In case of using Terraform Cloud, when creating Terraform Cloud workspace, you should take into account the following:
+- Workspace execution mode should be configured for "Agent" instead of "Remote". Specifying the "Remote" execution mode instructs HCP Terraform to perform Terraform runs on its own disposable virtual machines, so "Agent" execution mode is requred for Terraform Cloud to have access to the Azure subscription.
+- Workspace variables should be configured for the environment-specific variables and point to the correct backend configuration file f.e. `/environments/<env>/00-config-day-1.auto.tfvars` and `/environments/<env>/00-parameters-day-1.auto.tfvars` for both day-1 and day-2 respectively.
+- You will probably need to remove use_oidc and client_id from the 91-providers.tf file as they are not needed for Terraform Cloud and add organization and workspaces block to the terraform block in the 90-backend.tf file.
+
 ### Initializing Terraform Backend
 
 Each day-X configuration uses a **separate state file** to avoid conflicts. The backend configuration must be passed via `-backend-config` flags during `terraform init`.
@@ -43,8 +50,8 @@ terraform init -backend-config=../environments/test/backend-config-day-2.hcl
 ```
 
 **Note:** Each day-X has its own state file:
-- day-1: `terraform-infra-v2-day-1.tfstate`
-- day-2: `terraform-infra-v2-day-2.tfstate`
+- day-1: `terraform-day-1-test.tfstate` (test) or `terraform-day-1-dev.tfstate` (dev)
+- day-2: `terraform-day-2-test.tfstate` (test) or `terraform-day-2-dev.tfstate` (dev)
 
 This ensures state isolation and prevents conflicts between different deployment phases.
 
@@ -91,12 +98,12 @@ terraform apply \
 
 1. **day-1**: Deploy foundational infrastructure first
    - Creates resource groups, key vaults, networking, managed identities, etc.
-   - State stored in: `terraform-infra-v2-day-1.tfstate`
+   - State stored in: `terraform-day-1-test.tfstate` (test) or `terraform-day-1-dev.tfstate` (dev)
 
 2. **day-2**: Deploy identity/governance resources (depends on resources from day-1)
    - Uses data sources to look up day-1 resources by name and resource group
    - Creates Azure AD groups, application registrations, federated credentials
-   - State stored in: `terraform-infra-v2-day-2.tfstate`
+   - State stored in: `terraform-day-2-test.tfstate` (test) or `terraform-day-2-dev.tfstate` (dev)
 
 ## Cross-Day Dependencies
 
@@ -190,8 +197,67 @@ terraform plan -var-file=../environments/test/00-config-day-2.auto.tfvars -var-f
 
 - **Day-1 must be imported before day-2**: Day-2 resources depend on resources created in day-1 (e.g., key vaults, resource groups)
 - **Separate state files**: Each day-X uses its own state file:
-  - Day-1: `terraform-infra-v2-day-1.tfstate`
-  - Day-2: `terraform-infra-v2-day-2.tfstate`
+  - Day-1: `terraform-day-1-test.tfstate` (test) or `terraform-day-1-dev.tfstate` (dev)
+  - Day-2: `terraform-day-2-test.tfstate` (test) or `terraform-day-2-dev.tfstate` (dev)
 - **Idempotent**: The import scripts will skip resources that are already in state
 - **Expected drifts**: After import, running `terraform plan` will show cosmetic drifts (API version differences, module-internal changes). These are safe and documented in the script output
+
+## Post-Deployment: Application Configuration Updates
+
+After a fresh deployment (day-1 + day-2), certain application configuration files under `03_applications/` must be updated with values from the Terraform outputs before running the ArgoCD bootstrap. These values are environment-specific and change with each new deployment.
+
+### Required Updates
+
+#### 1. cert-manager ClusterIssuer (`03_applications/<env>/values/cert-manager/cluster-issuer.yaml`)
+
+The ClusterIssuer uses the **kubelet identity** (Managed Service Identity on AKS nodes) to authenticate with Azure DNS for Let's Encrypt DNS-01 challenges. After deploying day-2, update the `clientID` field with the kubelet identity's client ID.
+
+**How to get the value:**
+```bash
+cd day-2
+terraform output cluster_kublet_client_id
+```
+
+**What to update:**
+```yaml
+managedIdentity:
+  clientID: <cluster_kublet_client_id output value>
+```
+
+**Why it's needed:** cert-manager creates DNS TXT records (`_acme-challenge.*`) in the Azure DNS zone to prove domain ownership for Let's Encrypt certificate issuance. The kubelet identity is already granted the `DNS Zone Contributor` role on the DNS zone by Terraform (see `day-2/25-role-assignments.tf`), so no additional role assignments are needed.
+
+#### 2. Azure Key Vault Secrets Store CSI Driver (`03_applications/<env>/values/argo/argo-azure-entra-secret.yaml`)
+
+The CSI driver identity must be the **client ID** of the `azurekeyvaultsecretsprovider-*` addon identity (not the object ID).
+
+**How to get the value:**
+```bash
+az aks show -g <resource-group> -n <cluster-name> \
+  --query "addonProfiles.azureKeyvaultSecretsProvider.identity.clientId" -o tsv
+```
+
+**What to update:**
+```yaml
+keeper:
+  identityId: <CSI addon identity client ID>
+```
+
+#### 3. External Secrets & Backend Services identity references
+
+Files that reference `userAssignedIdentityID` or `identityId` should use the same CSI addon identity client ID from step 2:
+- `03_applications/<env>/values/external-secrets/secret-store.yaml`
+- `03_applications/<env>/values/backend-services/_all.yaml`
+- `03_applications/<env>/values/ai-services/assistants-core.yaml`
+
+### Deployment Checklist (Fresh Environment)
+
+1. Deploy **day-1** infrastructure (`terraform apply`)
+2. Deploy **day-2** infrastructure (`terraform apply`)
+3. Update application configs with Terraform outputs:
+   - `cluster-issuer.yaml` → `cluster_kublet_client_id`
+   - `argo-azure-entra-secret.yaml` → CSI addon identity client ID
+   - `secret-store.yaml`, `_all.yaml`, `assistants-core.yaml` → CSI addon identity client ID
+4. Run **ArgoCD bootstrap** workflow
+5. Verify cert-manager issues TLS certificates (`kubectl get certificate -n unique`)
+6. Verify ArgoCD UI is accessible via HTTPS
 

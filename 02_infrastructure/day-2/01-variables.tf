@@ -537,8 +537,8 @@ variable "postgres_suffix" {
   })
   default = {
     length  = 8
-    special = true
-    upper   = true
+    special = false
+    upper   = false
   }
 }
 

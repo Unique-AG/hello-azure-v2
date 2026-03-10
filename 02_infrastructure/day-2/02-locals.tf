@@ -31,12 +31,12 @@ locals {
   ingestion_storage_sa_name                          = "${var.ingestion_storage_sa_name}${var.env}"
 
   key_vault_core = {
-    name                = "${var.main_kv_name}${var.env}v2" #TODO: remove v2 when we have a new key vault
+    name                = "${var.main_kv_name}${var.env}"
     resource_group_name = var.resource_group_core_name
   }
 
   key_vault_sensitive = {
-    name                = "${var.sensitive_kv_name}${var.env}v2" #TODO: remove v2 when we have a new key vault
+    name                = "${var.sensitive_kv_name}${var.env}"
     resource_group_name = var.resource_group_sensitive_name
   }
 
@@ -55,14 +55,6 @@ locals {
 
   # Application registration
   application_secret_display_name = "${var.custom_subdomain_name}-${var.env}-${var.application_secret_display_name}"
-
-  # Dynamic DNS records - will be populated after application gateway is created
-  dns_subdomain_records_with_ip = {
-    for k, v in var.dns_subdomain_records : k => {
-      name    = v.name
-      records = []
-    }
-  }
 
   # Azure Role Definitions
   acr_pull_principals_role_name = "AcrPull Principals${local.env_suffix}"
