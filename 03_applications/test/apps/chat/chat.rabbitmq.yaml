@@ -3,7 +3,7 @@ spec:
   autoSync: false
   source:
     repoURL: https://github.com/Unique-AG/hello-azure-v2
-    targetRevision: chore/refactor-after-migration
+    targetRevision: preview
     path: 03_applications/test/values/rabbitmq
     directory:
       recurse: true

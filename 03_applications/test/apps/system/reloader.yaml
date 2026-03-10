@@ -3,7 +3,7 @@ spec:
   autoSync: false
   sources:
     - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
-      targetRevision: chore/refactor-after-migration
+      targetRevision: preview
       ref: values
     - chart: reloader
       repoURL: https://stakater.github.io/stakater-charts

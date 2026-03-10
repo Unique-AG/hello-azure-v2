@@ -3,7 +3,7 @@ spec:
   autoSync: false
   sources:
     - repoURL: "https://github.com/Unique-AG/hello-azure-v2"
-      targetRevision: chore/refactor-after-migration
+      targetRevision: preview
       ref: values
     - repoURL: ghcr.io/unique-ag/helm-charts
       chart: web-app

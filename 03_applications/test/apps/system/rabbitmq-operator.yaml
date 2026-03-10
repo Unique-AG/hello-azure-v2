@@ -3,7 +3,7 @@ spec:
   autoSync: false
   sources:
     - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
-      targetRevision: chore/refactor-after-migration
+      targetRevision: preview
       ref: values
     - chart: rabbitmq-cluster-operator
       repoURL: registry-1.docker.io/bitnamicharts

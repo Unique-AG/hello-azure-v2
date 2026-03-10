@@ -1,19 +1,5 @@
 name: "[tf] [test] Infrastructure Destroy 🏗️"
 on:
-  pull_request:
-    branches:
-      - preview
-    paths:
-      - .github/workflows/test.infrastructure.tf.yaml
-      - 02_infrastructure/environments/test/**
-      - terraform-modules/**
-  push:
-    branches:
-      - preview
-    paths:
-      - .github/workflows/test.infrastructure.tf.yaml
-      - 02_infrastructure/environments/test/**
-      - terraform-modules/**
   workflow_dispatch:
 
 permissions:
