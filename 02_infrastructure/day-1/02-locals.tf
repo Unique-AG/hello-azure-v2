@@ -1,7 +1,6 @@
 # Local values that are computed or combined from variables
 locals {
-  # DNS and naming
-  dns_zone_name                               = "${var.env}-${var.dns_zone_name}"
+  # Naming
   name_prefix                                 = "${var.name_prefix}-${var.env}"
   custom_subdomain_name                       = "${var.custom_subdomain_name}-${var.env}"
   document_intelligence_custom_subdomain_name = "${var.document_intelligence_custom_subdomain_name}-${var.env}"

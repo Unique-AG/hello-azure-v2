@@ -3,8 +3,7 @@ locals {
   # Environment suffix for resource naming
   env_suffix = "-${var.env}"
 
-  # DNS and naming
-  dns_zone_name                        = "${var.env}-${var.dns_zone_name}"
+  # Naming
   speech_service_custom_subdomain_name = "${var.speech_service_custom_subdomain_name}-${var.env}"
 
   # OpenAI service names
@@ -43,11 +42,6 @@ locals {
   aks = {
     name                = local.cluster_name # Uses "aks-{env}" to match the actual cluster name
     resource_group_name = var.resource_group_core_name
-  }
-
-  dns_zone = {
-    name                = "${var.dns_zone_name}-${var.env}"
-    resource_group_name = var.resource_group_name_vnet
   }
 
   # Link names
