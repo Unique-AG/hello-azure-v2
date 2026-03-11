@@ -2,9 +2,9 @@ name: '[tf] Lint & Secure 🤨'
 on:
   pull_request:
     paths:
-      - 01_bootstrap/**/*.tf"
-      - 02_infrastructure/**/*.tf"
-      - 03_applications/**/*.tf"
+      - 01_bootstrap/**/*.tf
+      - 02_infrastructure/**/*.tf
+      - 03_applications/**/*.tf
       - .github/workflows/tf.validate.yaml
       - .github/configs/**
       - scripts/**
@@ -45,10 +45,11 @@ jobs:
           fi
 
       - name: Sec
+        id: sec
         run: ./scripts/tf-sec.sh
 
       - name: Upload SARIF results
         uses: github/codeql-action/upload-sarif@6bb031afdd8eb862ea3fc1848194185e076637e5 #v3.28.11
-        if: always()
+        if: always() && steps.sec.outcome != 'skipped' # if the sec step is skipped, we don't want to upload the SARIF results
         with:
           sarif_file: tfsec-results.sarif

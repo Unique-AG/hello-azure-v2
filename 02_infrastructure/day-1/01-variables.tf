@@ -142,7 +142,7 @@ variable "subnet_github_name" {
   description = "The name of the GitHub runners subnet"
   type        = string
 }
-  
+
 variable "subnet_aks_pods_cidr" {
   description = "CIDR block for the AKS pods subnet"
   type        = string
