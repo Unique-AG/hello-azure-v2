@@ -1,0 +1,45 @@
+name: "[tf] [test] Infrastructure Apply 🏗️"
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write # To write comments
+  id-token: write
+
+jobs:
+  automated-plan-apply:
+    environment: 10-pm
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: 02_infrastructure/environments/test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 #v4.0.0
+        with:
+          terraform_version: 1.12.0
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config=config.auto.tfvars
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+  
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/preview'
+        run: terraform apply -auto-approve -input=false
