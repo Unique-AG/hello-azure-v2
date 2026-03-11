@@ -42,4 +42,4 @@ jobs:
       
       - name: Terraform Destroy
         if: (github.event_name == 'push' && github.ref == 'refs/heads/preview') || (github.event_name == 'pull_request' && github.head_ref == 'preview')
-        run: terraform destroy -auto-approve -input=true
+        run: terraform destroy -auto-approve -input=false
