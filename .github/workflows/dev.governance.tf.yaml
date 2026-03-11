@@ -4,13 +4,13 @@ on:
     branches:
       - preview
     paths:
-      - .github/workflows/dev.governance.tf.yaml.
+      - .github/workflows/dev.governance.tf.yaml
       - 01_bootstrap/environments/dev/**
   push:
     branches:
       - preview
     paths:
-      - .github/workflows/dev.governance.tf.yaml.
+      - .github/workflows/dev.governance.tf.yaml
       - 01_bootstrap/environments/dev/**
   workflow_dispatch:
 
