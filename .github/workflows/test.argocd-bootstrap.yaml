@@ -23,5 +23,5 @@ jobs:
     uses: ./.github/workflows/test.helm.yaml
     with:
       file_name: 03_applications/argo-bootstrap.yaml.gotmpl
-      action: ${{ inputs.action || 'apply' }}
+      action: ${{ inputs.action }}
     secrets: inherit
