@@ -21,6 +21,7 @@ env:
   INGESTION_API_URL: http://backend-service-ingestion.unique.svc
   LOG_LEVEL: info
   MAX_HEAP_MB: 750
+  PG_DATABASE_SSL_MODE: "verify"
   ZITADEL_GRPC_HOST: http://zitadel.unique.svc.cluster.local:8080
 envVars:
   - name: AMQP_USERNAME
@@ -49,7 +50,7 @@ nodeSelector:
 hooks:
   migration:
     command: |
-      cd /home/node/app/services/node-scope-management/prisma; npx prisma migrate deploy; cd /home/node/app/services/node-scope-management/dist; RUNNING_MODE=DATA_MIGRATION  node /home/node/app/services/node-scope-management/dist/main.js;
+      cd /home/node/app/services/node-scope-management/prisma; npx prisma migrate deploy --config ../prisma.config.ts; cd /home/node/app/services/node-scope-management/dist; RUNNING_MODE=DATA_MIGRATION  node /home/node/app/services/node-scope-management/dist/main.js;
     enabled: true
 replicaCount: 1
 resources:

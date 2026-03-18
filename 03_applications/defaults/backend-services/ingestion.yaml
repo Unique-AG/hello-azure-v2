@@ -40,6 +40,7 @@ env:
   USE_SCOPE_MANAGEMENT: "true"
   MAX_REQUEST_BODY_SIZE: "30mb"
   PDF_READ_MODE: "DOC_INTELLIGENCE_DEFAULT"
+  PG_DATABASE_SSL_MODE: "verify"
 extraCronJobs:
   es-indexing:
     schedule: "* * 31 2 *"
@@ -65,7 +66,7 @@ extraCronJobs:
 hooks:
   migration:
     command: |
-      cd /home/node/app/services/node-ingestion/prisma; npx prisma migrate deploy;
+      cd /home/node/app/services/node-ingestion/prisma; npx prisma migrate deploy --config ../prisma.config.ts;
     enabled: true
 nodeSelector:
   scalability: steady
