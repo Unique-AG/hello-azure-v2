@@ -23,9 +23,6 @@ env:
   MAX_HEAP_MB: 750
   PG_DATABASE_SSL_MODE: "verify"
   ZITADEL_GRPC_HOST: http://zitadel.unique.svc.cluster.local:8080
-  ZITADEL_HOST: unset_default_value
-  ZITADEL_WEBHOOK_ENDPOINT: http://backend-service-scope-management.unique.svc:8094/webhook/zitadel-events
-  ZITADEL_ROOT_ORG_ID: unset_default_value
   GATEKEEPER_API_URL: http://gatekeeper.chat:80
   GATEKEEPER_RUNNING_MODE: "report_only"
 envVars:
