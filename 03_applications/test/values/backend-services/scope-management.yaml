@@ -25,6 +25,9 @@ extraRoutes:
       - path:
           type: PathPrefix
           value: /scim
+  membership-sync:
+    hostnames:
+      - api.test-hello.azure.unique.dev
 secretProvider:
   vaults:
     hakv2test:

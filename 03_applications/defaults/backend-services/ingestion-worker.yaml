@@ -15,7 +15,7 @@ env:
   CHUNK_CREATE_BATCH_SIZE: 8
   PDF_READ_MODE: "DOC_INTELLIGENCE_DEFAULT"
 envVars:
-  - name: RABBITMQ_USERNAME #! FIXME: @evrim should refactor to respect AMQP_USERNAME as well
+  - name: RABBITMQ_USERNAME
     valueFrom:
       secretKeyRef:
         name: rabbitmqcluster-chat-default-user
@@ -25,7 +25,7 @@ envVars:
       secretKeyRef:
         name: rabbitmqcluster-chat-default-user
         key: username
-  - name: RABBITMQ_PASSWORD #! FIXME: @evrim should refactor to respect AMQP_PASSWORD as well
+  - name: RABBITMQ_PASSWORD
     valueFrom:
       secretKeyRef:
         name: rabbitmqcluster-chat-default-user

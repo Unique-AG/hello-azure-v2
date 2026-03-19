@@ -25,6 +25,9 @@ extraRoutes:
       - path:
           type: PathPrefix
           value: /scim
+  membership-sync:
+    hostnames:
+      - api.hello.azure.unique.dev
 secretProvider:
   vaults:
     helloazuresensitive:
