@@ -3,8 +3,6 @@ env:
   LOG_LEVEL: info
   MAX_HEAP_MB: 200
   PG_DATABASE_SSL_MODE: "verify"
-  GATEKEEPER_API_URL: http://gatekeeper.chat:80
-  GATEKEEPER_RUNNING_MODE: "report_only"
 hooks:
   migration:
     command: |

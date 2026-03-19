@@ -42,8 +42,6 @@ env:
   PDF_READ_MODE: "DOC_INTELLIGENCE_DEFAULT"
   PG_DATABASE_SSL_MODE: "verify"
   QDRANT_READ_CONSISTENCY: 1
-  GATEKEEPER_API_URL: http://gatekeeper.chat:80
-  GATEKEEPER_RUNNING_MODE: "report_only"
 extraCronJobs:
   es-indexing:
     schedule: "* * 31 2 *"
