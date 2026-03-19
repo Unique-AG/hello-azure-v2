@@ -3,6 +3,8 @@ env:
   MAX_HEAP_MB: 400
   PG_DATABASE_SSL_MODE: "verify"
   SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
+  GATEKEEPER_API_URL: http://gatekeeper.chat:80
+  GATEKEEPER_RUNNING_MODE: "report_only"
 hooks:
   migration:
     command: |
