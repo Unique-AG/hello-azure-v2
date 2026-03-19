@@ -10,6 +10,10 @@ env:
   INGESTION_QUEUE: queue
   LOG_LEVEL: info
   MAX_HEAP_MB: 850
+  MAX_RETRIES: 1
+  NUMBER_OF_PDF_PAGES_IN_PARALLEL: 10
+  CHUNK_CREATE_BATCH_SIZE: 8
+  PDF_READ_MODE: "DOC_INTELLIGENCE_DEFAULT"
 envVars:
   - name: RABBITMQ_USERNAME #! FIXME: @evrim should refactor to respect AMQP_USERNAME as well
     valueFrom:
