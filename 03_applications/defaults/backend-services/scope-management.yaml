@@ -74,7 +74,7 @@ routes:
       enabled: true
 extraRoutes:
   scim:
-    enabled: true
+    enabled: false
     annotations:
       konghq.com/plugins: unique-route-metrics
     parentRefs:
@@ -89,7 +89,7 @@ extraRoutes:
           type: PathPrefix
           value: /scim
   membership-sync:
-    enabled: true
+    enabled: false
     annotations:
       konghq.com/plugins: unique-route-metrics
     parentRefs:
