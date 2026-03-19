@@ -58,7 +58,8 @@ env:
     {"name": "HallucinationLevelEvaluation", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/evaluations/hallucination-level"},
     {"name": "DueDiligence", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/magic_table_dd"},
     {"name": "RfpAgent", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/rfp_agent"},
-    {"name": "UniqueAi", "apiURL": "http://assistants-core.chat.svc.cluster.local:8081/core/unique_ai"},
+    {"name": "UniqueAi", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/unique_ai"},
+    {"name": "UniqueAIV2", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/unique_ai_v2"},
     {"name": "KycReviewAgent", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/kyc_review_agent"}
     ]
   LOG_LEVEL: info
