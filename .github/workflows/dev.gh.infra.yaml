@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - preview
+      - '!release'
+      - '!main'
     paths:
       - .github/workflows/dev.gh.infra.yaml
       - 02_infrastructure/gh-dev/**
