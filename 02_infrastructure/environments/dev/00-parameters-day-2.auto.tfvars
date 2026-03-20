@@ -87,6 +87,13 @@ openai_cognitive_accounts = {
         model_version = "2024-11-20"
         sku_name      = "Standard"
         sku_capacity  = 50
+      },
+      {
+        name          = "gpt-4o-2024-05-13"
+        model_name    = "gpt-4o"
+        model_version = "2024-05-13"
+        sku_name      = "GlobalStandard"
+        sku_capacity  = 50
       }
     ]
   }
