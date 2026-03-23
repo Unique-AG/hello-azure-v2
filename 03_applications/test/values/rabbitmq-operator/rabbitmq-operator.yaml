@@ -1,0 +1,25 @@
+global:
+  defaultStorageClass: default-zrs
+  security:
+    allowInsecureImages: true
+clusterOperator:
+  image:
+    registry: uqhacrtest.azurecr.io
+    repository: bitnamilegacy/rabbitmq-cluster-operator
+    tag: 2.16.1-debian-12-r0
+  nodeSelector:
+    scalability: steady
+    lifecycle: persistent
+  watchAllNamespaces: false
+  watchNamespaces:
+    - unique
+msgTopologyOperator:
+  image:
+    registry: uqhacrtest.azurecr.io
+    repository: bitnamilegacy/rmq-messaging-topology-operator
+    tag: 1.17.4-debian-12-r0
+  nodeSelector:
+    scalability: steady
+    lifecycle: persistent
+  # Matches 'nano' Preset which is the default
+  # https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15

@@ -1,0 +1,58 @@
+name: '[tf] Lint & Secure 🤨'
+on:
+  pull_request:
+    branches:
+      - '!release'
+      - '!main'
+    paths:
+      - 01_bootstrap/**/*.tf
+      - 02_infrastructure/**/*.tf
+      - 03_applications/**/*.tf
+      - .github/workflows/tf.validate.yaml
+      - .github/configs/**
+      - scripts/**
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # Required for uploading SARIF results
+    steps:
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 #v4.0.0
+        with:
+          terraform_version: 1.12.0
+
+      - name: Format & Docs
+        run: |
+          # ensure the lock file is generated
+          terraform init
+          # run the docs and fmt scripts
+          ./scripts/tf-docs.sh
+          ./scripts/tf-fmt.sh
+          if [[ $(git diff --stat) != '' ]]; then
+            echo -e '\033[0;31mDocumentation outdated or terraform not formatted, pre-commit hook was not installed or skipped!\033[0m ❌'
+            git diff --color
+            exit 1
+          else
+            echo -e '\033[0;32mDocumentation and Format up to date\033[0m ✔'
+          fi
+
+      - name: Sec
+        id: sec
+        run: ./scripts/tf-sec.sh
+
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@dd677812177e0c29f9c970a6c58d8607ae1bfefd #v4
+        if: always() && steps.sec.outcome != 'skipped' # if the sec step is skipped, we don't want to upload the SARIF results
+        with:
+          sarif_file: tfsec-results.sarif

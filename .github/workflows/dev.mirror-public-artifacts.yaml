@@ -1,0 +1,50 @@
+name: '[dev][rel] Mirror Public Artifacts 🪞'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - preview
+    paths:
+      - mirroring/dev/io.docker.yaml
+      - mirroring/dev/io.ghcr.yaml
+      - mirroring/dev/io.quay.yaml
+      - .github/workflows/dev.mirror-public-artifacts.yaml
+
+permissions:
+  contents: read
+  id-token: write   # This is required for requesting the JWT
+  pull-requests: write # To write comments
+
+jobs:
+  import:
+    environment: 20-wl
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: mirroring/dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+
+      - name: Install node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f #v6.3.0
+
+      - name: Azure Login action
+        uses: azure/login@eec3c95657c1536435858eda1f3ff5437fee8474 #v2.3.0
+        with:
+          subscription-id: be4e82ff-bf83-4173-a750-15e807845579
+          tenant-id: aeade8c4-d4f7-4ae7-9149-4975fa3a7f91
+          client-id: a0e34ba0-b64c-49f4-8d94-1c74d7b3090e
+
+      - name: Install unique-ag/cli
+        run: npm install -g @unique-ag/cli@0.5.1
+
+      - name: Mirror public artifacts
+        timeout-minutes: 15
+        run: |
+          az acr login --name uniquehelloazure
+          qcli mirror images -f io.docker.yaml
+          qcli mirror images -f io.ghcr.yaml
+          qcli mirror images -f io.quay.yaml

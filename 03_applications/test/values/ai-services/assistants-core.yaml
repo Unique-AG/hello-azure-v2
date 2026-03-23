@@ -1,0 +1,27 @@
+env:
+  CORS_ALLOWED_ORIGINS: https://test-hello.azure.unique.dev
+  ZITADEL_PROJECT_ID: "362295080381317263" # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)
+  UNIQUE_INSTALLATION_ID: test-hello.azure.unique.dev # the hostname of the cluster
+image:
+  tag: "2026.12.1"
+  repository: uqhacrtest.azurecr.io/ai-service-assistants-core
+replicaCount: 2
+resources:
+  limits:
+    cpu: 500m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 2Gi
+secretProvider:
+  useVMManagedIdentity: "true"
+  tenantId: aeade8c4-d4f7-4ae7-9149-4975fa3a7f91
+  userAssignedIdentityID: 1f10df87-9938-4fe9-87c4-b3170f6e9611 # azurekeyvaultsecretsprovider-aks-test (client ID)
+  vaults:
+    hakv1test:
+      AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT_DEFINITIONS: azure-document-intelligence-endpoint-definitions
+serviceAccount:
+  enabled: true
+  workloadIdentity:
+    clientId: 1dc12421-3b16-48cd-8b25-497234379625 # aks-id-test
+    enabled: true

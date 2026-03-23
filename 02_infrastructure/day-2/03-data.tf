@@ -1,0 +1,177 @@
+# Data sources for referencing existing Azure resources
+data "azurerm_subscription" "current" {}
+
+data "azurerm_client_config" "current" {}
+
+# Azure AD data sources
+data "azuread_client_config" "current" {}
+
+data "azuread_application_published_app_ids" "well_known" {}
+
+data "azuread_user" "gitops_maintainer" {
+  for_each  = toset(var.gitops_maintainer_user_ids)
+  object_id = each.value
+}
+
+// Key Vault data sources (created in day-1)
+data "azurerm_key_vault" "key_vault_core" {
+  name                = local.key_vault_core.name
+  resource_group_name = local.key_vault_core.resource_group_name
+}
+
+data "azurerm_key_vault" "key_vault_sensitive" {
+  name                = local.key_vault_sensitive.name
+  resource_group_name = local.key_vault_sensitive.resource_group_name
+}
+
+# Resource Group data sources (created in day-1)
+data "azurerm_resource_group" "core" {
+  name = var.resource_group_core_name
+}
+
+data "azurerm_resource_group" "sensitive" {
+  name = var.resource_group_sensitive_name
+}
+
+data "azurerm_resource_group" "vnet" {
+  name = var.resource_group_name_vnet
+}
+
+# Virtual Network data source (created in day-1)
+data "azurerm_virtual_network" "vnet_day_1" {
+  name                = var.vnet_id
+  resource_group_name = var.resource_group_name_vnet
+}
+
+# Subnet data source for cognitive services (created in day-1)
+data "azurerm_subnet" "subnet_cognitive_services_day_1" {
+  name                 = var.subnet_cognitive_services_id
+  virtual_network_name = data.azurerm_virtual_network.vnet_day_1.name
+  resource_group_name  = var.resource_group_name_vnet
+}
+
+# Private DNS Zone data source for speech service (created in day-1)
+data "azurerm_private_dns_zone" "speech_service_day_1" {
+  name                = var.dns_zones.private_zones.cognitive_services.name
+  resource_group_name = var.dns_zones.resource_group_name
+}
+
+data "azurerm_private_dns_zone" "openai_day_1" {
+  count               = var.openai_cognitive_accounts.cognitive-account-swedencentral.openai_private_endpoint_enabled ? 1 : 0
+  name                = var.dns_zones.private_zones.aoi.name
+  resource_group_name = var.dns_zones.resource_group_name
+}
+
+# Managed Identity data sources (created in day-1)
+data "azurerm_user_assigned_identity" "psql_identity" {
+  name                = local.psql_user_assigned_identity_name
+  resource_group_name = data.azurerm_resource_group.sensitive.name
+}
+
+data "azurerm_user_assigned_identity" "ingestion_cache_identity" {
+  name                = local.ingestion_cache_identity_name
+  resource_group_name = data.azurerm_resource_group.sensitive.name
+}
+
+data "azurerm_user_assigned_identity" "ingestion_storage_identity" {
+  name                = local.ingestion_storage_identity_name
+  resource_group_name = data.azurerm_resource_group.sensitive.name
+}
+
+data "azurerm_user_assigned_identity" "aks_workload_identity" {
+  name                = local.aks_user_assigned_identity_name
+  resource_group_name = data.azurerm_resource_group.core.name
+}
+
+data "azurerm_user_assigned_identity" "grafana_identity" {
+  name                = local.grafana_identity_name
+  resource_group_name = data.azurerm_resource_group.core.name
+}
+
+data "azurerm_user_assigned_identity" "audit_storage_identity" {
+  name                = local.audit_storage_user_assigned_identity_name
+  resource_group_name = data.azurerm_resource_group.sensitive.name
+}
+
+# Custom Role Definition data sources (created in day-1)
+data "azurerm_role_definition" "acr_puller" {
+  name  = local.acr_pull_principals_role_name
+  scope = data.azurerm_subscription.current.id
+}
+
+data "azurerm_role_definition" "vnet_subnet_access" {
+  name  = local.vnet_subnet_access_role_name
+  scope = data.azurerm_subscription.current.id
+}
+
+data "azurerm_role_definition" "telemetry_observer" {
+  name  = local.telemetry_observer_role_name
+  scope = data.azurerm_subscription.current.id
+}
+
+# DNS Zone data source (created in day-1)
+# Note: DNS zone name in day-1 uses var.dns_zone_name directly (without env suffix)
+data "azurerm_dns_zone" "dns_zone" {
+  name                = var.dns_zone_name
+  resource_group_name = var.resource_group_name_vnet
+}
+
+# Azure AD Service Principal for Terraform
+# The terraform service principal is created in day-0/bootstrap
+# To find the correct object_id, run: az ad sp list --display-name "terraform" --query "[].{objectId:id,displayName:displayName}" -o table
+data "azuread_service_principal" "terraform" {
+  object_id = var.terraform_service_principal_object_id
+}
+
+# NOTE: This data source has been moved to day-1/38-role-assignments.tf
+# to support role assignments created in day-1.
+
+data "azuread_user" "telemetry_observer" {
+  for_each  = toset(var.telemetry_observer_user_ids)
+  object_id = each.value
+}
+
+
+# Log Analytics Workspace data source (created in day-1)
+data "azurerm_log_analytics_workspace" "log_analytics" {
+  name                = local.log_analytics_workspace_name
+  resource_group_name = data.azurerm_resource_group.core.name
+}
+
+# Subnet data source for Application Gateway (created in day-1)
+data "azurerm_subnet" "application_gateway" {
+  name                 = "snet-application-gateway"
+  virtual_network_name = "vnet-001"
+  resource_group_name  = data.azurerm_resource_group.vnet.name
+}
+
+# AKS Subnet data sources (created in day-1)
+data "azurerm_subnet" "aks_nodes" {
+  name                 = "snet-aks-nodes"
+  virtual_network_name = "vnet-001"
+  resource_group_name  = data.azurerm_resource_group.vnet.name
+}
+
+# AKS Public IP data source (created in day-1)
+data "azurerm_public_ip" "aks_public_ip" {
+  name                = var.aks_public_ip_name
+  resource_group_name = data.azurerm_resource_group.core.name
+}
+
+data "azurerm_subnet" "aks_pods" {
+  name                 = "snet-aks-pods"
+  virtual_network_name = "vnet-001"
+  resource_group_name  = data.azurerm_resource_group.vnet.name
+}
+
+# PostgreSQL data sources (created in day-1)
+data "azurerm_subnet" "postgresql" {
+  name                 = var.postgresql_subnet_name
+  virtual_network_name = data.azurerm_virtual_network.vnet_day_1.name
+  resource_group_name  = data.azurerm_resource_group.vnet.name
+}
+
+data "azurerm_private_dns_zone" "postgresql" {
+  name                = var.psql_private_dns_zone_name
+  resource_group_name = data.azurerm_resource_group.vnet.name
+}

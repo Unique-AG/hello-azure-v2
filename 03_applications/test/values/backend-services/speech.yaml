@@ -1,0 +1,18 @@
+image:
+  repository: uqhacrtest.azurecr.io/backend-service-speech
+  tag: "2026.12.1"
+replicaCount: 2
+resources:
+  limits:
+    cpu: 100m
+    memory: 300Mi
+  requests:
+    cpu: 100m
+    memory: 300Mi
+serviceAccount:
+  workloadIdentity:
+    clientId: 1dc12421-3b16-48cd-8b25-497234379625 # aks-id-test
+secretProvider:
+  vaults:
+    hakv2test:
+      SPEECH_PRIVATE_ENDPOINT_HOST: swedencentral-speech-fqdn

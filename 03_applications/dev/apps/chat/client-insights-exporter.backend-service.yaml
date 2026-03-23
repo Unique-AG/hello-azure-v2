@@ -1,0 +1,17 @@
+spec:
+  name: client-insights-exporter
+  autoSync: false
+  sources:
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: preview
+      ref: values
+    - repoURL: ghcr.io/unique-ag/helm-charts
+      chart: backend-service
+      targetRevision: 6.0.1
+      helm:
+        releaseName: client-insights-exporter
+        valueFiles:
+          - $values/03_applications/defaults/backend-services/client-insights-exporter.yaml
+          - $values/03_applications/dev/values/backend-services/_all.yaml
+          - $values/03_applications/dev/values/backend-services/client-insights-exporter.yaml
+        valuesObject: {}
