@@ -1,9 +1,9 @@
 name: '[tf] Lint & Secure 🤨'
 on:
   pull_request:
-    branches:
-      - '!release'
-      - '!main'
+    branches-ignore:
+      - release
+      - main
     paths:
       - 01_bootstrap/**/*.tf
       - 02_infrastructure/**/*.tf
