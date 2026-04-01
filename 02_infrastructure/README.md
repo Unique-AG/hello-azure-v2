@@ -16,6 +16,7 @@ This directory contains the infrastructure Terraform configurations organized by
 │   ├── 00-parameters-day-1.auto.tfvars  # Day-1 environment-specific parameters
 │   ├── 00-parameters-day-2.auto.tfvars  # Day-2 environment-specific parameters
 │   ├── 00-parameters-day-3.auto.tfvars  # Day-3 environment-specific parameters
+│   ├── prometheus-rules.auto.tfvars     # Prometheus alert and recording rules for day-2
 │   ├── backend-config-day-1.hcl         # Backend config for day-1 terraform init
 │   ├── backend-config-day-2.hcl         # Backend config for day-2 terraform init
 │   └── backend-config-day-3.hcl         # Backend config for day-3 terraform init
@@ -26,6 +27,7 @@ This directory contains the infrastructure Terraform configurations organized by
     ├── 00-parameters-day-1.auto.tfvars  # Day-1 environment-specific parameters
     ├── 00-parameters-day-2.auto.tfvars  # Day-2 environment-specific parameters
     ├── 00-parameters-day-3.auto.tfvars  # Day-3 environment-specific parameters
+    ├── prometheus-rules.auto.tfvars     # Prometheus alert and recording rules for day-2
     ├── backend-config-day-1.hcl         # Backend config for day-1 terraform init
     ├── backend-config-day-2.hcl         # Backend config for day-2 terraform init
     └── backend-config-day-3.hcl         # Backend config for day-3 terraform init
@@ -90,11 +92,13 @@ terraform apply \
 cd day-2
 terraform plan \
   -var-file=../environments/test/00-config-day-2.auto.tfvars \
-  -var-file=../environments/test/00-parameters-day-2.auto.tfvars
+  -var-file=../environments/test/00-parameters-day-2.auto.tfvars \
+  -var-file=../environments/test/prometheus-rules.auto.tfvars
 
 terraform apply \
   -var-file=../environments/test/00-config-day-2.auto.tfvars \
-  -var-file=../environments/test/00-parameters-day-2.auto.tfvars
+  -var-file=../environments/test/00-parameters-day-2.auto.tfvars \
+  -var-file=../environments/test/prometheus-rules.auto.tfvars
 ```
 
 **Day-3 (Secure Access - Azure Bastion):**
@@ -121,6 +125,7 @@ terraform apply \
 - **00-parameters-day-1.auto.tfvars**: Contains day-1 environment-specific parameters (resource names, locations, user IDs, etc.)
 - **00-parameters-day-2.auto.tfvars**: Contains day-2 environment-specific parameters (references to day-1 resources by name)
 - **00-parameters-day-3.auto.tfvars**: Contains day-3 environment-specific parameters (references to day-1 resources by name, bastion configuration)
+- **prometheus-rules.auto.tfvars**: Contains Prometheus alert rules and recording rules for AKS monitoring (used by day-2). Must be passed explicitly via `-var-file` as it resides outside the day-2 working directory.
 - **backend-config-day-1.hcl**: Backend configuration for day-1 terraform init (contains only backend settings, used with `-backend-config` flag)
 - **backend-config-day-2.hcl**: Backend configuration for day-2 terraform init (contains only backend settings, used with `-backend-config` flag)
 - **backend-config-day-3.hcl**: Backend configuration for day-3 terraform init (contains only backend settings, used with `-backend-config` flag)
