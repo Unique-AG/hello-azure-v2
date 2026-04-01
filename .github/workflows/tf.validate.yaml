@@ -1,9 +1,13 @@
 name: '[tf] Lint & Secure 🤨'
 on:
   pull_request:
+    branches:
+      - '!release'
+      - '!main'
     paths:
-      - governance/**/*.tf"
-      - infrastructure/**/*.tf"
+      - 01_bootstrap/**/*.tf
+      - 02_infrastructure/**/*.tf
+      - 03_applications/**/*.tf
       - .github/workflows/tf.validate.yaml
       - .github/configs/**
       - scripts/**
@@ -19,33 +23,36 @@ jobs:
       security-events: write  # Required for uploading SARIF results
     steps:
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           fetch-depth: 0
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd #v3.1.2
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 #v4.0.0
         with:
           terraform_version: 1.12.0
 
-# TODO: to be cleaned up at later point in time
-      # - name: Format & Docs
-      #   run: |
-      #     ./scripts/tf-docs.sh
-      #     ./scripts/tf-fmt.sh
-      #     if [[ $(git diff --stat) != '' ]]; then
-      #       echo -e '\033[0;31mDocumentation outdated or terraform not formatted, pre-commit hook was not installed or skipped!\033[0m ❌'
-      #       git diff --color
-      #       exit 1
-      #     else
-      #       echo -e '\033[0;32mDocumentation and Format up to date\033[0m ✔'
-      #     fi
+      - name: Format & Docs
+        run: |
+          # ensure the lock file is generated
+          terraform init
+          # run the docs and fmt scripts
+          ./scripts/tf-docs.sh
+          ./scripts/tf-fmt.sh
+          if [[ $(git diff --stat) != '' ]]; then
+            echo -e '\033[0;31mDocumentation outdated or terraform not formatted, pre-commit hook was not installed or skipped!\033[0m ❌'
+            git diff --color
+            exit 1
+          else
+            echo -e '\033[0;32mDocumentation and Format up to date\033[0m ✔'
+          fi
 
-      # - name: Sec
-      #   run: ./scripts/tf-sec.sh
+      - name: Sec
+        id: sec
+        run: ./scripts/tf-sec.sh
 
-      # - name: Upload SARIF results
-      #   uses: github/codeql-action/upload-sarif@6bb031afdd8eb862ea3fc1848194185e076637e5 #v3.28.11
-      #   if: always()
-      #   with:
-      #     sarif_file: tfsec-results.sarif
+      - name: Upload SARIF results
+        uses: github/codeql-action/upload-sarif@dd677812177e0c29f9c970a6c58d8607ae1bfefd #v4
+        if: always() && steps.sec.outcome != 'skipped' # if the sec step is skipped, we don't want to upload the SARIF results
+        with:
+          sarif_file: tfsec-results.sarif

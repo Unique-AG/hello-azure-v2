@@ -2,23 +2,23 @@ spec:
   name: rabbitmq-operator
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
-      targetRevision: chore/enable-test-workflows
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: preview
       ref: values
     - chart: rabbitmq-cluster-operator
       repoURL: registry-1.docker.io/bitnamicharts
-      targetRevision: 4.3.21
+      targetRevision: 4.4.34
       helm:
         releaseName: rabbitmq-cluster-operator
         valueFiles:
-          - $values/applications/test/values/rabbitmq-operator/rabbitmq-operator.yaml
+          - $values/03_applications/test/values/rabbitmq-operator/rabbitmq-operator.yaml
     - chart: raw
       repoURL: https://bedag.github.io/helm-charts
       targetRevision: 2.0.0
       helm:
         releaseName: rabbitmqcluster-chat-unique-user
         valueFiles:
-          - $values/applications/test/values/rabbitmq-operator/rabbitmq-cluster-operator-secret.yaml
+          - $values/03_applications/test/values/rabbitmq-operator/rabbitmq-cluster-operator-secret.yaml
   ignoreDifferences:
     - group: ""
       kind: Secret

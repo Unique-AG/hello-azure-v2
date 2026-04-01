@@ -1,5 +1,4 @@
 # Azure Defender for Cloud
-# Security monitoring and threat protection for the subscription
 
 module "defender" {
   source          = "github.com/unique-ag/terraform-modules.git//modules/azure-defender?depth=1&ref=azure-defender-2.2.0"

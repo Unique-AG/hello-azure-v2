@@ -3,7 +3,7 @@ chownImage:
   tag: 3.19
 image:
   repository: uqhacrtest.azurecr.io/zitadel/zitadel
-  tag: v2.71.13
+  tag: v3.4.8
 nodeSelector:
   scalability: steady
   lifecycle: persistent
@@ -129,6 +129,8 @@ resources:
   limits:
     memory: 1Gi
 initJob:
+  # Increase deadline; Azure PostgreSQL from AKS can be slow on first connect and migrations may exceed 5m
+  activeDeadlineSeconds: 900
   resources:
     requests:
       cpu: 100m

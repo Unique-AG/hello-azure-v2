@@ -2,7 +2,7 @@ spec:
   name: reloader
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: preview
       ref: values
     - chart: reloader
@@ -11,4 +11,4 @@ spec:
       helm:
         releaseName: reloader
         valueFiles:
-          - $values/applications/dev/values/reloader/reloader.yaml
+          - $values/03_applications/dev/values/reloader/reloader.yaml

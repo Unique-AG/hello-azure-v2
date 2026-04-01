@@ -17,7 +17,8 @@ resources:
                 hostedZoneName: test-hello.azure.unique.dev
                 environment: AzurePublicCloud
                 managedIdentity:
-                  clientID: 0a0aa9c2-0574-43fa-b3e6-ef34382624a5 # aks-test-agentpool
+                  # Kubelet identity client ID - obtain from: terraform output cluster_kublet_client_id
+                  clientID: 3a75d7b6-c4e9-4aa2-9ae3-395cfd7e133e # aks-test kubelet identity
             selector:
               dnsZones:
                 - test-hello.azure.unique.dev

@@ -17,12 +17,11 @@ CURSOR_RESEARCH.md
 *.tfstate
 *.tfstate.*
 
-# Ignore crash log files
-crash.log
-crash.*.log
+# Ignore all log files
+*.log
 
 # Ignore .tfvars files
-*.tfvars
+# *.tfvars
 *.tfvars.json
 
 # Exception: Track configuration and parameter files (they are part of the repository structure)

@@ -2,8 +2,8 @@ spec:
   name: zitadel
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
-      targetRevision: chore/enable-test-workflows
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: preview
       ref: values
     - chart: zitadel
       repoURL: https://charts.zitadel.com
@@ -11,8 +11,8 @@ spec:
       helm:
         releaseName: zitadel
         valueFiles: 
-          - $values/applications/test/values/zitadel/zitadel-extra-manifests.yaml
-          - $values/applications/test/values/zitadel/zitadel.yaml
+          - $values/03_applications/test/values/zitadel/zitadel-extra-manifests.yaml
+          - $values/03_applications/test/values/zitadel/zitadel.yaml
         valuesObject: {} 
 metadata:
   annotations:

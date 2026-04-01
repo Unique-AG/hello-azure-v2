@@ -4,11 +4,33 @@ env = "test"
 # Network configuration
 subnet_agw_cidr = "10.202.3.0/28"
 
+# Application Gateway configuration
+# Use explicit name to preserve existing gateway IP configuration name and avoid replacement
+# Existing name is "ha-test-gwip", but default would be "gateway-ip-configuration"
+application_gateway_gateway_ip_configuration_name = "ha-test-gwip"
+
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
 
 # Key Vault configuration
 kv_sku = "premium"
+
+# Terraform Service Principal (created in day-0/bootstrap)
+# To get the object_id, run: az ad sp list --display-name "terraform" --query "[].{objectId:id,displayName:displayName}" -o table, or go to Azure Portal -> Enterprise Applications -> Terraform -> Object ID
+terraform_service_principal_object_id = "b5016fe4-421b-4dd3-bc65-c9abf3dfad8b"
+
+# Kubelet Identity Object ID (from AKS cluster)
+# To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'identityProfile.kubeletidentity.objectId' -o tsv
+# This is set explicitly to avoid drift when the AKS cluster data source returns a different value
+kubelet_identity_object_id = "776cc853-f337-48a2-a934-42fe4f342f7b"
+
+# AKS Cluster ID (for role assignment scopes)
+# To get the ID, run: az aks show -n aks-test -g resource-group-core --query 'id' -o tsv
+aks_cluster_id = "/subscriptions/782871a0-bcee-44fb-851f-ccd3e69ada2a/resourceGroups/resource-group-core/providers/Microsoft.ContainerService/managedClusters/aks-test"
+
+# CSI Identity Object ID (Key Vault Secrets Provider identity from AKS cluster)
+# To get the object_id, run: az aks show -n aks-test -g resource-group-core --query 'addonProfiles.azureKeyvaultSecretsProvider.identity.objectId' -o tsv
+csi_identity_object_id = "8f6d5aff-a056-4073-8b99-0dfdbe5e25dd"
 
 # GitOps configuration
 gitops_display_name = "GitOps"
@@ -63,9 +85,6 @@ telemetry_observer_user_ids = [
   "3b48f167-cb68-4655-b45b-878e170af84d",
 ]
 
-# Speech Service configuration (private DNS zone name is not environment-specific)
-speech_service_private_dns_zone_name = "privatelink.cognitiveservices.azure.com"
-
 # Resource Group Names (created in day-0)
 resource_group_core_name      = "resource-group-core"
 resource_group_sensitive_name = "resource-group-sensitive"
@@ -75,11 +94,8 @@ resource_group_name_vnet      = "rg-vnet-002"
 main_kv_name      = "hakv1"
 sensitive_kv_name = "hakv2"
 
-# AKS Cluster
-cluster_name = "aks-test"
-
 # DNS Zone
-dns_zone_name = "hello.azure.unique.test"
+dns_zone_name = "test-hello.azure.unique.dev"
 
 # Application Registration
 application_registration_gitops_display_name = "GitOps"
@@ -125,5 +141,129 @@ cluster_workload_identities = {
   "backend-service-speech" = {
     name      = "backend-service-speech"
     namespace = "unique"
+  }
+}
+
+# OpenAI Cognitive Accounts
+openai_cognitive_accounts = {
+  "cognitive-account-swedencentral" = {
+    name                            = "cognitive-account-swedencentral"
+    location                        = "swedencentral"
+    local_auth_enabled              = false
+    custom_subdomain_name           = "hello-azure-unique"
+    openai_private_endpoint_enabled = false
+    public_network_access_enabled   = true
+    cognitive_deployments = [
+      {
+        name          = "text-embedding-ada-002"
+        model_name    = "text-embedding-ada-002"
+        model_version = "2"
+        sku_name      = null
+        sku_capacity  = 350
+      },
+      {
+        name          = "gpt-4o-2024-11-20"
+        model_name    = "gpt-4o"
+        model_version = "2024-11-20"
+        sku_name      = "Standard"
+        sku_capacity  = 50
+      },
+      {
+        name          = "gpt-4o-2024-05-13"
+        model_name    = "gpt-4o"
+        model_version = "2024-05-13"
+        sku_name      = "GlobalStandard"
+        sku_capacity  = 50
+      }
+    ]
+  }
+}
+
+# OpenAI Document Intelligence Accounts
+document_intelligence_accounts = {
+  "swedencentral-form-recognizer" = {
+    location                      = "swedencentral"
+    custom_subdomain_name         = "di-hello-azure-unique"
+    public_network_access_enabled = true
+    local_auth_enabled            = true
+  }
+}
+
+# OpenAI Speech Service
+speech_service_name = "speech-service"
+speech_service_accounts = {
+  "swedencentral-speech" = {
+    location              = "swedencentral"
+    account_kind          = "SpeechServices"
+    account_sku_name      = "S0"
+    custom_subdomain_name = "ss-hello-azure-test"
+    private_endpoint      = true
+  }
+}
+
+# DNS Zones 
+dns_zones = {
+  name_client_consented = "client-consented.unique.dev"
+  resource_group_name   = "rg-vnet-002"
+  private_zones = {
+    cognitive_services = {
+      name = "privatelink.cognitiveservices.azure.com"
+    }
+    aoi = {
+      name = "privatelink.openai.azure.com"
+    }
+    storage = {
+      name = "privatelink.blob.core.windows.net"
+    }
+    psql = {
+      name = "privatelink.postgres.database.azure.com"
+    }
+    redis = {
+      name = "privatelink.redis.cache.windows.net"
+    }
+  }
+
+}
+
+# Secrets
+rabbitmq_password_chat_secret_name        = "rabbitmq-password-chat"
+zitadel_db_user_password_secret_name      = "zitadel-db-user-password"
+zitadel_master_key_secret_name            = "zitadel-master-key"
+encryption_key_app_repository_secret_name = "encryption-key-app-repository"
+encryption_key_node_chat_lxm_secret_name  = "encryption-key-chat-lxm"
+encryption_key_ingestion_secret_name      = "encryption-key-ingestion"
+zitadel_pat_secret_name                   = "manual-zitadel-scope-mgmt-pat"
+
+# Secret Generation Configuration
+secret_password_length        = 32
+rabbitmq_password_chat_length = 24
+secret_expiration_date        = "2099-12-31T23:59:59Z"
+
+# Kubernetes Configuration
+kubernetes_node_pool_settings = {
+  rapid = {
+    max_count   = 3
+    min_count   = 0
+    node_count  = 0
+    node_taints = ["scalability=rapid:NoSchedule", "lifecycle=ephemeral:NoSchedule"]
+    node_labels = {
+      lifecycle   = "ephemeral"
+      scalability = "rapid"
+    }
+    vm_size = "Standard_D8s_v4"
+  },
+  steady = {
+    max_count   = 4
+    min_count   = 0
+    node_count  = 2
+    node_taints = []
+    node_labels = {
+      lifecycle   = "persistent"
+      scalability = "steady"
+    }
+    upgrade_settings = {
+      max_surge = "30%"
+    }
+    vm_size = "Standard_D8as_v5"
   }
 }

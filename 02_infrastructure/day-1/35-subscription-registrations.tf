@@ -1,5 +1,4 @@
 # Subscription Provider Registrations
-# Register required Azure resource providers for the subscription
 
 resource "azurerm_resource_provider_registration" "azure_dashboard_provider" {
   name = local.azure_resource_provider_registrations.azure_dashboard_provider.name

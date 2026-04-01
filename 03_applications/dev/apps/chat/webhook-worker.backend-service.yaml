@@ -2,7 +2,7 @@ spec:
   name: backend-service-webhook-worker
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: preview
       ref: values
     - repoURL: ghcr.io/unique-ag/helm-charts
@@ -11,7 +11,7 @@ spec:
       helm:
         releaseName: backend-service-webhook-worker
         valueFiles:
-          - $values/applications/defaults/backend-services/webhook-worker.yaml
-          - $values/applications/dev/values/backend-services/_all.yaml
-          - $values/applications/dev/values/backend-services/webhook-worker.yaml
+          - $values/03_applications/defaults/backend-services/webhook-worker.yaml
+          - $values/03_applications/dev/values/backend-services/_all.yaml
+          - $values/03_applications/dev/values/backend-services/webhook-worker.yaml
         valuesObject: {}

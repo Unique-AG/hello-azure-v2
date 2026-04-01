@@ -24,12 +24,15 @@ data "azuread_user" "gitops_maintainer" {
   object_id = each.value
 }
 
-# Kubernetes cluster data source (will be populated after AKS cluster is created)
-# Note: This will fail if cluster doesn't exist, but that's expected during initial setup
-# The cluster will be created in a later phase
-data "azurerm_kubernetes_cluster" "cluster" {
-  name                = local.cluster_name
-  resource_group_name = azurerm_resource_group.core.name
-  #depends_on          = [var.cluster_id] # Required for AGIC identity access. Note: This may cause role assignments to be recreated on plan, but is necessary for AGIC to function properly.
+# Data source to look up users
+data "azuread_user" "keyvault_secret_writer" {
+  for_each  = toset(var.keyvault_secret_writer_user_ids)
+  object_id = each.value
 }
 
+# Terraform Service Principal - needed for Key Vault role assignments
+# Uses object_id to uniquely identify the SP (multiple SPs may have the same display name)
+# To find the correct object_id, run: az ad sp list --display-name "terraform" --query "[].{objectId:id,displayName:displayName}" -o table
+data "azuread_service_principal" "terraform" {
+  object_id = var.terraform_service_principal_object_id
+}

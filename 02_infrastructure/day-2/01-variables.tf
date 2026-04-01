@@ -73,6 +73,18 @@ variable "resource_group_name_vnet" {
   type        = string
 }
 
+variable "virtual_network_name" {
+  description = "Name of the virtual network (created in day-1)"
+  type        = string
+  default     = "vnet-001"
+}
+
+variable "postgresql_subnet_name" {
+  description = "Name of the PostgreSQL subnet (created in day-1)"
+  type        = string
+  default     = "snet-postgres"
+}
+
 # Naming and Tagging
 variable "name_prefix" {
   description = "Prefix used for naming resources"
@@ -102,6 +114,12 @@ variable "custom_subdomain_name" {
   description = "The custom subdomain name to use for the application"
   type        = string
   default     = "ha"
+}
+
+variable "application_gateway_name" {
+  description = "Application Gateway name."
+  type        = string
+  default     = "appgw"
 }
 
 variable "document_intelligence_custom_subdomain_name" {
@@ -143,10 +161,48 @@ variable "budget_contact_emails" {
   type        = list(string)
 }
 
+# Application Gateway Configuration
+variable "ip_name" {
+  description = "Name of the public IP for the Application Gateway"
+  type        = string
+  default     = "default-public-ip-name"
+}
+
+# Key Vault SKU (for compatibility with day-1, not used in day-2 but may be in tfvars)
+variable "kv_sku" {
+  description = "SKU for Key Vault (for compatibility, not used in day-2)"
+  type        = string
+  default     = "premium"
+}
+
+# Terraform Service Principal
+variable "terraform_service_principal_object_id" {
+  description = "Object ID of the Terraform service principal (created in day-0/bootstrap)."
+  type        = string
+}
+
 variable "cluster_name" {
   description = "Name of the AKS cluster"
   type        = string
   default     = "aks"
+}
+
+variable "kubelet_identity_object_id" {
+  description = "Object ID of the AKS kubelet identity."
+  type        = string
+  default     = null
+}
+
+variable "aks_cluster_id" {
+  description = "Resource ID of the AKS cluster."
+  type        = string
+  default     = null
+}
+
+variable "csi_identity_object_id" {
+  description = "Object ID of the AKS CSI (Key Vault Secrets Provider) identity."
+  type        = string
+  default     = null
 }
 
 # Managed Identities
@@ -174,6 +230,128 @@ variable "ingestion_storage_identity_name" {
   default     = "storage-id"
 }
 
+variable "kubernetes_version" {
+  description = "The version of Kubernetes to use for the AKS cluster"
+  type        = string
+  default     = "1.34.0"
+}
+
+variable "aks_segregated_node_and_pod_subnets_enabled" {
+  description = "Whether to enable segregated node and pod subnets for the AKS cluster"
+  type        = bool
+  default     = true
+}
+
+variable "kubernetes_default_node_size" {
+  description = "The default node size for the AKS cluster"
+  type        = string
+  default     = "Standard_D2s_v6"
+}
+
+variable "kubernetes_default_node_zones" {
+  description = "The default node zones for the AKS cluster"
+  type        = list(string)
+  default     = ["1", "3"]
+}
+
+variable "node_resource_group_name" {
+  description = "The name of the resource group for AKS nodes"
+  type        = string
+  default     = "resource-group-core-aks-nodes"
+}
+
+variable "prometheus_node_recording_rules" {
+  description = "Node level recording rules for Prometheus monitoring"
+  type = list(object({
+    enabled    = optional(bool, true)
+    record     = string
+    expression = string
+    labels     = optional(map(string))
+  }))
+  default = null
+}
+
+variable "prometheus_kubernetes_recording_rules" {
+  description = "Kubernetes level recording rules for Prometheus monitoring"
+  type = list(object({
+    enabled    = optional(bool, true)
+    record     = string
+    expression = string
+    labels     = optional(map(string))
+  }))
+  default = null
+}
+
+variable "prometheus_ux_recording_rules" {
+  description = "UX level recording rules for Prometheus monitoring"
+  type = list(object({
+    enabled    = optional(bool, true)
+    record     = string
+    expression = string
+    labels     = optional(map(string))
+  }))
+  default = null
+}
+
+variable "grafana_monitor_enabled" {
+  description = "Whether to enable Grafana for the AKS cluster"
+  type        = bool
+  default     = true
+}
+
+variable "grafana_major_version" {
+  description = "The major version of Grafana to use for the AKS cluster"
+  type        = string
+  default     = "11"
+}
+
+variable "grafana_identity_type" {
+  description = "The type of the Grafana user-assigned identity"
+  type        = string
+  default     = "UserAssigned"
+}
+
+variable "kubernetes_node_pool_settings" {
+  description = "Configuration settings for the rapid node pool"
+  type = map(object({
+    auto_scaling_enabled = optional(bool, true)
+    max_count            = optional(number, 3)
+    min_count            = optional(number, 0)
+    mode                 = optional(string, "User")
+    node_count           = optional(number, 0)
+    node_labels = optional(object({
+      lifecycle   = string
+      scalability = string
+      }), {
+      lifecycle   = "ephemeral"
+      scalability = "rapid"
+    })
+    node_taints     = optional(list(string), ["scalability=rapid:NoSchedule", "lifecycle=ephemeral:NoSchedule"])
+    os_disk_size_gb = optional(number, 100)
+    os_sku          = optional(string, "AzureLinux")
+    upgrade_settings = optional(object({
+      max_surge = string
+      }), {
+      max_surge = "10%"
+    })
+    vm_size = optional(string, "Standard_D8s_v4")
+    zones   = optional(list(string), ["1", "3"])
+  }))
+  default = {}
+}
+
+variable "aks_public_ip_name" {
+  description = "Name of the AKS public IP (created in day-1)"
+  type        = string
+  default     = "aks_public_ip"
+}
+
+variable "aks_network_profile_idle_timeout_in_minutes" {
+  description = "The idle timeout in minutes for the AKS network profile"
+  type        = number
+  default     = 100
+}
+
 variable "grafana_identity_name" {
   description = "The name of the Grafana user-assigned identity"
   type        = string
@@ -184,6 +362,184 @@ variable "psql_user_assigned_identity_name" {
   description = "The name of the PostgreSQL user-assigned identity"
   type        = string
   default     = "psql-id"
+}
+
+variable "psql_private_dns_zone_name" {
+  description = "Name of the PostgreSQL private DNS zone (created in day-1)"
+  type        = string
+  default     = "psql.postgres.database.azure.com"
+}
+
+# PostgreSQL Configuration
+variable "postgresql_server_name" {
+  description = "The name of the PostgreSQL server"
+  type        = string
+  default     = "psql"
+}
+
+variable "postgresql_zone" {
+  description = "The availability zone for the PostgreSQL server"
+  type        = string
+  default     = "1"
+}
+
+variable "postgresql_version" {
+  description = "The version of PostgreSQL to use"
+  type        = string
+  default     = "14"
+}
+
+variable "postgresql_sku" {
+  description = "The SKU for the PostgreSQL server"
+  type        = string
+  default     = "GP_Standard_D2ds_v5"
+}
+
+variable "postgresql_storage_mb" {
+  description = "The storage size in MB for the PostgreSQL server"
+  type        = number
+  default     = 32768
+}
+
+variable "postgresql_backup_retention_days" {
+  description = "The number of days to retain backups for the PostgreSQL server"
+  type        = number
+  default     = 7
+}
+
+variable "postgresql_databases" {
+  description = "Map of databases and their properties"
+  type = map(object({
+    name            = string
+    collation       = optional(string, null)
+    charset         = optional(string, null)
+    lifecycle       = optional(bool, false)
+    prevent_destroy = optional(bool, true)
+  }))
+  default = {
+    "chat" = {
+      name            = "chat"
+      prevent_destroy = false
+    }
+    "ingestion" = {
+      name            = "ingestion"
+      prevent_destroy = false
+    }
+    "theme" = {
+      name            = "theme"
+      prevent_destroy = false
+    }
+    "scope-management" = {
+      name            = "scope-management"
+      prevent_destroy = false
+    }
+    "app-repository" = {
+      name            = "app-repository"
+      prevent_destroy = false
+    }
+  }
+}
+
+variable "postgresql_server_tags" {
+  description = "Additional tags that apply only to the PostgreSQL server"
+  type        = map(string)
+  default     = {}
+}
+
+variable "postgresql_metric_alerts_external_action_group_ids" {
+  description = "List of external Action Group IDs to apply to all PostgreSQL metric alerts"
+  type        = list(string)
+  default     = []
+}
+
+variable "postgresql_metric_alerts" {
+  description = "Map of metric alerts for PostgreSQL server. Each alert includes name, description, severity, frequency, window_size, enabled status, and criteria."
+  type = map(object({
+    name        = string
+    description = string
+    severity    = number
+    frequency   = string
+    window_size = string
+    enabled     = bool
+    criteria = object({
+      metric_name = string
+      aggregation = string
+      operator    = string
+      threshold   = number
+    })
+  }))
+  default = {
+    default_cpu_alert = {
+      name        = "PostgreSQL High CPU Usage"
+      description = "Alert when CPU usage is above 80% for more than 30 minutes"
+      severity    = 2
+      frequency   = "PT5M"
+      window_size = "PT30M"
+      enabled     = true
+      criteria = {
+        metric_name = "cpu_percent"
+        aggregation = "Average"
+        operator    = "GreaterThan"
+        threshold   = 80
+      }
+    }
+    default_memory_alert = {
+      name        = "PostgreSQL High Memory Usage"
+      description = "Alert when memory usage is above 90% for more than 1 hour"
+      severity    = 1
+      frequency   = "PT15M"
+      window_size = "PT1H"
+      enabled     = true
+      criteria = {
+        metric_name = "memory_percent"
+        aggregation = "Average"
+        operator    = "GreaterThan"
+        threshold   = 90
+      }
+    }
+  }
+}
+
+variable "postgres_username" {
+  description = "The username for the PostgreSQL server"
+  type = object({
+    length  = number
+    special = bool
+    numeric = bool
+  })
+  default = {
+    length  = 16
+    special = false
+    numeric = false
+  }
+}
+
+variable "postgres_password" {
+  description = "The password for the PostgreSQL server"
+  type = object({
+    length  = number
+    special = bool
+    numeric = bool
+  })
+  default = {
+    length  = 32
+    special = false
+    numeric = true
+  }
+}
+
+variable "postgres_suffix" {
+  description = "The suffix for the PostgreSQL server"
+  type = object({
+    length  = number
+    special = bool
+    upper   = bool
+  })
+  default = {
+    length  = 8
+    special = false
+    upper   = false
+  }
 }
 
 variable "csi_identity_name" {
@@ -230,10 +586,40 @@ variable "container_registry_name" {
   default     = "uqhacr"
 }
 
+variable "container_registry_sku" {
+  description = "SKU of the Azure Container Registry"
+  type        = string
+  default     = "Basic"
+}
+
+variable "container_registry_admin_enabled" {
+  description = "Whether to enable admin access to the Azure Container Registry"
+  type        = bool
+  default     = false
+}
+
+variable "container_registry_identity_type" {
+  description = "Type of the Azure Container Registry identity"
+  type        = string
+  default     = "SystemAssigned"
+}
+
+variable "registry_diagnostic_name" {
+  description = "Name of the diagnostic setting for the Container Registry"
+  type        = string
+  default     = "log-helloazure"
+}
+
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
   default     = "uqharedis"
+}
+
+variable "public_network_access_enabled" {
+  description = "Whether public network access is enabled for the Redis Cache"
+  type        = bool
+  default     = true
 }
 
 variable "ingestion_cache_sa_name" {
@@ -272,11 +658,6 @@ variable "ingestion_storage_connection_string_2_secret_name" {
   default     = "ingestion-storage-connection-string-2"
 }
 
-variable "speech_service_private_dns_zone_name" {
-  description = "The name of the private DNS zone for the speech service"
-  type        = string
-}
-
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
   description = "The name of the virtual network link for the speech service private DNS zone"
   type        = string
@@ -287,6 +668,139 @@ variable "speech_service_custom_subdomain_name" {
   description = "The custom subdomain name to use for the speech service"
   type        = string
   default     = "ss-hello-azure"
+}
+
+# OpenAI Configuration
+variable "openai_endpoint_secret_name_suffix" {
+  description = "Suffix for OpenAI endpoint secret names in Key Vault"
+  type        = string
+  default     = "-ep"
+}
+
+variable "openai_cognitive_accounts" {
+  description = "Map of Azure OpenAI cognitive accounts configuration"
+  type = map(object({
+    name                            = string
+    location                        = string
+    local_auth_enabled              = bool
+    custom_subdomain_name           = optional(string)
+    openai_private_endpoint_enabled = optional(bool, false)
+    public_network_access_enabled   = bool
+    cognitive_deployments = list(object({
+      name          = string
+      model_name    = string
+      model_version = string
+      sku_name      = optional(string)
+      sku_capacity  = number
+    }))
+  }))
+  default = {
+    "cognitive-account-swedencentral" = {
+      name                          = "cognitive-account-swedencentral"
+      location                      = "swedencentral"
+      local_auth_enabled            = false
+      custom_subdomain_name         = null
+      public_network_access_enabled = true
+      cognitive_deployments = [
+        {
+          name          = "text-embedding-ada-002"
+          model_name    = "text-embedding-ada-002"
+          model_version = "2"
+          sku_name      = null
+          sku_capacity  = 350
+        },
+        {
+          name          = "gpt-35-turbo-0125"
+          model_name    = "gpt-35-turbo"
+          model_version = "0125"
+          sku_name      = null
+          sku_capacity  = 120
+        },
+        {
+          name          = "gpt-4o-2024-11-20"
+          model_name    = "gpt-4o"
+          model_version = "2024-11-20"
+          sku_name      = "Standard"
+          sku_capacity  = 50
+        }
+      ]
+    }
+  }
+}
+
+# Document Intelligence Configuration
+variable "document_intelligence_name" {
+  description = "Name of the Document Intelligence service"
+  type        = string
+  default     = "doc-intelligence"
+}
+
+variable "document_intelligence_accounts" {
+  description = "Map of Document Intelligence accounts configuration"
+  type = map(object({
+    location                      = string
+    custom_subdomain_name         = optional(string)
+    public_network_access_enabled = bool
+    local_auth_enabled            = bool
+  }))
+  default = {
+    "swedencentral-form-recognizer" = {
+      location                      = "swedencentral"
+      custom_subdomain_name         = null
+      public_network_access_enabled = true
+      local_auth_enabled            = true
+    }
+  }
+}
+
+# Speech Service Configuration
+variable "speech_service_name" {
+  description = "Name of the Speech Service"
+  type        = string
+  default     = "speech-service"
+}
+
+variable "speech_service_accounts" {
+  description = "Map of Speech Service accounts configuration"
+  type = map(object({
+    location              = string
+    account_kind          = string
+    account_sku_name      = string
+    custom_subdomain_name = optional(string)
+    private_endpoint      = optional(bool)
+    diagnostic_settings = optional(object({
+      log_analytics_workspace_id = string
+      enabled_log_categories     = list(string)
+    }))
+  }))
+  default = {
+    "swedencentral-speech" = {
+      location              = "swedencentral"
+      account_kind          = "SpeechServices"
+      account_sku_name      = "S0"
+      custom_subdomain_name = null
+      private_endpoint      = true
+      diagnostic_settings   = null
+    }
+  }
+}
+
+variable "subnet_cognitive_services_id" {
+  description = "Subnet name for cognitive services private endpoints"
+  type        = string
+  default     = "snet-cognitive-services"
+}
+
+variable "vnet_id" {
+  description = "Virtual network name for cognitive services private endpoints"
+  type        = string
+  default     = "vnet-001"
+}
+
+variable "log_analytics_workspace_id" {
+  description = "Log Analytics workspace ID for diagnostic settings"
+  type        = string
+  default     = ""
 }
 
 # Azure AD Groups
@@ -371,6 +885,83 @@ variable "cluster_workload_identities" {
       namespace = "unique"
     }
   }
+}
+
+########################################################
+# Secrets Configuration
+########################################################
+# Key Vault Secrets Configuration
+variable "rabbitmq_password_chat_secret_name" {
+  description = "The name of the secret containing the RabbitMQ password for chat service"
+  type        = string
+  default     = "rabbitmq-password-chat"
+}
+
+variable "zitadel_db_user_password_secret_name" {
+  description = "The name of the secret containing the Zitadel database user password"
+  type        = string
+  default     = "zitadel-db-user-password"
+}
+
+variable "zitadel_master_key_secret_name" {
+  description = "The name of the secret containing the Zitadel master key"
+  type        = string
+  default     = "zitadel-master-key"
+}
+
+variable "encryption_key_app_repository_secret_name" {
+  description = "The name of the secret containing the application repository encryption key"
+  type        = string
+  default     = "encryption-key-app-repository"
+}
+
+variable "encryption_key_node_chat_lxm_secret_name" {
+  description = "The name of the secret containing the node chat LXM encryption key"
+  type        = string
+  default     = "encryption-key-chat-lxm"
+}
+
+variable "encryption_key_ingestion_secret_name" {
+  description = "The name of the secret containing the ingestion encryption key"
+  type        = string
+  default     = "encryption-key-ingestion"
+}
+
+variable "zitadel_pat_secret_name" {
+  description = "The name of the manual secret placeholder for Zitadel PAT (to be set manually)"
+  type        = string
+  default     = "manual-zitadel-scope-mgmt-pat"
+}
+
+# Secret Generation Configuration
+variable "secret_password_length" {
+  description = "Default length for generated passwords"
+  type        = number
+  default     = 32
+}
+
+variable "rabbitmq_password_chat_length" {
+  description = "Default length for RabbitMQ generated password"
+  type        = number
+  default     = 24
+}
+
+variable "secret_expiration_date" {
+  description = "Expiration date for secrets (RFC3339 format)"
+  type        = string
+  default     = "2099-12-31T23:59:59Z"
+}
+
+variable "acr_push_role_name" {
+  description = "Role name for the ACR push permissions"
+  type        = string
+  default     = "AcrPush"
+}
+
+variable "monitor_metrics_reader_role_definition_name" {
+  description = "Role definition name for the monitor metrics reader"
+  type        = string
+  default     = "Monitoring Data Reader"
 }
 
 variable "ingestion_cache_access_tier" {
@@ -514,3 +1105,196 @@ variable "ingestion_storage_self_cmk_key_name" {
   type        = string
   default     = "ingestion-storage-cmk"
 }
+
+variable "application_gateway_public_ip_name_allocation_method" {
+  description = "Allocation method for the public IP for the Application Gateway"
+  type        = string
+  default     = "Static"
+}
+
+variable "application_gateway_public_ip_name_sku" {
+  description = "SKU for the public IP for the Application Gateway"
+  type        = string
+  default     = "Standard"
+}
+
+variable "application_gateway_autoscale_configuration_max_capacity" {
+  description = "Max capacity for the autoscale configuration for the Application Gateway"
+  type        = number
+  default     = 2
+}
+
+variable "application_gateway_sku" {
+  description = "SKU for the Application Gateway"
+  type = object({
+    name = string
+    tier = string
+  })
+  default = {
+    name = "WAF_v2"
+    tier = "WAF_v2"
+  }
+}
+
+variable "application_gateway_sku_name" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
+variable "application_gateway_gateway_ip_configuration_name" {
+  description = "Name of the gateway IP configuration for the Application Gateway"
+  type        = string
+  default     = "gateway-ip-configuration"
+}
+
+variable "application_gateway_frontend_ip_configuration_name" {
+  description = "Name suffix for the frontend IP configuration of the Application Gateway. The full name will be constructed using the custom_subdomain_name, environment, and this value."
+  type        = string
+  default     = "feip"
+}
+
+variable "application_gateway_waf_policy_settings" {
+  description = "Explicit name for the WAF policy settings for the Application Gateway"
+  type = object({
+    explicit_name               = string
+    mode                        = string
+    file_upload_limit_in_mb     = number
+    max_request_body_size_in_kb = number
+  })
+  default = {
+    explicit_name               = "default-waf-policy-name"
+    mode                        = "Detection"
+    file_upload_limit_in_mb     = 100
+    max_request_body_size_in_kb = 1024
+  }
+}
+
+# Role Assignments
+variable "key_reader_key_vault_role_name" {
+  description = "Role name for the key reader key vault"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "secret_reader_key_vault_role_name" {
+  description = "Role name for the secret reader key vault"
+  type        = string
+  default     = "Key Vault Secrets User"
+}
+
+variable "key_manager_key_vault_role_name" {
+  description = "Role name for the key manager key vault"
+  type        = string
+  default     = "Key Vault Crypto Officer"
+}
+
+variable "secret_manager_key_vault_role_name" {
+  description = "Role name for the secret manager key vault"
+  type        = string
+  default     = "Key Vault Secrets Officer"
+}
+
+variable "access_manager_key_vault_role_name" {
+  description = "Role name for the access manager key vault"
+  type        = string
+  default     = "Key Vault Data Access Administrator"
+}
+
+variable "cluster_user_role_name" {
+  description = "Role name for the cluster user"
+  type        = string
+  default     = "Azure Kubernetes Service Contributor Role"
+}
+
+variable "cluster_rbac_admin_role_name" {
+  description = "Role name for the cluster RBAC admin"
+  type        = string
+  default     = "Azure Kubernetes Service RBAC Cluster Admin"
+}
+
+variable "key_vault_crypto_service_encryption_user_role_name" {
+  description = "Role name for Key Vault Crypto Service Encryption User"
+  type        = string
+  default     = "Key Vault Crypto Service Encryption User"
+}
+
+variable "scope_management_encryption_key_1_version" {
+  description = "To rotate this SCOPE MANAGEMENT encryption key increase the version."
+  default     = "1"
+}
+
+variable "scope_management_encryption_key_2_version" {
+  description = "To rotate this SCOPE MANAGEMENT encryption key increase the version."
+  default     = "1"
+}
+
+variable "audit_storage_user_assigned_identity_name" {
+  description = "The name of the audit storage user-assigned identity."
+  type        = string
+  default     = "audit-storage-id"
+}
+
+variable "audit_storage_sa_name" {
+  type    = string
+  default = "helloazureaudit"
+}
+
+variable "audit_containers" {
+  description = "List of storage container names for audit logs"
+  type        = list(string)
+  default = [
+    "backend-service-chat",
+    "backend-service-ingestion",
+    "backend-service-ingestion-worker",
+    "backend-service-ingestion-worker-chat",
+    "backend-service-app-repository",
+    "backend-service-scope-management",
+    "backend-service-configuration"
+  ]
+}
+
+variable "dns_zones" {
+  description = "DNS zones"
+  type = object({
+    name_client_consented = optional(string, "client-consented.unique.ag")
+    resource_group_name   = optional(string, "rg-vnet-002")
+    private_zones = optional(object({
+      redis = object({
+        name = string
+      })
+      psql = object({
+        name = string
+      })
+      cognitive_services = object({
+        name = string
+      })
+      aoi = object({
+        name = string
+      })
+      storage = object({
+        name = string
+      })
+      }), {
+      redis = {
+        name = "privatelink.redis.cache.windows.net"
+      }
+      psql = {
+        name = "privatelink.postgres.database.azure.com"
+      }
+      cognitive_services = {
+        name = "privatelink.cognitiveservices.azure.com"
+      }
+      storage = {
+        name = "privatelink.blob.core.windows.net"
+      }
+      aoi = {
+        name = "privatelink.openai.azure.com"
+      }
+    })
+  })
+
+  default = {}
+}
+
+

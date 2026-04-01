@@ -1,5 +1,4 @@
 # Log Analytics Workspace
-# Centralized logging and monitoring workspace
 
 resource "azurerm_log_analytics_workspace" "this" {
   name                = local.log_analytics_workspace_name

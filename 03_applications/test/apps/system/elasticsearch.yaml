@@ -2,8 +2,8 @@ spec:
   name: es-ingestion
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
-      targetRevision: chore/enable-test-workflows
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: preview
       ref: values
     - chart: raw
       repoURL: "https://bedag.github.io/helm-charts"
@@ -11,4 +11,4 @@ spec:
       helm:
         releaseName: elasticsearch-ingestion
         valueFiles:
-          - $values/applications/test/values/elasticsearch/elasticsearch.yaml
+          - $values/03_applications/test/values/elasticsearch/elasticsearch.yaml

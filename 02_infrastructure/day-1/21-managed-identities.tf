@@ -37,10 +37,8 @@ resource "azurerm_user_assigned_identity" "grafana_identity" {
   resource_group_name = azurerm_resource_group.core.name
 }
 
-# # Random string for PostgreSQL server name suffix
-# resource "random_string" "psql_suffix" {
-#   length  = 8
-#   special = false
-#   upper   = false
-# }
-
+resource "azurerm_user_assigned_identity" "audit_storage_identity" {
+  name                = local.audit_storage_user_assigned_identity_name
+  location            = azurerm_resource_group.sensitive.location
+  resource_group_name = azurerm_resource_group.sensitive.name
+}

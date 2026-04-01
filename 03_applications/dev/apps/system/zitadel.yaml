@@ -2,7 +2,7 @@ spec:
   name: zitadel
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure'
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: preview
       ref: values
     - chart: zitadel
@@ -11,6 +11,6 @@ spec:
       helm:
         releaseName: zitadel
         valueFiles: 
-          - $values/applications/dev/values/zitadel/zitadel-extra-manifests.yaml
-          - $values/applications/dev/values/zitadel/zitadel.yaml
+          - $values/03_applications/dev/values/zitadel/zitadel-extra-manifests.yaml
+          - $values/03_applications/dev/values/zitadel/zitadel.yaml
         valuesObject: {} 

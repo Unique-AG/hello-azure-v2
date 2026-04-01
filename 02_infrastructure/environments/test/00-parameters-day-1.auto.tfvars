@@ -2,8 +2,7 @@
 env = "test"
 
 # Network configuration
-subnet_agw_cidr     = "10.202.3.0/28"
-bastion_subnet_cidr = "10.202.3.128/26"
+subnet_agw_cidr = "10.202.3.0/28"
 
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
@@ -13,9 +12,6 @@ kv_sku = "premium"
 
 # GitOps configuration
 gitops_display_name = "GitOps"
-
-# DNS root A record (for day-1 DNS resources)
-dns_zone_root_records = ["135.225.80.201"]
 
 # DNS subdomain records
 dns_subdomain_records = {
@@ -30,23 +26,6 @@ dns_subdomain_records = {
   zitadel = {
     name    = "id"
     records = [] # Will be populated dynamically
-  }
-}
-
-# DNS zone subdomain records (for day-1 DNS resources)
-# This maps to the for_each in azurerm_dns_a_record.adnsar_sub_domains
-dns_zone_sub_domain_records = {
-  api = {
-    name    = "api"
-    records = ["135.225.80.201"]
-  }
-  argo = {
-    name    = "argo"
-    records = ["135.225.80.201"]
-  }
-  zitadel = {
-    name    = "id"
-    records = ["135.225.80.201"]
   }
 }
 
@@ -92,11 +71,15 @@ telemetry_observer_user_ids = [
   "3b48f167-cb68-4655-b45b-878e170af84d",
 ]
 
-dns_zone_name = "test-hello.azure.unique.dev"
-
 # Speech Service configuration (private DNS zone name is not environment-specific)
 speech_service_private_dns_zone_virtual_network_link_name = "speech-service-private-dns-zone-vnet-link-test"
 azurerm_private_dns_zone_virtual_network_link_name        = "PsqlVnetZone.com"
 
+# DNS Zone (created in day-1)
+dns_zone_name = "test-hello.azure.unique.dev"
+
 # Application Registration
 application_registration_gitops_display_name = "GitOps"
+
+# Terraform Service Principal (same as day-2)
+terraform_service_principal_object_id = "b5016fe4-421b-4dd3-bc65-c9abf3dfad8b"

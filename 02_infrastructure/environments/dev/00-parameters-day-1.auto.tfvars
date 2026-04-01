@@ -2,8 +2,7 @@
 env = "dev"
 
 # Network configuration
-subnet_agw_cidr     = "10.201.3.0/28"
-bastion_subnet_cidr = "10.201.3.128/26"
+subnet_agw_cidr = "10.201.3.0/28"
 
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
@@ -89,7 +88,6 @@ custom_subdomain_name                       = "hello-azure"
 document_intelligence_custom_subdomain_name = "di-hello-azure"
 
 # Speech Service configuration
-speech_service_private_dns_zone_name                      = "privatelink.cognitiveservices.azure.com"
 speech_service_private_dns_zone_virtual_network_link_name = "speech-service-private-dns-zone-vnet-link"
 
 # Application Registration

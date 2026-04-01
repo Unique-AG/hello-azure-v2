@@ -1,4 +1,5 @@
 # Day-2 specific parameters
+env = "dev"
 
 # Resource Group Names
 resource_group_core_name      = "resource-group-core"
@@ -63,3 +64,73 @@ cluster_workload_identities = {
     namespace = "unique"
   }
 }
+
+# OpenAI Cognitive Accounts
+openai_cognitive_accounts = {
+  "cognitive-account-swedencentral" = {
+    name                          = "cognitive-account-swedencentral"
+    location                      = "swedencentral"
+    local_auth_enabled            = false
+    custom_subdomain_name         = "hello-azure-unique"
+    public_network_access_enabled = true
+    cognitive_deployments = [
+      {
+        name          = "text-embedding-ada-002"
+        model_name    = "text-embedding-ada-002"
+        model_version = "2"
+        sku_name      = null
+        sku_capacity  = 350
+      },
+      {
+        name          = "gpt-4o-2024-11-20"
+        model_name    = "gpt-4o"
+        model_version = "2024-11-20"
+        sku_name      = "Standard"
+        sku_capacity  = 50
+      },
+      {
+        name          = "gpt-4o-2024-05-13"
+        model_name    = "gpt-4o"
+        model_version = "2024-05-13"
+        sku_name      = "GlobalStandard"
+        sku_capacity  = 50
+      }
+    ]
+  }
+}
+
+# OpenAI Document Intelligence Accounts
+document_intelligence_accounts = {
+  "swedencentral-form-recognizer" = {
+    location                      = "swedencentral"
+    custom_subdomain_name         = "di-hello-azure-unique"
+    public_network_access_enabled = true
+    local_auth_enabled            = true
+  }
+}
+
+# OpenAI Speech Service
+speech_service_name = "speech-service"
+speech_service_accounts = {
+  "swedencentral-speech" = {
+    location              = "swedencentral"
+    account_kind          = "SpeechServices"
+    account_sku_name      = "S0"
+    custom_subdomain_name = "ss-hello-azure-dev"
+    private_endpoint      = true
+  }
+}
+
+# Secrets
+rabbitmq_password_chat_secret_name        = "rabbitmq-password-chat"
+zitadel_db_user_password_secret_name      = "zitadel-db-user-password"
+zitadel_master_key_secret_name            = "zitadel-master-key"
+encryption_key_app_repository_secret_name = "encryption-key-app-repository"
+encryption_key_node_chat_lxm_secret_name  = "encryption-key-node-chat-lxm"
+encryption_key_ingestion_secret_name      = "encryption-key-ingestion"
+zitadel_pat_secret_name                   = "manual-zitadel-scope-mgmt-pat"
+
+# Secret Generation Configuration
+secret_password_length        = 32
+rabbitmq_password_chat_length = 24
+secret_expiration_date        = "2099-12-31T23:59:59Z"

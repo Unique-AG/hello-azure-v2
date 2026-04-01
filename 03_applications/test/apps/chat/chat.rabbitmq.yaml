@@ -2,9 +2,9 @@ spec:
   name: rabbitmq-chat
   autoSync: false
   source:
-    repoURL: https://github.com/Unique-AG/hello-azure
-    targetRevision: chore/enable-test-workflows
-    path: applications/test/values/rabbitmq
+    repoURL: https://github.com/Unique-AG/hello-azure-v2
+    targetRevision: preview
+    path: 03_applications/test/values/rabbitmq
     directory:
       recurse: true
 metadata:

@@ -33,6 +33,13 @@ This directory contains the infrastructure Terraform configurations organized by
 
 ## Usage
 
+### Considerations When Using Terraform Cloud
+
+In case of using Terraform Cloud, when creating Terraform Cloud workspace, you should take into account the following:
+- Workspace execution mode should be configured for "Agent" instead of "Remote". Specifying the "Remote" execution mode instructs HCP Terraform to perform Terraform runs on its own disposable virtual machines, so "Agent" execution mode is requred for Terraform Cloud to have access to the Azure subscription.
+- Workspace variables should be configured for the environment-specific variables and point to the correct backend configuration file f.e. `/environments/<env>/00-config-day-1.auto.tfvars` and `/environments/<env>/00-parameters-day-1.auto.tfvars` for both day-1 and day-2 respectively.
+- You will probably need to remove use_oidc and client_id from the 91-providers.tf file as they are not needed for Terraform Cloud and add organization and workspaces block to the terraform block in the 90-backend.tf file.
+
 ### Initializing Terraform Backend
 
 Each day-X configuration uses a **separate state file** to avoid conflicts. The backend configuration must be passed via `-backend-config` flags during `terraform init`.
@@ -137,7 +144,7 @@ terraform apply \
 
 ## Cross-Day Dependencies
 
-Day-2 and Day-3 do **not** use `terraform_remote_state` to reference day-1. Instead, they use **data sources** to look up resources by name:
+Day-2 does **not** use `terraform_remote_state` to reference day-1. Instead, it uses **data sources** to look up resources by name:
 
 ```hcl
 # Day-2 looks up resources created in day-1
