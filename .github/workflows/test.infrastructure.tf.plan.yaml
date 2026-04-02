@@ -55,3 +55,4 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: terraform plan -var-file=../environments/test/00-config-day-3.auto.tfvars -var-file=../environments/test/00-parameters-day-3.auto.tfvars -no-color
+
