@@ -21,7 +21,11 @@ env:
   INGESTION_API_URL: http://backend-service-ingestion.unique.svc
   LOG_LEVEL: info
   MAX_HEAP_MB: 750
+  PG_DATABASE_SSL_MODE: "verify"
   ZITADEL_GRPC_HOST: http://zitadel.unique.svc.cluster.local:8080
+  ZITADEL_HOST: unset_default_value
+  ZITADEL_WEBHOOK_ENDPOINT: http://backend-service-scope-management.unique.svc:8094/webhook/zitadel-events
+  ZITADEL_ROOT_ORG_ID: unset_default_value
 envVars:
   - name: AMQP_USERNAME
     valueFrom:
@@ -49,7 +53,7 @@ nodeSelector:
 hooks:
   migration:
     command: |
-      cd /home/node/app/services/node-scope-management/prisma; npx prisma migrate deploy; cd /home/node/app/services/node-scope-management/dist; RUNNING_MODE=DATA_MIGRATION  node /home/node/app/services/node-scope-management/dist/main.js;
+      cd /home/node/app/services/node-scope-management/prisma; npx prisma migrate deploy --config ../prisma.config.ts; cd /home/node/app/services/node-scope-management/dist; RUNNING_MODE=DATA_MIGRATION  node /home/node/app/services/node-scope-management/dist/main.js;
     enabled: true
 replicaCount: 1
 resources:
@@ -68,3 +72,34 @@ routes:
       enabled: true
     probe:
       enabled: true
+extraRoutes:
+  scim:
+    enabled: false
+    annotations:
+      konghq.com/plugins: unique-route-metrics
+    parentRefs:
+      - name: kong
+        namespace: unique
+        group: gateway.networking.k8s.io
+        kind: Gateway
+    hostnames:
+      - unset_default_value
+    matches:
+      - path:
+          type: PathPrefix
+          value: /scim
+  membership-sync:
+    enabled: false
+    annotations:
+      konghq.com/plugins: unique-route-metrics
+    parentRefs:
+      - name: kong
+        namespace: unique
+        group: gateway.networking.k8s.io
+        kind: Gateway
+    hostnames:
+      - unset_default_value
+    matches:
+      - path:
+          type: PathPrefix
+          value: /membership-sync

@@ -3,6 +3,8 @@ on:
   pull_request:
     branches:
       - preview
+      - '!release'
+      - '!main'
     paths:
       - .github/workflows/dev.governance.tf.yaml
       - 01_bootstrap/environments/dev/**

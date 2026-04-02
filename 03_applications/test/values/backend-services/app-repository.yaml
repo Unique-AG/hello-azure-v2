@@ -1,10 +1,10 @@
 serviceAccount:
   enabled: true
   workloadIdentity:
-    clientId: e5d4bdfe-f71c-4787-8918-81e58056aa23 # aks-id-test
+    clientId: 1dc12421-3b16-48cd-8b25-497234379625 # aks-id-test
     enabled: true
 image:
-  tag: "2025.44.1"
+  tag: "2026.12.1"
   repository: uqhacrtest.azurecr.io/backend-service-app-repository
 routes:
   hostname: api.test-hello.azure.unique.dev

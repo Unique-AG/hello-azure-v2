@@ -3,6 +3,8 @@ on:
   pull_request:
     branches:
       - preview
+      - '!release'
+      - '!main'
     paths:
       - .github/workflows/test.infrastructure.tf.plan.yaml
       - 02_infrastructure/environments/test/**

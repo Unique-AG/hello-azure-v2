@@ -188,6 +188,11 @@ variable "subnet_github_cidr" {
   type        = string
 }
 
+variable "bastion_subnet_cidr" {
+  description = "CIDR block for the Azure Bastion subnet (must be at least /26)"
+  type        = string
+}
+
 # DNS Configuration
 variable "dns_zone_name" {
   description = "The DNS zone name for the environment"
@@ -213,6 +218,21 @@ variable "dns_subdomain_records" {
     name    = string
     records = list(string)
   }))
+}
+
+variable "dns_zone_root_records" {
+  description = "List of IP addresses for the root A record in the DNS zone. When importing, get this value from the original terraform state using: terraform state show 'module.perimeter.azurerm_dns_a_record.adnsar_root'"
+  type        = set(string)
+  default     = []
+}
+
+variable "dns_zone_sub_domain_records" {
+  description = "Map of subdomain names to their respective A record IP addresses. When importing, get these values from the original terraform state."
+  type = map(object({
+    name    = string
+    records = set(string)
+  }))
+  default = {}
 }
 
 variable "psql_private_dns_zone_name" {
@@ -520,6 +540,11 @@ variable "ingestion_storage_sa_name" {
   default     = "uqhastorage"
 }
 
+variable "speech_service_private_dns_zone_name" {
+  description = "The name of the private DNS zone for the speech service."
+  type        = string
+  default     = "privatelink.cognitiveservices.azure.com"
+}
 
 variable "speech_service_private_dns_zone_virtual_network_link_name" {
   description = "The name of the virtual network link for the speech service private DNS zone"

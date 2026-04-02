@@ -3,7 +3,7 @@ env:
   ZITADEL_PROJECT_ID: "362295080381317263" # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)
   UNIQUE_INSTALLATION_ID: test-hello.azure.unique.dev # the hostname of the cluster
 image:
-  tag: "2025.44.1"
+  tag: "2026.12.1"
   repository: uqhacrtest.azurecr.io/ai-service-assistants-core
 replicaCount: 2
 resources:
@@ -23,5 +23,5 @@ secretProvider:
 serviceAccount:
   enabled: true
   workloadIdentity:
-    clientId: e5d4bdfe-f71c-4787-8918-81e58056aa23 # aks-id-test
+    clientId: 1dc12421-3b16-48cd-8b25-497234379625 # aks-id-test
     enabled: true
