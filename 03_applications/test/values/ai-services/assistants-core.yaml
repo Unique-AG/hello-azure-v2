@@ -3,7 +3,7 @@ env:
   ZITADEL_PROJECT_ID: "362295080381317263" # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)
   UNIQUE_INSTALLATION_ID: test-hello.azure.unique.dev # the hostname of the cluster
 image:
-  tag: "2026.12.1"
+  tag: "2026.14.0"
   repository: uqhacrtest.azurecr.io/ai-service-assistants-core
 replicaCount: 2
 resources:
