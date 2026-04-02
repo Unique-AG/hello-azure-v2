@@ -7,14 +7,14 @@ on:
       - '!main'
     paths:
       - .github/workflows/test.infrastructure.tf.plan.yaml
-      - 02_infrastructure/environments/test/**
+      - 02_infrastructure/**/*.tf
       - terraform-modules/**
   push:
     branches:
       - preview
     paths:
       - .github/workflows/test.infrastructure.tf.plan.yaml
-      - 02_infrastructure/environments/test/**
+      - 02_infrastructure/**/*.tf
       - terraform-modules/**
   workflow_dispatch:
 
