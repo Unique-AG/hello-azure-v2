@@ -43,6 +43,22 @@ env:
   PG_DATABASE_SSL_MODE: "verify"
   QDRANT_READ_CONSISTENCY: 1
 extraCronJobs:
+  node-ingestion-file-access-rebuild:
+    schedule: "* * 31 2 *"
+    restartPolicy: OnFailure
+    env:
+      RUNNING_MODE: file-access-rebuild-v2
+      FILE_ACCESS_REBUILD_BATCH_SIZE: "500"
+      FILE_ACCESS_REBUILD_WAIT_TIME_MS: "50"
+      FILE_ACCESS_REBUILD_REBUILD_ALL: "true"
+      FILE_ACCESS_REBUILD_TRIGGER_REINDEXING: "true"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 2Gi
+      limits:
+        cpu: 200m
+        memory: 2Gi
   es-indexing:
     schedule: "* * 31 2 *"
     restartPolicy: OnFailure
