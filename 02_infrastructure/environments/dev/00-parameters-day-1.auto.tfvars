@@ -24,6 +24,7 @@ subnet_storage_name   = "snet-storage"
 subnet_storage_cidr   = "10.201.3.80/28"
 subnet_github_name    = "snet-github"
 subnet_github_cidr    = "10.201.3.96/28"
+bastion_subnet_cidr   = "10.201.3.128/26"
 
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
@@ -54,6 +55,7 @@ dns_subdomain_records = {
 tags = {
   app = "hello-azure"
 }
+
 # Resource locations
 resource_audit_location           = "swedencentral"
 resource_group_core_location      = "swedencentral"

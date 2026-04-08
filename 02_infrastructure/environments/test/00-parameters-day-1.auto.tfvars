@@ -24,6 +24,7 @@ subnet_storage_name   = "snet-storage"
 subnet_storage_cidr   = "10.202.3.80/28"
 subnet_github_name    = "snet-github-runners"
 subnet_github_cidr    = "10.202.3.96/28"
+bastion_subnet_cidr   = "10.202.3.128/26"
 
 # Budget configuration
 budget_contact_emails = ["support@unique.ch"]
