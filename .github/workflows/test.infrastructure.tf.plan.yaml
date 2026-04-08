@@ -7,14 +7,14 @@ on:
       - '!main'
     paths:
       - .github/workflows/test.infrastructure.tf.plan.yaml
-      - 02_infrastructure/environments/test/**
+      - 02_infrastructure/day-3/**/*.tf
       - terraform-modules/**
   push:
     branches:
       - preview
     paths:
       - .github/workflows/test.infrastructure.tf.plan.yaml
-      - 02_infrastructure/environments/test/**
+      - 02_infrastructure/day-3/**/*.tf
       - terraform-modules/**
   workflow_dispatch:
 
@@ -30,7 +30,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: 02_infrastructure/environments/test
+        working-directory: 02_infrastructure/day-3
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -46,7 +46,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config=config.auto.tfvars
+        run: terraform init -backend-config=../environments/test/backend-config-day-3.hcl
 
       - name: Terraform Validate
         id: validate
@@ -54,4 +54,5 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
+        run: terraform plan -var-file=../environments/test/00-config-day-3.auto.tfvars -var-file=../environments/test/00-parameters-day-3.auto.tfvars -no-color
+

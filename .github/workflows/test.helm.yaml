@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
 
       - name: Azure Login action
-        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 #v2.2.0
+        uses: azure/login@eec3c95657c1536435858eda1f3ff5437fee8474 #v2.3.0
         with:
           subscription-id: 782871a0-bcee-44fb-851f-ccd3e69ada2a
           tenant-id: aeade8c4-d4f7-4ae7-9149-4975fa3a7f91
