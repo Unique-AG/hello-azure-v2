@@ -1,7 +1,7 @@
 # Azure OpenAI Service
 # This module creates and configures Azure OpenAI cognitive accounts with deployments
 module "openai" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-openai?depth=1&ref=azure-openai-2.4.0"
+  source = "github.com/unique-ag/terraform-modules.git//modules/azure-openai?depth=1&ref=279f8ec331cad2fd8eae3a88815e686468941883" # azure-openai-2.4.0
 
   resource_group_name         = data.azurerm_resource_group.core.name
   endpoint_secret_name_suffix = var.openai_endpoint_secret_name_suffix
@@ -30,7 +30,7 @@ module "openai" {
 # This module creates and configures Azure Document Intelligence (Form Recognizer) accounts
 
 module "document_intelligence" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-document-intelligence?ref=azure-document-intelligence-3.0.3"
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-document-intelligence?ref=4e705e11e96f7da8c29a6ea776f8d5e76b6128fa" # azure-document-intelligence-3.0.3
 
   doc_intelligence_name = local.document_intelligence_name
   resource_group_name   = data.azurerm_resource_group.core.name
@@ -52,7 +52,7 @@ module "document_intelligence" {
 # Azure Speech Service
 # This module creates and configures Azure Speech Service accounts with optional private endpoints
 module "speech_service" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-speech-service?depth=1&ref=azure-speech-service-4.0.1"
+  source = "github.com/unique-ag/terraform-modules.git//modules/azure-speech-service?depth=1&ref=d8dd200b7871f55b8a274903a9865161b7f1ec61" # azure-speech-service-4.0.1
 
   key_vault_id        = data.azurerm_key_vault.key_vault_sensitive.id
   resource_group_name = data.azurerm_resource_group.core.name

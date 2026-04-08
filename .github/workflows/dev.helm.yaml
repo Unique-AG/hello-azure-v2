@@ -67,7 +67,7 @@ jobs:
       - name: "🔍 Helm Template"
         if: inputs.action == 'template'
         run: |
-          helmfile -e dev-f ${{ inputs.file_name }} ${{ inputs.release_name && format('-l name={0}', inputs.release_name) || '' }} template
+          helmfile -e dev -f ${{ inputs.file_name }} ${{ inputs.release_name && format('-l name={0}', inputs.release_name) || '' }} template
 
       - name: "🪞 Helm Diff"
         if: inputs.action == 'diff'
