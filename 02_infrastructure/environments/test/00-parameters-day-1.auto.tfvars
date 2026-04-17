@@ -81,7 +81,7 @@ gitops_maintainer_user_ids = [
   "4b89a1f0-8038-4929-81e6-6d128dac7aa0",
   "084a1c45-5010-4aab-bab6-7b86a9d10e5c",
   "3b48f167-cb68-4655-b45b-878e170af84d",
-    "58ac4aff-3811-41bb-aff3-554a74488962",
+  "58ac4aff-3811-41bb-aff3-554a74488962",
   "0f309293-9600-4c19-bd7c-3dff1fa678d9",
   "c9c9dff6-22d7-426c-8caa-2c6758189967",
 ]
