@@ -12,8 +12,6 @@ spec:
         releaseName: web-app-theme
         valueFiles:
           - $values/03_applications/defaults/web-apps/theme.yaml
-          - $values/03_applications/defaults/_flags.yaml
-          - $values/03_applications/test/values/_flags.yaml
           - $values/03_applications/test/values/web-apps/_all.yaml
           - $values/03_applications/test/values/web-apps/theme.yaml
         valuesObject: {}

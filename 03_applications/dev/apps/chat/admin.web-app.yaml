@@ -12,8 +12,6 @@ spec:
         releaseName: web-app-admin
         valueFiles:
           - $values/03_applications/defaults/web-apps/admin.yaml
-          - $values/03_applications/defaults/_flags.yaml
-          - $values/03_applications/dev/values/_flags.yaml
           - $values/03_applications/dev/values/web-apps/_all.yaml
           - $values/03_applications/dev/values/web-apps/admin.yaml
         valuesObject: {}

@@ -12,8 +12,6 @@ spec:
         releaseName: web-app-knowledge-upload
         valueFiles:
           - $values/03_applications/defaults/web-apps/knowledge-upload.yaml
-          - $values/03_applications/defaults/_flags.yaml
-          - $values/03_applications/dev/values/_flags.yaml
           - $values/03_applications/dev/values/web-apps/_all.yaml
           - $values/03_applications/dev/values/web-apps/knowledge-upload.yaml
         valuesObject: {}
