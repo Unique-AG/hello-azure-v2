@@ -1,5 +1,6 @@
 env:
   APP_REPOSITORY_URL: http://backend-service-app-repository.unique.svc
+  CONFIGURATION_BACKEND_URL: http://backend-service-configuration.unique.svc:8095
   LOG_LEVEL: info
   MAX_HEAP_MB: 200
 envVars:

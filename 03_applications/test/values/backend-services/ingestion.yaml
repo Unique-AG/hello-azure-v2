@@ -1,12 +1,10 @@
 image:
-  tag: "2026.14.0"
+  tag: "2026.16.2"
   repository: uqhacrtest.azurecr.io/backend-service-ingestion
 env:
   ELASTICSEARCH_CA_BUNDLE: /etc/ssl/elastic/ca.crt
   ELASTICSEARCH_URL: https://elasticsearch-ingestion-es-http.unique.svc:9200
   ELASTICSEARCH_USERNAME: elastic
-  FEATURE_FLAG_ENABLE_ELASTICSEARCH_INDEXING: "true"
-  FEATURE_FLAG_ENABLE_SEARCH_ADAPTER_ELASTICSEARCH_UN_9883: "true"
   INGESTION_UPLOAD_API_URL: https://api.test-hello.azure.unique.dev/scoped/ingestion/upload
   ZITADEL_ROOT_ORG_ID: "361772156100608158"
 envVars:

@@ -12,6 +12,8 @@ spec:
         releaseName: backend-service-configuration
         valueFiles:
           - $values/03_applications/defaults/backend-services/configuration.yaml
+          - $values/03_applications/defaults/_flags.yaml
+          - $values/03_applications/test/values/_flags.yaml
           - $values/03_applications/test/values/backend-services/_all.yaml
           - $values/03_applications/test/values/backend-services/configuration.yaml
         valuesObject: {}
