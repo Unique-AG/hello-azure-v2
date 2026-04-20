@@ -1,0 +1,25 @@
+# =============================================================================
+# FEATURE FLAGS CONFIGURATION — DEFAULTS (all environments)
+# =============================================================================
+#
+# This file defines default feature flags applied to every environment
+# (test, dev, and any future overlay). Environment-specific flag files
+# override values here.
+#
+# OVERRIDE ORDER (lowest to highest priority):
+#   1. Service defaults                       (03_applications/defaults/<tier>/<service>.yaml)
+#   2. Default flag map (this file)           (03_applications/defaults/_flags.yaml)
+#   3. Env-specific flag map                  (03_applications/<env>/values/_flags.yaml)
+#   4. Env-specific _all / service overlays   (03_applications/<env>/values/<tier>/*.yaml)
+#
+# NOTES:
+# - Not every service consumes every flag — that is fine; unused env vars are ignored.
+# - Flag names must be consistent across services; the backing implementation does not matter.
+# - Keep this file flat; if we exceed ~50 entries we should switch to a ConfigMap-based
+#   approach as discussed in monorepo PR #14560.
+# =============================================================================
+
+env:
+  FEATURE_FLAG_ENABLE_AGENTIC_METADATA_EXTRACTION_UN_15619: "true"
+  FEATURE_FLAG_ENABLE_LANDSCAPED_PDF_PAGE_BASED_CHUNKING_UN_10606: "true"
+  FEATURE_FLAG_ENABLE_PPT_PAGE_BASED_CHUNKING_UN_9444: "true"
