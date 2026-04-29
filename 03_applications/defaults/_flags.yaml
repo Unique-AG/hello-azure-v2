@@ -7,19 +7,30 @@
 # override values here.
 #
 # OVERRIDE ORDER (lowest to highest priority):
-#   1. Service defaults                       (03_applications/defaults/<tier>/<service>.yaml)
-#   2. Default flag map (this file)           (03_applications/defaults/_flags.yaml)
-#   3. Env-specific flag map                  (03_applications/<env>/values/_flags.yaml)
-#   4. Env-specific _all / service overlays   (03_applications/<env>/values/<tier>/*.yaml)
+#   1. Default flag map (this file)           (03_applications/defaults/_flags.yaml)
+#   2. Env-specific flag map                  (03_applications/<env>/values/_flags.yaml)
 #
 # NOTES:
-# - Not every service consumes every flag — that is fine; unused env vars are ignored.
-# - Flag names must be consistent across services; the backing implementation does not matter.
+# - Applications request the Feature Flags they need at runtime from configuration backend.
+# - Not every service consumes every flag but they are all set via this file which is loaded by the configuration backend.
 # - Keep this file flat; if we exceed ~50 entries we should switch to a ConfigMap-based
 #   approach as discussed in monorepo PR #14560.
 # =============================================================================
 
 env:
+  FEATURE_FLAG_AGENTIC_TABLE_INSERT_ROW_UN_17649: "true"
+  FEATURE_FLAG_AGENTIC_TABLE_REFERENCE_SIDEBAR_COMPONENTS_UN_16483: "true"
+  FEATURE_FLAG_ENABLE_ADVANCED_FORMATTING_UN_9758: "true"
   FEATURE_FLAG_ENABLE_AGENTIC_METADATA_EXTRACTION_UN_15619: "true"
+  FEATURE_FLAG_ENABLE_CODE_EXECUTION_FENCE_UN_17972: "true"
+  FEATURE_FLAG_ENABLE_ELASTICSEARCH_INDEXING: "true"
+  FEATURE_FLAG_ENABLE_HTML_RENDERING_UN_15131: "true"
   FEATURE_FLAG_ENABLE_LANDSCAPED_PDF_PAGE_BASED_CHUNKING_UN_10606: "true"
+  FEATURE_FLAG_ENABLE_MOVE_FILE_UN_15517: "true"
+  FEATURE_FLAG_ENABLE_MOVE_FOLDER_UN_16037: "true"
   FEATURE_FLAG_ENABLE_PPT_PAGE_BASED_CHUNKING_UN_9444: "true"
+  FEATURE_FLAG_ENABLE_SEARCH_ADAPTER_ELASTICSEARCH_UN_9883: "true"
+  FEATURE_FLAG_ENABLE_TIERED_ACCESS_PERMISSIONS_UN_13846: "true"
+  FEATURE_FLAG_NET_PROMOTER_SCORE_UI_UN_7747: "true"
+  FEATURE_FLAG_NEW_TRANSLATION_UI_UN_7233: "true"
+  FEATURE_FLAG_USER_API_KEY_GENERATION_UN_11416: "true"
