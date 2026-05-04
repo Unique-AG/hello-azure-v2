@@ -7,9 +7,3 @@ resources:
   requests:
     cpu: "2"
     memory: 4Gi
-
-prometheus:
-  enabled: true
-  defaultAlerts:
-    additionalLabels:
-      team: data-science

@@ -1,5 +1,4 @@
 env:
-  FEATURE_FLAG_ENABLE_NEW_SPACE_ACCESS_MODAL_UN_17544: "true"
   MAX_HEAP_MB: 350
 nodeSelector:
   scalability: steady

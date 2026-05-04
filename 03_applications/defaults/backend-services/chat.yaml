@@ -38,7 +38,6 @@ env:
   ENABLE_UPLOAD_CHAT_INTERACTIONS_AS_STREAM: "true"
   ENABLE_ANALYTICS_CHAT_DETAILED_INTERACTIONS_PRISMA_CURSOR: "true"
   INGESTION_API_URL: http://backend-service-ingestion.unique.svc
-  LITELLM_ENABLED: "false"
   INTERNAL_MODULES_CONFIG: >-
     [
     {"name": "SearchInVectorDBV2", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/search"},
