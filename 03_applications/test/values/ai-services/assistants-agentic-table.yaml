@@ -1,0 +1,18 @@
+# Image mirrored uniquecr -> uqhacrtest (mirroring/test/app.unique.yaml).
+image:
+  tag: "2026.18.0"
+  repository: uqhacrtest.azurecr.io/assistants-agentic-table
+
+replicaCount: 2
+
+resources:
+  limits:
+    memory: 8Gi
+  requests:
+    cpu: "2"
+    memory: 4Gi
+
+workloadIdentity:
+  azure:
+    enabled: true
+    clientId: 1dc12421-3b16-48cd-8b25-497234379625 # aks-id-test

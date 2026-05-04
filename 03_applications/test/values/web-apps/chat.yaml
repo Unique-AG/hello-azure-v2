@@ -3,5 +3,5 @@ env:
   MAX_FILE_SIZE_IN_MB: 200
   SELF_URL: https://test-hello.azure.unique.dev/chat
 image:
-  tag: "2026.16.2"
+  tag: "2026.18.0"
   repository: uqhacrtest.azurecr.io/web-app-chat

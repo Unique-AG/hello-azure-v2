@@ -1,0 +1,19 @@
+spec:
+  name: assistants-agentic-table
+  autoSync: false
+  sources:
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: preview
+      ref: values
+    - repoURL: oci://uniqueapp.azurecr.io/helm
+      chart: assistants-agentic-table
+      targetRevision: "2026.18.0"
+      helm:
+        releaseName: assistants-agentic-table
+        valueFiles:
+          - $values/03_applications/defaults/ai-services/assistants-agentic-table.yaml
+          - $values/03_applications/test/values/ai-services/assistants-agentic-table.yaml
+        valuesObject: {}
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
