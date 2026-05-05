@@ -4,7 +4,12 @@ env:
   MAX_HEAP_MB: 384
   HTML_STORE_MAX_SLOTS: "150"
   HTML_STORE_MAX_SIZE_BYTES: "7340032"
-  HTML_STORE_TTL_MS: "1500"
+  HTML_STORE_TTL_MS: "60000"
+
+routes:
+  gateway:
+    name: kong
+    namespace: unique
 
 resources:
   limits:
