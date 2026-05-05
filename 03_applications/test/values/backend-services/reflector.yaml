@@ -1,7 +1,6 @@
 # Test overlay for Reflector (hostname, gateway, secrets). Override order: after defaults/backend-services/reflector.yaml.
 image:
   repository: uqhacrtest.azurecr.io/reflector
-  tag: "2026.18.0"
 routes:
   hostname: reflector.test-hello.azure.unique.dev
 
