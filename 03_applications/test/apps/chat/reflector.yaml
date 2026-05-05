@@ -1,0 +1,21 @@
+spec:
+  name: reflector
+  autoSync: false
+  sources:
+    - repoURL: "https://github.com/Unique-AG/hello-azure-v2"
+      targetRevision: preview
+      ref: values
+    # Same OCI chart reference style as gitops elements (e.g. cat prod: oci://uniqueapp.azurecr.io/helm/reflector).
+    - repoURL: oci://uniqueapp.azurecr.io/helm/reflector
+      targetRevision: "2026.18.0"
+      helm:
+        releaseName: reflector
+        valueFiles:
+          - $values/03_applications/defaults/_flags.yaml
+          - $values/03_applications/defaults/backend-services/reflector.yaml
+          - $values/03_applications/test/values/_flags.yaml
+          - $values/03_applications/test/values/backend-services/reflector.yaml
+        valuesObject: {}
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"

@@ -1,0 +1,9 @@
+env:
+  UNIQUE_API_BASE_URL: http://backend-service-chat.unique.svc/public
+
+resources:
+  limits:
+    memory: 8Gi
+  requests:
+    cpu: "2"
+    memory: 4Gi

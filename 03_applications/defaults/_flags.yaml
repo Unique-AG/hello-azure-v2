@@ -2,36 +2,52 @@
 # FEATURE FLAGS CONFIGURATION — DEFAULTS (all environments)
 # =============================================================================
 #
-# This file defines default feature flags applied to every environment
-# (test, dev, and any future overlay). Environment-specific flag files
-# override values here.
 #
 # OVERRIDE ORDER (lowest to highest priority):
 #   1. Default flag map (this file)           (03_applications/defaults/_flags.yaml)
 #   2. Env-specific flag map                  (03_applications/<env>/values/_flags.yaml)
 #
 # NOTES:
-# - Applications request the Feature Flags they need at runtime from configuration backend.
-# - Not every service consumes every flag but they are all set via this file which is loaded by the configuration backend.
-# - Keep this file flat; if we exceed ~50 entries we should switch to a ConfigMap-based
-#   approach as discussed in monorepo PR #14560.
+# - Applications request flags at runtime from configuration-backend where wired.
+# - Keep this file flat; if we exceed ~50 entries see monorepo PR #14560.
 # =============================================================================
 
 env:
+  ENABLE_ACCESS_MANAGEMENT_FOR_EXTERNAL_FOLDERS_AND_FILES: "false"
+  FEATURE_FLAG_ABOUT_SPACE_SECTION_UN_10270: "false"
+  FEATURE_FLAG_AGENTIC_TABLE_CONTEXT_UN_14904: "false"
+  FEATURE_FLAG_AGENTIC_TABLE_ENABLE_NEW_SHARING_UI_UN_16758: "true"
   FEATURE_FLAG_AGENTIC_TABLE_INSERT_ROW_UN_17649: "true"
+  FEATURE_FLAG_AGENTIC_TABLE_NEW_FILES_DROPDOWN_UN_12713: "true"
   FEATURE_FLAG_AGENTIC_TABLE_REFERENCE_SIDEBAR_COMPONENTS_UN_16483: "true"
+  FEATURE_FLAG_AGENTIC_TABLE_ROW_METADATA_UN_14904: "false"
+  FEATURE_FLAG_AGENTIC_TABLE_SHEET_METADATA_UN_14904: "false"
   FEATURE_FLAG_ENABLE_ADVANCED_FORMATTING_UN_9758: "true"
-  FEATURE_FLAG_ENABLE_AGENTIC_METADATA_EXTRACTION_UN_15619: "true"
-  FEATURE_FLAG_ENABLE_CODE_EXECUTION_FENCE_UN_17972: "true"
+  FEATURE_FLAG_ENABLE_AGENTIC_METADATA_EXTRACTION_UN_15619: "false"
+  FEATURE_FLAG_ENABLE_CAN_MANAGE_ACCESS_UN_11608: "false"
+  FEATURE_FLAG_ENABLE_CODE_EXECUTION_FENCE_UN_17972: "false"
   FEATURE_FLAG_ENABLE_ELASTICSEARCH_INDEXING: "true"
-  FEATURE_FLAG_ENABLE_HTML_RENDERING_UN_15131: "true"
+  FEATURE_FLAG_ENABLE_ENDPOINT_MODULES_UN_15310: "false"
+  FEATURE_FLAG_ENABLE_FILE_BASED_ACCESS_UN_12660: "false"
+  FEATURE_FLAG_ENABLE_FOLDER_PATH_RESOLUTION_FOR_EXCLUSIVE_FILE_ACCESS: "false"
+  FEATURE_FLAG_ENABLE_HTML_RENDERING_UN_15131: "false"
   FEATURE_FLAG_ENABLE_LANDSCAPED_PDF_PAGE_BASED_CHUNKING_UN_10606: "true"
+  FEATURE_FLAG_ENABLE_MAGIC_TABLE_UN_8472: "false"
+  FEATURE_FLAG_ENABLE_MODULE_BASED_EVENT_DISTRIBUTION_UN_15312: "false"
   FEATURE_FLAG_ENABLE_MOVE_FILE_UN_15517: "true"
   FEATURE_FLAG_ENABLE_MOVE_FOLDER_UN_16037: "true"
+  FEATURE_FLAG_ENABLE_NEW_SPACE_ACCESS_MODAL_UN_17544: "true"
   FEATURE_FLAG_ENABLE_PPT_PAGE_BASED_CHUNKING_UN_9444: "true"
   FEATURE_FLAG_ENABLE_SEARCH_ADAPTER_ELASTICSEARCH_UN_9883: "true"
   FEATURE_FLAG_ENABLE_SPACES_2_0_UN_11203: "true"
   FEATURE_FLAG_ENABLE_TIERED_ACCESS_PERMISSIONS_UN_13846: "true"
   FEATURE_FLAG_NET_PROMOTER_SCORE_UI_UN_7747: "true"
-  FEATURE_FLAG_NEW_TRANSLATION_UI_UN_7233: "true"
+  FEATURE_FLAG_SAVE_MODEL_USAGE_DASHBOARD_UN_18889: "false"
+  FEATURE_FLAG_SAVE_MODEL_USAGE_UN_12832: "false"
+  FEATURE_FLAG_SET_PRIVATE_FOLDER_ACCESS_DEFAULT_UN_13988: "false"
   FEATURE_FLAG_USER_API_KEY_GENERATION_UN_11416: "true"
+  FEATURE_FLAG_DEPLOYMENT_VERSION_CHECK: "false"
+  FEATURE_FLAG_ENABLE_SELECTED_UPLOADED_FILES_UN_18215: "false"
+  FEATURE_FLAG_ENABLE_NEW_ANSWERS_UI_UN_14411: "false"
+  FEATURE_FLAG_FILE_PREVIEW_UN_19395: "false"
+  FEATURE_FLAG_SIDE_MENU_NAVIGATION: "false"
