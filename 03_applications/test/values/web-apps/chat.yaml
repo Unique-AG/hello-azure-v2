@@ -1,6 +1,7 @@
 env:
   FILE_TYPES_DOCUMENT_TRANSLATOR: "docx,xls,pptx"
   MAX_FILE_SIZE_IN_MB: 200
+  REFLECTOR_BACKEND_API_URL: https://reflector.test-hello.azure.unique.dev
   SELF_URL: https://test-hello.azure.unique.dev/chat
 image:
   tag: "2026.18.0"

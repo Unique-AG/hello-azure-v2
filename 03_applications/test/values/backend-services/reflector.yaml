@@ -1,0 +1,11 @@
+# Test overlay for Reflector (hostname, gateway, secrets). Override order: after defaults/backend-services/reflector.yaml.
+
+env:
+  HTML_RENDERING_SIGNING_KEYS: '[{"keyId":"hello-azure-test","keyValue":"hello-azure-test-signing-key-placeholder"}]'
+  HTML_STORE_TTL_MS: "60000"
+
+routes:
+  hostname: reflector.test-hello.azure.unique.dev
+  gateway:
+    name: kong
+    namespace: unique
