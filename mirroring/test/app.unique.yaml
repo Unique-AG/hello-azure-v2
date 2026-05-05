@@ -18,3 +18,4 @@ images:
   - name: web-app-knowledge-upload:2026.18.0
   - name: web-app-theme:2026.18.0
   - name: backend-service-speech:2026.18.0
+  - name: reflector:2026.18.0
