@@ -30,7 +30,7 @@ env:
     {"name": "EarningCallsBeta", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/earning_calls"},
     {"name": "HallucinationLevelEvaluation", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/evaluations/hallucination-level"},
     {"name": "DueDiligence", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/magic_table_dd"},
-    {"name": "RfpAgent", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/rfp_agent"}
+    {"name": "RfpAgent", "apiURL": "http://assistants-agentic-table.unique.svc.cluster.local/agentic_table"}
     ]
   LOG_LEVEL: info
   MAX_HEAP_MB: 3700
@@ -38,7 +38,7 @@ env:
   PUBSUB_REDIS_DB: 2
   SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
 image:
-  tag: "2026.16.2"
+  tag: "2026.18.0"
   repository: uqhacrtest.azurecr.io/backend-service-chat
 resources:
   limits:

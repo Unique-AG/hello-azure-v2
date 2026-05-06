@@ -47,7 +47,37 @@ jobs:
         run: npm install -g @unique-ag/cli@0.5.1
 
       - name: Mirror Unique release artifacts
-        timeout-minutes: 15
+        timeout-minutes: 60
         run: |
-          qcli az acr import -f app.unique.yaml -u ${{ env.UNIQUECR_USERNAME }} -p ${{ secrets.UNIQUECR_PASSWORD }}
-          # NOTE: this might be a bit misleading as the credentials being used are for the source registry, not the target registry (defined in the app.unique.yaml file).
+          set -euo pipefail
+
+          SOURCE_REGISTRY="$(awk -F': ' '/^sourceRegistry:/{print $2; exit}' app.unique.yaml)"
+          TARGET_REGISTRY="$(awk -F': ' '/^targetRegistryName:/{print $2; exit}' app.unique.yaml)"
+          mapfile -t IMAGES < <(awk -F': ' '/^[[:space:]]*- name:/{print $2}' app.unique.yaml)
+
+          for IMAGE in "${IMAGES[@]}"; do
+            echo "Importing ${SOURCE_REGISTRY}/${IMAGE} -> ${TARGET_REGISTRY}/${IMAGE}"
+
+            set +e
+            IMPORT_OUTPUT="$(az acr import \
+              --name "${TARGET_REGISTRY}" \
+              --source "${SOURCE_REGISTRY}/${IMAGE}" \
+              --image "${IMAGE}" \
+              --username "${{ env.UNIQUECR_USERNAME }}" \
+              --password "${{ secrets.UNIQUECR_PASSWORD }}" \
+              2>&1)"
+            IMPORT_EXIT_CODE=$?
+            set -e
+
+            if [ "${IMPORT_EXIT_CODE}" -eq 0 ]; then
+              continue
+            fi
+
+            if [[ "${IMPORT_OUTPUT}" == *"Code: Conflict"* && "${IMPORT_OUTPUT}" == *"already exists in target registry"* ]]; then
+              echo "Image already exists in target registry, skipping: ${IMAGE}"
+              continue
+            fi
+
+            echo "${IMPORT_OUTPUT}"
+            exit "${IMPORT_EXIT_CODE}"
+          done
