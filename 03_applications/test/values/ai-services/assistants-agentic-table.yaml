@@ -1,7 +1,7 @@
 # Image mirrored uniquecr -> uqhacrtest (mirroring/test/app.unique.yaml).
 image:
   tag: "2026.18.0"
-  repository: uqhacrtest.azurecr.io/assistants-agentic-table
+  repository: uqhacrtest.azurecr.io/ai-service-assistants-agentic-table
 
 replicaCount: 2
 
