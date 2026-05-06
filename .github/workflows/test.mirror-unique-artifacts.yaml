@@ -47,7 +47,7 @@ jobs:
         run: npm install -g @unique-ag/cli@0.5.1
 
       - name: Mirror Unique release artifacts
-        timeout-minutes: 15
+        timeout-minutes: 60
         run: |
           set -euo pipefail
 
