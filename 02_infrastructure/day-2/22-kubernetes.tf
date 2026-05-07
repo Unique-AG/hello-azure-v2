@@ -2,7 +2,7 @@
 # This module creates an Azure Kubernetes Service cluster with node pools and monitoring
 
 module "kubernetes_cluster" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-kubernetes-service?ref=azure-kubernetes-service-4.0.1"
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-kubernetes-service?ref=azure-kubernetes-service-5.3.0"
 
   kubernetes_version                      = var.kubernetes_version
   application_gateway_id                  = module.application_gateway.appgw_id
@@ -60,5 +60,8 @@ module "kubernetes_cluster" {
       zones                = v.zones
     }
   }
+
+  # AKS 5.x: default activity-log alerts use this list; keeps aks_agent_pool_write_error actionable.
+  default_action_group_ids = [azurerm_monitor_action_group.aks_alerts.id]
 }
 
