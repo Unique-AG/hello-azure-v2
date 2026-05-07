@@ -409,3 +409,17 @@ If you need to run kubectl from your local machine, you can set up port forwardi
 - For production, consider using Azure RBAC integration with AKS for better security
 - Ensure your user has the necessary Azure RBAC permissions: `Azure Bastion Reader` role to connect, and appropriate AKS permissions to access the cluster
 
+## Storage accounts: shared access keys vs Entra-only auth (follow-up)
+
+The `azure-storage-account` module v5 defaults `shared_access_key_enabled` to **false** for security. This repo pins **`shared_access_key_enabled = true`** on tfstate, ingestion, and audit storage accounts so behaviour matches today: Terraform backend and workloads continue using shared-key connection strings where configured.
+
+To migrate to Entra-only auth (greenfield recommendation), treat it as a coordinated rollout—not a silent Terraform-only flip:
+
+1. **RBAC**: Grant the GitOps service principal (and workload identities that must access data plane) appropriate roles on each storage account (e.g. **Storage Blob Data Contributor** / owner-scoped as needed for tfstate usage).
+2. **Backend**: Add `use_azuread_auth = true` to the relevant `backend-config-day-*.hcl` files; run `terraform init -reconfigure` per root after Azure RBAC is in place.
+3. **Tfstate storage module**: After backend proves stable with Entra auth, set `shared_access_key_enabled = false` on `module.tfstate_sa` only when state access no longer relies on account keys.
+4. **Applications**: Refactor services that read Key Vault–stored connection strings to use **DefaultAzureCredential** / workload identity toward Storage; then remove `connection_settings` from the ingestion modules and disable keys where safe.
+5. **Cleanup**: Remove obsolete Key Vault secrets that stored connection strings once nothing consumes them.
+
+Until those steps complete, keep **`shared_access_key_enabled = true`** and document any env-specific `ingestion_*_backup_vault` blocks: if you use a non-null backup vault with an explicit `name`, set `random_suffix_enabled = false` unless you intend to adopt the module’s suffixed vault naming (see module upgrade notes in `terraform-modules`).
+
