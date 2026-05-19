@@ -1,7 +1,7 @@
 # Azure OpenAI Service
 # This module creates and configures Azure OpenAI cognitive accounts with deployments
 module "openai" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-openai?depth=1&ref=azure-openai-3.3.0"
+  source = "github.com/unique-ag/terraform-modules.git//modules/azure-openai?ref=e14929281dc8524e3f3fae97189f20c16958bca6"
 
   resource_group_name = data.azurerm_resource_group.core.name
   endpoint_secret = {
