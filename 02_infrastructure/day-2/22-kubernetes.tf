@@ -2,7 +2,7 @@
 # This module creates an Azure Kubernetes Service cluster with node pools and monitoring
 
 module "kubernetes_cluster" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-kubernetes-service?ref=azure-kubernetes-service-5.3.0"
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-kubernetes-service?ref=e09fc424df151a727ccd557cfa4b288a5862c21e"
 
   kubernetes_version                      = var.kubernetes_version
   application_gateway_id                  = module.application_gateway.appgw_id
