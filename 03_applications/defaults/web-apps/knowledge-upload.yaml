@@ -34,4 +34,7 @@ routes:
     default:
       enabled: true
 strategy:
-  type: Recreate
+  type: RollingUpdate
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 0
