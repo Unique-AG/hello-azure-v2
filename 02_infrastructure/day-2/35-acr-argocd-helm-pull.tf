@@ -6,12 +6,10 @@ resource "azurerm_container_registry_scope_map" "argocd_helm_pull" {
   name                    = "argocd-helm-pull"
   container_registry_name = azurerm_container_registry.acr.name
   resource_group_name     = data.azurerm_resource_group.core.name
-  description             = "Pull-only access for Argo CD OCI Helm charts (reflector, assistants-agentic-table)"
+  description             = "Pull-only access for Argo CD OCI Helm charts under helm/*"
   actions = [
-    "repositories/helm/reflector/content/read",
-    "repositories/helm/reflector/metadata/read",
-    "repositories/helm/assistants-agentic-table/content/read",
-    "repositories/helm/assistants-agentic-table/metadata/read",
+    "repositories/helm/*/content/read",
+    "repositories/helm/*/metadata/read",
   ]
 }
 
