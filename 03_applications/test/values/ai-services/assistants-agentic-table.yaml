@@ -1,7 +1,14 @@
-# Image mirrored uniquecr -> uqhacrtest (mirroring/test/app.unique.yaml).
+# Test overlay for assistants-agentic-table (mirroring/test/app.unique.yaml).
+# Dedicated chart joins image.registry + image.repository (see monorepo charts/base _helpers.tpl).
 image:
+  registry: uqhacrtest.azurecr.io
+  repository: ai-service-assistants-agentic-table
   tag: "2026.20.2"
-  repository: uqhacrtest.azurecr.io/ai-service-assistants-agentic-table
+  useDigest: false
+
+env:
+  # Bypass Kong for content upload PUTs; Nest handler is PUT /scoped/upload on ingestion :8091.
+  INGESTION_UPLOAD_API_URL_INTERNAL: http://backend-service-ingestion.unique.svc.cluster.local:8091/scoped/upload
 
 replicaCount: 2
 
