@@ -19,3 +19,5 @@ images:
   - name: web-app-theme:2026.20.2
   - name: backend-service-speech:2026.20.2
   - name: backend-service-reflector:2026.20.2
+  - name: helm/reflector:2026.20.2
+  - name: helm/assistants-agentic-table:2026.20.2
