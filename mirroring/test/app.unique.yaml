@@ -2,7 +2,6 @@ sourceRegistry: uniquecr.azurecr.io
 targetRegistryName: uqhacrtest
 images:
   - name: ai-service-assistants-core:2026.20.2
-  - name: ai-service-assistants-agentic-table:2026.20.2
   - name: backend-service-app-repository:2026.20.2
   - name: backend-service-chat:2026.20.2
   - name: backend-service-event-socket:2026.20.2
@@ -18,4 +17,5 @@ images:
   - name: web-app-knowledge-upload:2026.20.2
   - name: web-app-theme:2026.20.2
   - name: backend-service-speech:2026.20.2
-  - name: backend-service-reflector:2026.20.2
+  - name: helm/reflector:2026.20.2
+  - name: helm/assistants-agentic-table:2026.20.2
