@@ -5,7 +5,7 @@ spec:
     - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: preview
       ref: values
-    - repoURL: oci://uniqueapp.azurecr.io/helm
+    - repoURL: oci://uqhacrtest.azurecr.io/helm
       chart: assistants-agentic-table
       targetRevision: "2026.20.2"
       helm:
