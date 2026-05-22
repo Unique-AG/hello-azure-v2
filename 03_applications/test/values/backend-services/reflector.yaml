@@ -1,6 +1,12 @@
 # Test overlay for Reflector (hostname, gateway, secrets). Override order: after defaults/backend-services/reflector.yaml.
+# Dedicated reflector chart joins image.registry + image.repository (see monorepo charts/base _helpers.tpl).
 image:
-  repository: uqhacrtest.azurecr.io/backend-service-reflector
+  registry: uqhacrtest.azurecr.io
+  repository: backend-service-reflector
+  tag: "2026.20.2"
+  useDigest: false
+env:
+  HTML_STORE_TTL_MS: "60000"
 routes:
   hostname: reflector.test-hello.azure.unique.dev
 

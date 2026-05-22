@@ -32,7 +32,7 @@ module "openai" {
 # This module creates and configures Azure Document Intelligence (Form Recognizer) accounts
 
 module "document_intelligence" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-document-intelligence?ref=azure-document-intelligence-3.3.0"
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-document-intelligence?ref=0b403eb50496da428ec54d6ee12a26dff4c9629d"
 
   doc_intelligence_name = local.document_intelligence_name
   resource_group_name   = data.azurerm_resource_group.core.name
@@ -54,7 +54,7 @@ module "document_intelligence" {
 # Azure Speech Service
 # This module creates and configures Azure Speech Service accounts with optional private endpoints
 module "speech_service" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-speech-service?depth=1&ref=azure-speech-service-4.2.0"
+  source = "github.com/unique-ag/terraform-modules.git//modules/azure-speech-service?ref=0b403eb50496da428ec54d6ee12a26dff4c9629d"
 
   key_vault_id        = data.azurerm_key_vault.key_vault_sensitive.id
   resource_group_name = data.azurerm_resource_group.core.name

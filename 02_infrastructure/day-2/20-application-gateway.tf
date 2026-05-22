@@ -11,7 +11,7 @@ resource "azurerm_public_ip" "application_gateway_public_ip" {
 }
 
 module "application_gateway" {
-  source        = "github.com/Unique-AG/terraform-modules.git//modules/azure-application-gateway?depth=1&ref=azure-application-gateway-5.0.1"
+  source        = "github.com/Unique-AG/terraform-modules.git//modules/azure-application-gateway?ref=fb541e95340e0c4e051092479195a625a6616fa0"
   name_prefix   = var.application_gateway_name
   explicit_name = local.application_gateway_name
   autoscale_configuration = {
