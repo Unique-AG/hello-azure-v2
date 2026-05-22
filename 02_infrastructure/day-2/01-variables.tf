@@ -187,6 +187,12 @@ variable "cluster_name" {
   default     = "aks"
 }
 
+variable "defender_security_contact_email" {
+  description = "Email for security-related Azure Monitor notifications (matches Defender contact default in day-1)."
+  type        = string
+  default     = "security-events@unique.ch"
+}
+
 variable "kubelet_identity_object_id" {
   description = "Object ID of the AKS kubelet identity."
   type        = string
