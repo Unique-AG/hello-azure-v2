@@ -12,7 +12,7 @@ data "azuread_service_principal" "msgraph" {
 }
 
 module "application_registration" {
-  source                    = "github.com/Unique-AG/terraform-modules.git//modules/azure-entra-app-registration?ref=azure-entra-app-registration-3.0.0"
+  source                    = "github.com/Unique-AG/terraform-modules.git//modules/azure-entra-app-registration?ref=2d09bf629de36bbbab124c5c33ffec6505427548"
   display_name              = var.application_registration_gitops_display_name
   role_assignments_required = false
   client_secret_generation_config = {
