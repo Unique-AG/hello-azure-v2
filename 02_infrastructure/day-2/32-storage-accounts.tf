@@ -1,5 +1,5 @@
 module "ingestion_cache" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?depth=1&ref=azure-storage-account-3.1.0"
+  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?ref=32d9495aaac9134231925f1dc682d84fb1adf6b8"
 
   name                          = local.ingestion_cache_sa_name
   resource_group_name           = data.azurerm_resource_group.sensitive.name
@@ -27,10 +27,12 @@ module "ingestion_cache" {
   }
 
   identity_ids = [data.azurerm_user_assigned_identity.ingestion_cache_identity.id]
+
+  shared_access_key_enabled = true
 }
 
 module "ingestion_storage" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?depth=1&ref=azure-storage-account-3.1.0"
+  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?ref=32d9495aaac9134231925f1dc682d84fb1adf6b8"
 
   name                          = local.ingestion_storage_sa_name
   resource_group_name           = data.azurerm_resource_group.sensitive.name
@@ -71,5 +73,7 @@ module "ingestion_storage" {
   }
 
   identity_ids = [data.azurerm_user_assigned_identity.ingestion_storage_identity.id]
+
+  shared_access_key_enabled = true
 }
 

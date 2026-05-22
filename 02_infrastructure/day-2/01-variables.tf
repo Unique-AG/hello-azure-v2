@@ -979,7 +979,8 @@ variable "ingestion_cache_account_replication_type" {
 variable "ingestion_cache_backup_vault" {
   description = "Backup vault for the ingestion cache account. Set to null to disable backup."
   type = object({
-    name = string
+    name                  = string
+    random_suffix_enabled = optional(bool, false)
   })
   default  = null
   nullable = true
@@ -1050,7 +1051,8 @@ variable "ingestion_storage_account_replication_type" {
 variable "ingestion_storage_backup_vault" {
   description = "Backup vault for the ingestion storage account. Set to null to disable backup."
   type = object({
-    name = string
+    name                  = string
+    random_suffix_enabled = optional(bool, false)
   })
   default  = null
   nullable = true
