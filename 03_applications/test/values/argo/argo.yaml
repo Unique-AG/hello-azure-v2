@@ -52,7 +52,8 @@ configs:
         #################################################
 
         ################### GROUPS #####################
-        g, maintain, role:admin
+        # Entra GitOps app (entra-app-registration v4): role claim is application_support, not legacy maintain
+        g, application_support, role:admin
         ################### POLICIES #####################
         # role:sync-only
         p, role:sync-only, applications, get, *, allow
@@ -64,7 +65,7 @@ configs:
         # role:no-access
         p, role:no-access, *, *, *, deny
 
-        # maintainers are kings here and only here
+        # application_support users are admins here (see entra-app-registration v4)
         # role:admin
         p, role:admin, *, *, *, allow
 extraObjects: []

@@ -409,17 +409,17 @@ If you need to run kubectl from your local machine, you can set up port forwardi
 - For production, consider using Azure RBAC integration with AKS for better security
 - Ensure your user has the necessary Azure RBAC permissions: `Azure Bastion Reader` role to connect, and appropriate AKS permissions to access the cluster
 
-## Storage accounts: shared access keys vs Entra-only auth (follow-up)
+## GitOps (Argo CD) RBAC after Entra app-registration v4
 
-The `azure-storage-account` module v5 defaults `shared_access_key_enabled` to **false** for security. This repo pins **`shared_access_key_enabled = true`** on tfstate, ingestion, and audit storage accounts so behaviour matches today: Terraform backend and workloads continue using shared-key connection strings where configured.
+`azure-entra-app-registration` **4.0.0** removes the legacy Entra app role **`maintain`** (`value = maintain`). GitOps maintainers are assigned **`application_support`** via `application_support_object_ids` in `02_infrastructure/day-2/11-application-registration.tf`.
 
-To migrate to Entra-only auth (greenfield recommendation), treat it as a coordinated rollout—not a silent Terraform-only flip:
+Argo CD OIDC is configured with `scopes: '[roles]'`. The Casbin group binding in `03_applications/{dev,test}/values/argo/argo.yaml` must map the **new** role claim:
 
-1. **RBAC**: Grant the GitOps service principal (and workload identities that must access data plane) appropriate roles on each storage account (e.g. **Storage Blob Data Contributor** / owner-scoped as needed for tfstate usage).
-2. **Backend**: Add `use_azuread_auth = true` to the relevant `backend-config-day-*.hcl` files; run `terraform init -reconfigure` per root after Azure RBAC is in place.
-3. **Tfstate storage module**: After backend proves stable with Entra auth, set `shared_access_key_enabled = false` on `module.tfstate_sa` only when state access no longer relies on account keys.
-4. **Applications**: Refactor services that read Key Vault–stored connection strings to use **DefaultAzureCredential** / workload identity toward Storage; then remove `connection_settings` from the ingestion modules and disable keys where safe.
-5. **Cleanup**: Remove obsolete Key Vault secrets that stored connection strings once nothing consumes them.
+```yaml
+g, application_support, role:admin
+```
 
-Until those steps complete, keep **`shared_access_key_enabled = true`** and document any env-specific `ingestion_*_backup_vault` blocks: if you use a non-null backup vault with an explicit `name`, set `random_suffix_enabled = false` unless you intend to adopt the module’s suffixed vault naming (see module upgrade notes in `terraform-modules`).
+Do **not** leave `g, maintain, role:admin` after the Entra module bump — maintainers will authenticate but lose Argo admin until Helm values are synced.
+
+Typical day-2 plan after the bump (if v4 roles are already in state): **1 in-place WAF policy update**, **6 destroys** of legacy `maintainers` Entra resources, **0 adds**. Apply Terraform, then sync the Argo application so RBAC picks up the YAML change.
 

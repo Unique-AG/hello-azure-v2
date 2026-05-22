@@ -1,5 +1,5 @@
 module "ingestion_cache" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?depth=1&ref=azure-storage-account-5.1.0"
+  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?ref=32d9495aaac9134231925f1dc682d84fb1adf6b8"
 
   name                          = local.ingestion_cache_sa_name
   resource_group_name           = data.azurerm_resource_group.sensitive.name
@@ -32,7 +32,7 @@ module "ingestion_cache" {
 }
 
 module "ingestion_storage" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?depth=1&ref=azure-storage-account-5.1.0"
+  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?ref=32d9495aaac9134231925f1dc682d84fb1adf6b8"
 
   name                          = local.ingestion_storage_sa_name
   resource_group_name           = data.azurerm_resource_group.sensitive.name
