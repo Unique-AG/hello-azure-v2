@@ -4,5 +4,5 @@ env:
   REFLECTOR_BACKEND_API_URL: https://reflector.test-hello.azure.unique.dev
   SELF_URL: https://test-hello.azure.unique.dev/chat
 image:
-  tag: "2026.20.2"
+  tag: "2026.22.4"
   repository: uqhacrtest.azurecr.io/web-app-chat

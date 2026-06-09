@@ -1,6 +1,7 @@
 build
 .tfdocs-config.yml
 .terraform*
+!.terraform-version
 mkdocs
 *.tfstate
 *.tfstate.backup

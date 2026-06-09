@@ -409,3 +409,17 @@ If you need to run kubectl from your local machine, you can set up port forwardi
 - For production, consider using Azure RBAC integration with AKS for better security
 - Ensure your user has the necessary Azure RBAC permissions: `Azure Bastion Reader` role to connect, and appropriate AKS permissions to access the cluster
 
+## GitOps (Argo CD) RBAC after Entra app-registration v4
+
+`azure-entra-app-registration` **4.0.0** removes the legacy Entra app role **`maintain`** (`value = maintain`). GitOps maintainers are assigned **`application_support`** via `application_support_object_ids` in `02_infrastructure/day-2/11-application-registration.tf`.
+
+Argo CD OIDC is configured with `scopes: '[roles]'`. The Casbin group binding in `03_applications/{dev,test}/values/argo/argo.yaml` must map the **new** role claim:
+
+```yaml
+g, application_support, role:admin
+```
+
+Do **not** leave `g, maintain, role:admin` after the Entra module bump — maintainers will authenticate but lose Argo admin until Helm values are synced.
+
+Typical day-2 plan after the bump (if v4 roles are already in state): **1 in-place WAF policy update**, **6 destroys** of legacy `maintainers` Entra resources, **0 adds**. Apply Terraform, then sync the Argo application so RBAC picks up the YAML change.
+
