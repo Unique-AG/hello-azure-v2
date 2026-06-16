@@ -8,7 +8,12 @@
 #   2. Env-specific flag map                  (03_applications/<env>/values/_flags.yaml)
 #
 # NOTES:
-# - Applications request flags at runtime from configuration-backend where wired.
+# - configuration-backend receives this file via Argo valueFiles and serves flags
+#   to other services. Do not wire CHAT_BACKEND_API_URL or
+#   SCOPE_MANAGEMENT_API_URL into configuration-backend: chat and scope-management
+#   already call configuration-backend for flags, so outbound calls would create a
+#   circular dependency and can deadlock under user-targeted flag evaluation.
+# - Other applications request flags at runtime from configuration-backend where wired.
 # - Keep this file flat; if we exceed ~50 entries see monorepo PR #14560.
 # =============================================================================
 
@@ -33,7 +38,6 @@ env:
   FEATURE_FLAG_ENABLE_MODULE_BASED_EVENT_DISTRIBUTION_UN_15312: "false"
   FEATURE_FLAG_ENABLE_MOVE_FILE_UN_15517: "true"
   FEATURE_FLAG_ENABLE_MOVE_FOLDER_UN_16037: "true"
-  FEATURE_FLAG_ENABLE_NEW_SPACE_ACCESS_MODAL_UN_17544: "true"
   FEATURE_FLAG_ENABLE_PPT_PAGE_BASED_CHUNKING_UN_9444: "true"
   FEATURE_FLAG_ENABLE_SEARCH_ADAPTER_ELASTICSEARCH_UN_9883: "true"
   FEATURE_FLAG_ENABLE_SPACES_2_0_UN_11203: "true"

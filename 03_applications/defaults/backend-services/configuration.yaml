@@ -1,5 +1,6 @@
 env:
   AUDIT_LOG_DIR: /dev/stdout
+  # Do not add CHAT_BACKEND_API_URL or SCOPE_MANAGEMENT_API_URL here — see _flags.yaml NOTES.
   LOG_LEVEL: info
   MAX_HEAP_MB: 200
   PG_DATABASE_SSL_MODE: "verify"
