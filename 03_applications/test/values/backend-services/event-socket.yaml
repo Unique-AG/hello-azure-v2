@@ -1,5 +1,5 @@
 image:
-  tag: "2026.24.2"
+  tag: "2026.26.3"
   repository: uqhacrtest.azurecr.io/backend-service-event-socket
 routes:
   gateway:
