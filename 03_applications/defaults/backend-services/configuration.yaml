@@ -7,7 +7,7 @@ env:
 hooks:
   migration:
     command: |
-      cd /home/node/app/services/configuration-backend && pnpm exec prisma migrate deploy --config prisma.config.ts;
+      cd /home/node/app/services/configuration-backend && pnpm exec prisma migrate deploy --config prisma.config.ts; cd /home/node/app/services/configuration-backend/dist; RUNNING_MODE=DATA_MIGRATION node /home/node/app/services/configuration-backend/dist/main.js;
     enabled: true
 replicaCount: 1
 resources:
