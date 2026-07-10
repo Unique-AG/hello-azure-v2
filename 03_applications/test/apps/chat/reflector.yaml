@@ -7,7 +7,7 @@ spec:
       ref: values
     - repoURL: uqhacrtest.azurecr.io/helm
       chart: reflector
-      targetRevision: "2026.26.3"
+      targetRevision: "2026.28.1"
       helm:
         passCredentials: true
         releaseName: reflector
