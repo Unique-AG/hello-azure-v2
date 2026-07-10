@@ -10,9 +10,12 @@ resources:
       algorithm: RS256
       allowed_iss:
         - https://id.test-hello.azure.unique.dev
-      # jwks_extra_headers: # This can be uncommented if you want to avoid hairpinning (going outisde of the cluster to reach Zitadel which is deployed in the same cluster)
-      #   forwarded: host=id.test-hello.azure.unique.dev
-      # jwks_uri: http://zitadel.unique.svc.cluster.local:8080/oauth/v2/keys
+      # Fetch JWKS from the in-cluster Zitadel service to avoid hairpinning
+      # (going outside the cluster to reach Zitadel which is deployed in the same cluster).
+      # The forwarded Host header keeps Zitadel's issuer/org resolution correct.
+      jwks_extra_headers:
+        forwarded: host=id.test-hello.azure.unique.dev
+      jwks_uri: http://zitadel.unique.svc.cluster.local:8080/oauth/v2/keys
       uri_param_names:
         - token
       zitadel_project_id: '362295080381317263' # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)

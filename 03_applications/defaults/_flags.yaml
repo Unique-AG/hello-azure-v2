@@ -2,17 +2,11 @@
 # FEATURE FLAGS CONFIGURATION — DEFAULTS (all environments)
 # =============================================================================
 #
-#
 # OVERRIDE ORDER (lowest to highest priority):
 #   1. Default flag map (this file)           (03_applications/defaults/_flags.yaml)
 #   2. Env-specific flag map                  (03_applications/<env>/values/_flags.yaml)
 #
 # NOTES:
-# - configuration-backend receives this file via Argo valueFiles and serves flags
-#   to other services. Do not wire CHAT_BACKEND_API_URL or
-#   SCOPE_MANAGEMENT_API_URL into configuration-backend: chat and scope-management
-#   already call configuration-backend for flags, so outbound calls would create a
-#   circular dependency and can deadlock under user-targeted flag evaluation.
 # - Other applications request flags at runtime from configuration-backend where wired.
 # - Keep this file flat; if we exceed ~50 entries see monorepo PR #14560.
 # =============================================================================
@@ -20,10 +14,7 @@
 env:
   ENABLE_ACCESS_MANAGEMENT_FOR_EXTERNAL_FOLDERS_AND_FILES: "false"
   FEATURE_FLAG_ABOUT_SPACE_SECTION_UN_10270: "false"
-  FEATURE_FLAG_AGENTIC_TABLE_CONTEXT_UN_14904: "false"
-  FEATURE_FLAG_AGENTIC_TABLE_ENABLE_NEW_SHARING_UI_UN_16758: "true"
   FEATURE_FLAG_AGENTIC_TABLE_ROW_METADATA_UN_14904: "false"
-  FEATURE_FLAG_AGENTIC_TABLE_SHEET_METADATA_UN_14904: "false"
   FEATURE_FLAG_ENABLE_ADVANCED_FORMATTING_UN_9758: "true"
   FEATURE_FLAG_ENABLE_AGENTIC_METADATA_EXTRACTION_UN_15619: "false"
   FEATURE_FLAG_ENABLE_CAN_MANAGE_ACCESS_UN_11608: "false"
@@ -60,3 +51,11 @@ env:
   FEATURE_FLAG_ENABLE_ATOMIC_FIGURE_CHUNKING_UN_19136: "false"
   FEATURE_FLAG_ENABLE_MDI_PDF_HYPERLINK_EXTRACTION_UN_19716: "false"
   FEATURE_FLAG_AGENTIC_TABLE_COMMENTS_UN_17606: "false"
+  FEATURE_FLAG_AGENTIC_TABLE_COPY_ACTION_UN_20824: "false"
+  FEATURE_FLAG_ENABLE_HTML_INLINE_IMAGE_EXTRACTION_UN_20936: "false"
+  FEATURE_FLAG_ENABLE_MULTI_FILE_IMAGE_CONTENT_EXTRACTION_UN_20936: "false"
+  FEATURE_FLAG_ENABLE_USER_MODEL_SELECTION_UN_20804: "false"
+  FEATURE_FLAG_MODEL_USAGE_LIMITS_UN_18889: "false"
+  FEATURE_FLAG_AGENTIC_TABLE_METADATA_FORM_UN_17903: "false"
+  FEATURE_FLAG_AGENTIC_TABLE_CAN_ANSWER_ROLE_UN_21308: "false"
+  FEATURE_FLAG_ENABLE_FULL_WIDTH_SCROLL_UN_19453: "false"
