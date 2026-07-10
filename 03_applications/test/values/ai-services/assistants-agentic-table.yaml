@@ -3,7 +3,7 @@
 image:
   registry: uqhacrtest.azurecr.io
   repository: ai-service-assistants-agentic-table
-  tag: "2026.26.3"
+  tag: "2026.28.1"
   useDigest: false
 
 env:
