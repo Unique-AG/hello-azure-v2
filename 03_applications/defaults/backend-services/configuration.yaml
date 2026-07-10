@@ -8,9 +8,16 @@ env:
   CHAT_BACKEND_API_URL: http://backend-service-chat.unique.svc
 hooks:
   migration:
+    enabled: true
     command: |
       cd /home/node/app/services/configuration-backend && pnpm exec prisma migrate deploy --config prisma.config.ts; cd /home/node/app/services/configuration-backend/dist; RUNNING_MODE=DATA_MIGRATION node --max-old-space-size=1000 /home/node/app/services/configuration-backend/dist/main.js;
-    enabled: true
+    resources:
+      requests:
+        cpu: 200m
+        memory: 600Mi
+      limits:
+        memory: 1000Mi
+        cpu: 500m
 replicaCount: 1
 resources:
   limits:
