@@ -4,10 +4,12 @@ env:
   LOG_LEVEL: info
   MAX_HEAP_MB: 200
   PG_DATABASE_SSL_MODE: "verify"
+  SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
+  CHAT_BACKEND_API_URL: http://backend-service-chat.unique.svc
 hooks:
   migration:
     command: |
-      cd /home/node/app/services/configuration-backend && pnpm exec prisma migrate deploy --config prisma.config.ts; cd /home/node/app/services/configuration-backend/dist; RUNNING_MODE=DATA_MIGRATION node /home/node/app/services/configuration-backend/dist/main.js;
+      cd /home/node/app/services/configuration-backend && pnpm exec prisma migrate deploy --config prisma.config.ts; cd /home/node/app/services/configuration-backend/dist; RUNNING_MODE=DATA_MIGRATION node --max-old-space-size=1000 /home/node/app/services/configuration-backend/dist/main.js;
     enabled: true
 replicaCount: 1
 resources:
