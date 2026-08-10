@@ -2,12 +2,12 @@ spec:
   name: assistants-agentic-table
   autoSync: false
   sources:
-    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+    - repoURL: "https://github.com/Unique-AG/hello-azure-v2"
       targetRevision: preview
       ref: values
     - repoURL: uqhacrtest.azurecr.io/helm
       chart: assistants-agentic-table
-      targetRevision: "2026.28.1"
+      targetRevision: "2026.30.2"
       helm:
         passCredentials: true
         releaseName: assistants-agentic-table

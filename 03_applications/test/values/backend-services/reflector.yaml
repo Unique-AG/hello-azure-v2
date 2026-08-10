@@ -3,11 +3,9 @@
 image:
   registry: uqhacrtest.azurecr.io
   repository: backend-service-reflector
-  tag: "2026.28.1"
+  tag: "2026.30.2"
   useDigest: false
 env:
   HTML_STORE_TTL_MS: "60000"
 routes:
   hostname: reflector.test-hello.azure.unique.dev
-
-
