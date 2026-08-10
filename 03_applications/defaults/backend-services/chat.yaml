@@ -63,6 +63,7 @@ env:
     {"name": "UniqueAIV2", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/unique_ai_v2"},
     {"name": "KycReviewAgent", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/kyc_review_agent"}
     ]
+  LITELLM_KEY_CLEANUP_GRACE_MINUTES: "60"
   LOG_LEVEL: info
   MAX_HEAP_MB: 3700
   MIN_NO_OF_MESSAGES_BY_USER_BEFORE_NPS_TRIGGER: "30"
