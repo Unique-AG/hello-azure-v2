@@ -4,7 +4,7 @@ env:
   NOTIFICATION_UNSUBSCRIBE_BASE_URL: "https://test-hello.azure.unique.dev/chat/notifications/unsubscribe"
 image:
   repository: uqhacrtest.azurecr.io/backend-service-configuration
-  tag: "2026.30.2"
+  tag: "2026.32.5"
 secretProvider:
   vaults:
     hakv2test:

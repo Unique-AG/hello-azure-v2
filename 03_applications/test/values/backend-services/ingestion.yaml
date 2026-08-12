@@ -1,12 +1,12 @@
 image:
-  tag: "2026.30.2"
+  tag: "2026.32.5"
   repository: uqhacrtest.azurecr.io/backend-service-ingestion
 env:
   ELASTICSEARCH_CA_BUNDLE: /etc/ssl/elastic/ca.crt
   ELASTICSEARCH_URL: https://elasticsearch-ingestion-es-http.unique.svc:9200
   ELASTICSEARCH_USERNAME: elastic
   INGESTION_UPLOAD_API_URL: https://api.test-hello.azure.unique.dev/scoped/ingestion/upload
-  RECENCY_RANKING_COMPANY_IDS: '361772156100608158'
+  RECENCY_RANKING_COMPANY_IDS: "361772156100608158"
   ZITADEL_ROOT_ORG_ID: "361772156100608158"
 envVars:
   - name: RABBITMQ_USERNAME
