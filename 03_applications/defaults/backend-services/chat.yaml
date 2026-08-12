@@ -105,10 +105,10 @@ nodeSelector:
 resources:
   limits:
     cpu: 500m
-    memory: 600Mi
+    memory: 1000Mi
   requests:
     cpu: 500m
-    memory: 550Mi
+    memory: 950Mi
 routes:
   gateway:
     namespace: unique
