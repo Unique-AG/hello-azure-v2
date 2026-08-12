@@ -37,8 +37,9 @@ env:
   MIN_NO_OF_MESSAGES_BY_USER_BEFORE_NPS_TRIGGER: "30"
   PUBSUB_REDIS_DB: 2
   SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
+  ALLOW_CONTEXT_MEMORY_WITH_WEB_SEARCH_UN_22591: "true"
 image:
-  tag: "2026.30.2"
+  tag: "2026.32.5"
   repository: uqhacrtest.azurecr.io/backend-service-chat
 resources:
   limits:

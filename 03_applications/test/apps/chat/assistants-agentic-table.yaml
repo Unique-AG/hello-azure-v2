@@ -7,7 +7,7 @@ spec:
       ref: values
     - repoURL: uqhacrtest.azurecr.io/helm
       chart: assistants-agentic-table
-      targetRevision: "2026.30.2"
+      targetRevision: "2026.32.5"
       helm:
         passCredentials: true
         releaseName: assistants-agentic-table

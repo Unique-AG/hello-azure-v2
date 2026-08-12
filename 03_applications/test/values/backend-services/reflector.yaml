@@ -3,7 +3,7 @@
 image:
   registry: uqhacrtest.azurecr.io
   repository: backend-service-reflector
-  tag: "2026.30.2"
+  tag: "2026.32.5"
   useDigest: false
 env:
   HTML_STORE_TTL_MS: "60000"
