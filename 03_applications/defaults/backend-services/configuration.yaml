@@ -6,6 +6,9 @@ env:
   PG_DATABASE_SSL_MODE: "verify"
   SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
   CHAT_BACKEND_API_URL: http://backend-service-chat.unique.svc
+  NOTIFICATION_EMAIL_WORKER_ENABLED: "false"
+  NOTIFICATION_PERMALINK_BASE_URL: ""
+  NOTIFICATION_UNSUBSCRIBE_BASE_URL: ""
 hooks:
   migration:
     enabled: true

@@ -1,6 +1,10 @@
+env:
+  NOTIFICATION_EMAIL_WORKER_ENABLED: "true"
+  NOTIFICATION_PERMALINK_BASE_URL: "https://test-hello.azure.unique.dev/chat/notifications/go"
+  NOTIFICATION_UNSUBSCRIBE_BASE_URL: "https://test-hello.azure.unique.dev/chat/notifications/unsubscribe"
 image:
   repository: uqhacrtest.azurecr.io/backend-service-configuration
-  tag: "2026.28.1"
+  tag: "2026.30.2"
 secretProvider:
   vaults:
     hakv2test:
