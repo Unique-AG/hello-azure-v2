@@ -1,7 +1,7 @@
 #!/bin/bash
 # Terraform import commands for Day-2 resources
 # Usage: ./import_azure_resources.sh test
-#        ./import_azure_resources.sh dev
+#        ./import_azure_resources.sh test
 
 set -euo pipefail
 

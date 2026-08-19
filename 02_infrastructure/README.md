@@ -20,17 +20,6 @@ This directory contains the infrastructure Terraform configurations organized by
 │   ├── backend-config-day-1.hcl         # Backend config for day-1 terraform init
 │   ├── backend-config-day-2.hcl         # Backend config for day-2 terraform init
 │   └── backend-config-day-3.hcl         # Backend config for day-3 terraform init
-└── environments/dev/            # Dev environment-specific variables
-    ├── 00-config-day-1.auto.tfvars      # Day-1 provider & backend configuration
-    ├── 00-config-day-2.auto.tfvars      # Day-2 provider & backend configuration
-    ├── 00-config-day-3.auto.tfvars      # Day-3 provider & backend configuration
-    ├── 00-parameters-day-1.auto.tfvars  # Day-1 environment-specific parameters
-    ├── 00-parameters-day-2.auto.tfvars  # Day-2 environment-specific parameters
-    ├── 00-parameters-day-3.auto.tfvars  # Day-3 environment-specific parameters
-    ├── prometheus-rules.auto.tfvars     # Prometheus alert and recording rules for day-2
-    ├── backend-config-day-1.hcl         # Backend config for day-1 terraform init
-    ├── backend-config-day-2.hcl         # Backend config for day-2 terraform init
-    └── backend-config-day-3.hcl         # Backend config for day-3 terraform init
 ```
 
 ## Usage
@@ -187,15 +176,6 @@ If you have existing resources in Azure that need to be imported into Terraform 
 Please note that you need to initialize terraform state before running the import scripts.
 e.g.
 
-for dev environment:
-```bash
-cd day-1
-terraform init -backend-config=../environments/dev/backend-config-day-1.hcl
-cd day-2
-terraform init -backend-config=../environments/dev/backend-config-day-2.hcl
-cd day-3
-terraform init -backend-config=../environments/dev/backend-config-day-3.hcl
-```
 for test environment:
 ```bash
 cd day-1
@@ -210,25 +190,6 @@ terraform init -backend-config=../environments/test/backend-config-day-3.hcl
 - day-1/import_azure_resources.sh
 - day-2/import_azure_resources.sh
 - day-3/import_azure_resources.sh (if needed)
-
-for dev environment:
-```bash
-cd day-1
-terraform init -backend-config=../environments/dev/backend-config-day-1.hcl
-./import_azure_resources.sh
-```
-
-```bash
-cd day-2
-terraform init -backend-config=../environments/dev/backend-config-day-2.hcl
-./import_azure_resources.sh
-```
-
-```bash
-cd day-3
-terraform init -backend-config=../environments/dev/backend-config-day-3.hcl
-# Import script would go here if needed
-```
 
 for test environment:
 ```bash
@@ -345,12 +306,6 @@ This is the simplest and most common approach. Connect to a jumpbox VM via Azure
      --resource-group resource-group-core \
      --name aks-test \
      --admin
-
-   # For dev environment
-   az aks get-credentials \
-     --resource-group resource-group-core \
-     --name aks-dev \
-     --admin
    ```
 
 5. **Run kubectl commands**:
@@ -413,7 +368,7 @@ If you need to run kubectl from your local machine, you can set up port forwardi
 
 `azure-entra-app-registration` **4.0.0** removes the legacy Entra app role **`maintain`** (`value = maintain`). GitOps maintainers are assigned **`application_support`** via `application_support_object_ids` in `02_infrastructure/day-2/11-application-registration.tf`.
 
-Argo CD OIDC is configured with `scopes: '[roles]'`. The Casbin group binding in `03_applications/{dev,test}/values/argo/argo.yaml` must map the **new** role claim:
+Argo CD OIDC is configured with `scopes: '[roles]'`. The Casbin group binding in `03_applications/test/values/argo/argo.yaml` must map the **new** role claim:
 
 ```yaml
 g, application_support, role:admin

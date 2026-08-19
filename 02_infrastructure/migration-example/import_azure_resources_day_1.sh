@@ -1,7 +1,7 @@
 #!/bin/bash
 # Terraform import commands for Day-1 resources
 # Usage: ./import_azure_resources.sh test
-#        ./import_azure_resources.sh dev
+#        ./import_azure_resources.sh test
 #
 # IMPORTANT: Before running this script, you need to:
 # 1. Get the actual Azure resource IDs for each resource

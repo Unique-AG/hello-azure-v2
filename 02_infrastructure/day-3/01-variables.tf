@@ -75,7 +75,7 @@ variable "name_prefix" {
 }
 
 variable "env" {
-  description = "Environment name (e.g., dev, test or prod)"
+  description = "Environment name (e.g., test or prod)"
   type        = string
 }
 

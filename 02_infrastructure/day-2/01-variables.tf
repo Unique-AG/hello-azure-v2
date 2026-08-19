@@ -107,7 +107,6 @@ variable "subnet_agw_cidr" {
 variable "dns_zone_name" {
   description = "The DNS zone name for the environment"
   type        = string
-  default     = "hello.azure.unique.dev"
 }
 
 variable "custom_subdomain_name" {
@@ -582,7 +581,7 @@ variable "telemetry_observer_user_ids" {
 }
 
 variable "env" {
-  description = "Environment name (e.g., dev, test or prod)"
+  description = "Environment name (e.g., test or prod)"
   type        = string
 }
 

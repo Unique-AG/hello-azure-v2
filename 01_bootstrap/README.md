@@ -8,12 +8,8 @@ This directory contains the bootstrap Terraform configuration for initializing t
 01_bootstrap/
 ├── day-0/          # Shared Terraform code (resource groups, storage account, Azure AD application, federated credentials, service principals, role assignments)
 └── environments/   # Environment-specific variables
-    ├── test/       # Test environment-specific variables
-    │   ├── 00-config.auto.tfvars           # Provider configuration (subscription_id, tenant_id, client_id, use_oidc)
-    │   ├── 00-parameters.auto.tfvars       # Environment-specific parameters
-    │   └── backend-config-day-0.hcl        # Backend config for day-0 state file
-    └── dev/        # Dev environment-specific variables
-        ├── 00-config.auto.tfvars           # Provider configuration
+    └── test/       # Test environment-specific variables
+        ├── 00-config.auto.tfvars           # Provider configuration (subscription_id, tenant_id, client_id, use_oidc)
         ├── 00-parameters.auto.tfvars       # Environment-specific parameters
         └── backend-config-day-0.hcl        # Backend config for day-0 state file
 ```
@@ -25,18 +21,18 @@ This directory contains the bootstrap Terraform configuration for initializing t
 This step will allow us to automate all the further deployments. In a high overview, in this init the following are created:
 - Storage account for Terraform state (`tfstate`)
 - Azure Application
-- [Federated credentials](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp) that will allow Terraform to [authenticate to Azure using a Service Principal with Open ID Connect](https://registry.terraform.io/providers/hashicorp/Azurerm/latest/docs/guides/service_principal_oidc). It allows GitHub actions on the branch `main` to deploy and manage resource for this subscription. [More about Federated identity credentials](https://learn.microsoft.com/en-us/graph/api/resources/federatedidentitycredentials-overview?view=graph-rest-1.0)
+- [Federated credentials](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp) that will allow Terraform to [authenticate to Azure using a Service Principal with Open ID Connect](https://registry.terraform.io/providers/hashicorp/Azurerm/latest/docs/guides/service_principal_oidc). It allows GitHub Actions workflows running in this repository's GitHub environments (`00-init`, `10-pm`, `20-wl`) to deploy and manage resources for this subscription. [More about Federated identity credentials](https://learn.microsoft.com/en-us/graph/api/resources/federatedidentitycredentials-overview?view=graph-rest-1.0)
 - Service principal and role mapping
 
-With this setup, the GitHub's `main` and `dev` branches will have right to access the tenant with `Contributor` role without defining any credentials in the repository. The OIDC token (JWT) that is created in the GitHub actions will be exchanged for Azure access token. Only tokens for `main` and `dev` branches will be allowed to be exchanged based on the [subject of the generated token](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect#filtering-for-a-specific-branch)
+With this setup, GitHub Actions workflows running in the `00-init`, `10-pm` and `20-wl` GitHub environments have the right to access the tenant with `Contributor` role without defining any credentials in the repository. The OIDC token (JWT) that is created in the GitHub actions will be exchanged for an Azure access token. Only tokens issued for those environments will be allowed to be exchanged based on the [subject of the generated token](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect#filtering-for-a-specific-environment)
 
 E.g.:
 ```
-resource "azuread_application_federated_identity_credential" "github_actions_terraform_main" {
+resource "azuread_application_federated_identity_credential" "github_actions_terraform" {
   ...
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = "https://token.actions.githubusercontent.com"
-  subject        = "repo:Unique-AG/hello-azure:ref:refs/heads/main"
+  subject        = "repo:Unique-AG/hello-azure-v2:environment:20-wl"
 }
 ```
 
@@ -102,7 +98,7 @@ sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environm
 sed -i "s/\(client_id.*=\s*\).*/\1 $var_value/" ../../02_infrastructure/environments/test/00-config-day-2.auto.tfvars
 ```
 
-**Note:** For the dev environment, replace `test` with `dev` in all the paths above. The `client_id` must be consistent across all environment config files (day-0, day-1, and day-2) as they all authenticate using the same Azure AD Application created during bootstrap.
+**Note:** The `client_id` must be consistent across all environment config files (day-0, day-1, and day-2) as they all authenticate using the same Azure AD Application created during bootstrap.
 
 ### Phase 2: Migrate to Remote State
 
@@ -154,7 +150,6 @@ terraform init -backend-config=../environments/test/backend-config-day-0.hcl
 
 **Note:** The state file is stored at:
 - Test: `terraform-day-0-test.tfstate`
-- Dev: `terraform-day-0-dev.tfstate`
 
 ### Running Terraform Plan/Apply
 
@@ -170,18 +165,6 @@ terraform plan \
 terraform apply \
   -var-file=../environments/test/00-config-day-0.auto.tfvars \
   -var-file=../environments/test/00-parameters-day-0.auto.tfvars
-```
-
-**Dev Environment:**
-```bash
-cd day-0
-terraform plan \
-  -var-file=../environments/dev/00-config-day-0.auto.tfvars \
-  -var-file=../environments/dev/00-parameters-day-0.auto.tfvars
-
-terraform apply \
-  -var-file=../environments/dev/00-config-day-0.auto.tfvars \
-  -var-file=../environments/dev/00-parameters-day-0.auto.tfvars
 ```
 
 ### Environment-Specific Files
@@ -200,7 +183,7 @@ This bootstrap step (day-0) must be completed **before** deploying infrastructur
    - Creates Azure AD application and service principal
    - Sets up federated credentials for GitHub Actions
    - Assigns necessary roles and permissions
-   - State stored in: `terraform-init-test.tfstate` (test) or `terraform-init-dev.tfstate` (dev)
+   - State stored in: `terraform-init-test.tfstate`
 
 2. **02_infrastructure/day-1**: Deploy foundational infrastructure (depends on day-0)
 3. **02_infrastructure/day-2**: Deploy identity/governance resources (depends on day-1)
@@ -220,7 +203,7 @@ This bootstrap creates the following resources:
 ## Important Notes
 
 - **Day-0 must be completed first**: All subsequent infrastructure deployments depend on the remote state storage and service principal created here
-- **Separate state files**: Each environment (test/dev) uses its own state file
+- **Separate state files**: Each environment uses its own state file
 - **Client ID**: After Phase 1, the `client_id` must be updated in the environment's `00-config.auto.tfvars` file
 - **OIDC Authentication**: The setup uses OpenID Connect for secure authentication without storing credentials
 
