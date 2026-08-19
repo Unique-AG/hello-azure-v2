@@ -19,7 +19,7 @@ permissions:
 jobs:
   # The Sync Waves are a bit a fake to mimic and make sure the cluster is updated in a controlled way.
   argo-bootstrap:
-    if: github.ref == 'refs/heads/preview'
+    if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/test.helm.yaml
     with:
       file_name: 03_applications/argo-bootstrap.yaml.gotmpl

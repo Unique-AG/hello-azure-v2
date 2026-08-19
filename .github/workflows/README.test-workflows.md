@@ -25,7 +25,7 @@ The workflows are organized into three environment layers that represent the inf
 - **Environment**: `00-init`
 - **Status**: ✅ Active (workflow_dispatch + push/pull_request triggers)
 
-> **⚠️ Critical**: This workflow must be run manually first (or via push to `preview` branch) to establish the authentication and state storage infrastructure that all subsequent workflows depend on.
+> **⚠️ Critical**: This workflow must be run manually first (or via push to `main` branch) to establish the authentication and state storage infrastructure that all subsequent workflows depend on.
 
 ---
 

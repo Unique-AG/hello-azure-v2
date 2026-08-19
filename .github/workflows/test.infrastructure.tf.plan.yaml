@@ -2,16 +2,14 @@ name: "[tf] [test] Infrastructure Plan 🏗️"
 on:
   pull_request:
     branches:
-      - preview
-      - '!release'
-      - '!main'
+      - main
     paths:
       - .github/workflows/test.infrastructure.tf.plan.yaml
       - 02_infrastructure/day-3/**/*.tf
       - terraform-modules/**
   push:
     branches:
-      - preview
+      - main
     paths:
       - .github/workflows/test.infrastructure.tf.plan.yaml
       - 02_infrastructure/day-3/**/*.tf

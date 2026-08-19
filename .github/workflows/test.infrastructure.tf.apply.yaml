@@ -41,5 +41,5 @@ jobs:
         run: terraform plan -no-color
   
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/preview'
+        if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve -input=false

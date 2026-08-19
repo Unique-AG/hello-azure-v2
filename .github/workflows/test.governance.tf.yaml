@@ -3,15 +3,13 @@ on:
   workflow_dispatch: 
   pull_request:
     branches:
-      - preview
-      - '!release'
-      - '!main'
+      - main
     paths:
       - .github/workflows/test.governance.tf.yaml
       - 01_bootstrap/environments/test/**
   push:
     branches:
-      - preview
+      - main
     paths:
       - .github/workflows/test.governance.tf.yaml
       - 01_bootstrap/environments/test/**
@@ -56,7 +54,7 @@ jobs:
         run: terraform plan -no-color
       
       - name: Terraform Apply
-        if: ${{ github.event.ref == 'refs/heads/preview' }}
+        if: ${{ github.event.ref == 'refs/heads/main' }}
         run: terraform apply -auto-approve -input=false
       
       - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea #v7.0.1
