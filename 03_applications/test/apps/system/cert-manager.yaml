@@ -3,7 +3,7 @@ spec:
   autoSync: true
   sources:
     - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
-      targetRevision: preview
+      targetRevision: main
       ref: values
     - chart: cert-manager
       repoURL: https://charts.jetstack.io
