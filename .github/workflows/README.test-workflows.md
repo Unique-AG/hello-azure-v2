@@ -48,7 +48,7 @@ The workflows are organized into three environment layers that represent the inf
   - ✅ `test.governance.tf.yaml` (for Terraform state storage and authentication)
 - **Environment**: `10-pm`
 - **Status**: ✅ Active (workflow_dispatch only)
-- **Note**: `test.infrastructure.tf.plan.yaml` and `test.infrastructure.tf.destroy.yaml` are currently commented out
+- **Note**: `test.infrastructure.tf.plan.yaml` runs plans on pull requests and pushes to `main`; the destroy workflow was removed with the single-`main` consolidation
 
 ---
 
@@ -62,7 +62,7 @@ The following workflows can run in parallel after Phase 2, but have specific ord
   - ✅ `test.governance.tf.yaml` (for authentication)
   - ✅ `test.infrastructure.tf.apply.yaml` (for networking/VNet integration)
 - **Environment**: `20-wl`
-- **Status**: ✅ Active (workflow_dispatch only)
+- **Status**: ✅ Active (workflow_dispatch + push/pull_request triggers on `main`)
 
 **4. `test.mirror-public-artifacts.yaml`** - **RUNS AFTER ACR EXISTS**
 - **Purpose**: Mirrors public container images (Docker Hub, GHCR, Quay.io) to Azure Container Registry
@@ -70,7 +70,7 @@ The following workflows can run in parallel after Phase 2, but have specific ord
   - ✅ `test.governance.tf.yaml` (for Azure authentication)
   - ✅ `test.infrastructure.tf.apply.yaml` (ACR `uqhacrtest` must exist)
 - **Environment**: `20-wl`
-- **Status**: ✅ Active (workflow_dispatch only)
+- **Status**: ✅ Active (workflow_dispatch + push trigger on `main`)
 - **Note**: Currently commented out (needs ACR login and qcli setup)
 
 **5. `test.mirror-unique-artifacts.yaml`** - **RUNS AFTER ACR EXISTS**
@@ -79,7 +79,7 @@ The following workflows can run in parallel after Phase 2, but have specific ord
   - ✅ `test.governance.tf.yaml` (for Azure authentication)
   - ✅ `test.infrastructure.tf.apply.yaml` (ACR `uqhacrtest` must exist)
 - **Environment**: `20-wl`
-- **Status**: ✅ Active (workflow_dispatch only)
+- **Status**: ✅ Active (workflow_dispatch + push trigger on `main`)
 - **Note**: Requires `UNIQUECR_PASSWORD` secret
 
 **6. `test.argocd-bootstrap.yaml`** - **RUNS AFTER AKS AND IMAGES ARE READY**
@@ -94,23 +94,13 @@ The following workflows can run in parallel after Phase 2, but have specific ord
 - **Status**: ✅ Active (workflow_dispatch only)
 - **Calls**: `test.helm.yaml` reusable workflow with `03_applications/argo-bootstrap.yaml.gotmpl`
 
-**7. `test.cluster.helm.yaml`** - **RUNS AFTER ARGOCD BOOTSTRAP**
-- **Purpose**: Deploys cluster-level Helm charts (if any)
-- **Dependencies**: 
-  - ✅ `test.governance.tf.yaml` (for Azure authentication)
-  - ✅ `test.infrastructure.tf.apply.yaml` (AKS cluster must exist)
-  - ✅ `test.argocd-bootstrap.yaml` (ArgoCD should be running)
-- **Environment**: `20-wl`
-- **Status**: ✅ Active (workflow_dispatch only)
-- **Calls**: `test.helm.yaml` reusable workflow
-
 ---
 
 ## Reusable Workflows
 
 **`test.helm.yaml`** - **NOT DIRECTLY EXECUTABLE**
 - **Purpose**: Reusable workflow for Helm operations (template, diff, sync/apply)
-- **Status**: Reusable only (workflow_call) - called by `test.argocd-bootstrap.yaml` and `test.cluster.helm.yaml`
+- **Status**: Reusable only (workflow_call) - called by `test.argocd-bootstrap.yaml`
 - **Note**: Not visible in GitHub Actions UI as it's only callable by other workflows
 
 ---
@@ -128,7 +118,6 @@ The following workflows can run in parallel after Phase 2, but have specific ord
    ↓
 4. test.argocd-bootstrap.yaml                  [20-wl]
    ↓
-5. test.cluster.helm.yaml                      [20-wl]
 ```
 
 ---
@@ -139,7 +128,7 @@ The following workflows can run in parallel after Phase 2, but have specific ord
 |------------|---------|-----------|
 | `00-init` | Foundation - Identity & State | `test.governance.tf.yaml` |
 | `10-pm` | Platform - Core Infrastructure | `test.infrastructure.tf.apply.yaml` |
-| `20-wl` | Workloads - Applications | `test.gh.infra.yaml`, `test.mirror-*.yaml`, `test.argocd-bootstrap.yaml`, `test.cluster.helm.yaml` |
+| `20-wl` | Workloads - Applications | `test.gh.infra.yaml`, `test.mirror-*.yaml`, `test.argocd-bootstrap.yaml` |
 
 ---
 

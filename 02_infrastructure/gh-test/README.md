@@ -97,7 +97,7 @@ For more information, see the [official GitHub documentation](https://docs.githu
 | Name | Version |
 |------|---------|
 | <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.2.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.58.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >=4.14.0 |
 
 ## Modules
 
