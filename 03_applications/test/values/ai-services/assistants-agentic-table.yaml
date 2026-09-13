@@ -7,8 +7,9 @@ image:
   useDigest: false
 
 env:
-  # Bypass Kong for content upload PUTs; Nest handler is PUT /scoped/upload on ingestion :8091.
-  INGESTION_UPLOAD_API_URL_INTERNAL: http://backend-service-ingestion.unique.svc.cluster.local:8091/scoped/upload
+  # Bypass Kong for content upload PUTs; Nest handler is PUT /scoped/upload on ingestion.
+  # The backend-service chart exposes the ingestion Service on port 80 (not 8091 as in the monorepo).
+  INGESTION_UPLOAD_API_URL_INTERNAL: http://backend-service-ingestion.unique.svc.cluster.local/scoped/upload
 
 replicaCount: 2
 

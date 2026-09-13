@@ -24,7 +24,7 @@ env:
   ADMIN_FRONTEND_URL: unset_default_value
   AMQP_BENCHMARK_PREFETCH: 1
   ANONYMIZED_CHAT_INTERACTIONS_EXPORT: "false"
-  APP_REPOSITORY_URL: http://node-app-repository.unique.svc
+  APP_REPOSITORY_URL: http://backend-service-app-repository.unique.svc
   ASSISTANT_CORE_API_URL: http://assistants-core.unique.svc.cluster.local:8081/core
   AUDIT_LOG_DIR: /dev/stdout
   BENCHMARKS_PER_MINUTE_PER_PROCESS: 1

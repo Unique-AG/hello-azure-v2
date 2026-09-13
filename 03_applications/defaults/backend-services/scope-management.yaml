@@ -25,7 +25,8 @@ env:
   PG_DATABASE_SSL_MODE: "verify"
   ZITADEL_GRPC_HOST: http://zitadel.unique.svc.cluster.local:8080
   ZITADEL_HOST: unset_default_value
-  ZITADEL_WEBHOOK_ENDPOINT: http://backend-service-scope-management.unique.svc:8094/webhook/zitadel-events
+  # Registered as Zitadel Actions v2 target on startup; the backend-service chart exposes the Service on port 80.
+  ZITADEL_WEBHOOK_ENDPOINT: http://backend-service-scope-management.unique.svc/webhook/zitadel-events
   ZITADEL_ROOT_ORG_ID: unset_default_value
 envVars:
   - name: AMQP_USERNAME
