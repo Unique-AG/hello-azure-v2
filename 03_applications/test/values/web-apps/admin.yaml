@@ -1,5 +1,7 @@
 env:
+  ALLOW_CONTEXT_MEMORY_WITH_WEB_SEARCH_UN_22591: "true" # matches backend-services/chat.yaml (test)
+  GRAPHQL_OPERATION_NAME_IN_URL_ENABLED: "true"
   SELF_URL: https://test-hello.azure.unique.dev/admin
 image:
-  tag: "2026.32.5"
+  tag: "2026.36.4"
   repository: uqhacrtest.azurecr.io/web-app-admin

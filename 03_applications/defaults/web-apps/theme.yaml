@@ -1,5 +1,7 @@
 env:
+  GRAPHQL_OPERATION_NAME_IN_URL_ENABLED: "false" # 2026.34: appends ?op=<operationName> to GraphQL requests (debug aid)
   MAX_HEAP_MB: 200
+  USER_API_KEY_GENERATION_ENABLED: "true" # 2026.36: replaces FEATURE_FLAG_USER_API_KEY_GENERATION_UN_11416 (keep in sync across web apps + app-repository)
 nodeSelector:
   scalability: steady
   lifecycle: persistent

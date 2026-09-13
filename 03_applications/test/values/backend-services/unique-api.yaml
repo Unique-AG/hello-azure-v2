@@ -1,0 +1,11 @@
+# Test overlay for Unique API (image, hostname). Override order: after defaults/backend-services/unique-api.yaml.
+# Dedicated unique-api chart joins image.registry + image.repository (see monorepo charts/base _helpers/_image.tpl).
+image:
+  registry: uqhacrtest.azurecr.io
+  repository: unique/unique-api
+  tag: "2026.36.4"
+  useDigest: false
+env:
+  ZITADEL_PROJECT_ID: "362295080381317263" # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)
+routes:
+  hostname: api.test-hello.azure.unique.dev

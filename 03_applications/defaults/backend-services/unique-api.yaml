@@ -1,0 +1,80 @@
+# ── Unique API (release 2026.36+) ─────────────────────────────────────────────
+# Dedicated monorepo chart (mirrored as helm/unique-api, see mirroring/<env>/app.unique.yaml).
+# Values aligned with monorepo gitops-resources/argocd/defaults/stable/unique-api.yaml.
+#
+# From 2026.36 backend-service-chat forwards the Unique API domains that are live
+# (starting with Identity & access: /users, /groups, /company) to this service.
+# The client path stays /public/chat; without unique-api those routes fail with 502.
+
+# ── Deployment ────────────────────────────────────────────────────────────────
+env:
+  MAX_HEAP_MB: "300"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 400Mi
+  limits:
+    memory: 450Mi
+
+# ── InternalServices ──────────────────────────────────────────────────────────
+# The chart renders CHAT_API_URL, CONFIGURATION_BACKEND_URL, INGESTION_API_URL,
+# SCOPE_MANAGEMENT_API_URL and APP_REPOSITORY_API_URL from these entries
+# (<name>.<namespace>.svc.cluster.local[:servicePort]). hello-azure release names
+# differ from the chart defaults (node-chat -> backend-service-chat, ...).
+internalServices:
+  dependencies:
+    appRepository:
+      name: backend-service-app-repository
+      namespace: unique
+      servicePort: 80
+    chat:
+      name: backend-service-chat
+      namespace: unique
+      servicePort: 80
+    configurationBackend:
+      name: backend-service-configuration
+      namespace: unique
+      servicePort: 8095
+    ingestion:
+      name: backend-service-ingestion
+      namespace: unique
+      servicePort: 80
+    scopeManagement:
+      name: backend-service-scope-management
+      namespace: unique
+      servicePort: 80
+  dependents:
+    chat:
+      name: backend-service-chat
+      namespace: unique
+
+# ── HTTPRoute ─────────────────────────────────────────────────────────────────
+routes:
+  gateway:
+    name: kong
+    namespace: unique
+
+extraRoutes:
+  gateway-api:
+    enabled: true
+  openapi:
+    enabled: true
+  public-versioned:
+    enabled: true
+    annotations:
+      konghq.com/read-timeout: "3600000"
+      konghq.com/write-timeout: "3600000"
+      konghq.com/connect-timeout: "3600000"
+  swagger:
+    enabled: true
+
+# ── NetworkPolicy ─────────────────────────────────────────────────────────────
+# No Cilium network policies are enforced in this setup (same as the other services).
+networkPolicy:
+  enabled: false
+
+# ── HorizontalPodAutoscaler ───────────────────────────────────────────────────
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 4
