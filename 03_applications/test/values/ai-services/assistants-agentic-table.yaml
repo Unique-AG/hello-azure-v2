@@ -1,5 +1,3 @@
-# Test overlay for assistants-agentic-table (mirroring/test/app.unique.yaml).
-# Dedicated chart joins image.registry + image.repository (see monorepo charts/base _helpers.tpl).
 image:
   registry: uqhacrtest.azurecr.io
   repository: ai-service-assistants-agentic-table
@@ -7,8 +5,6 @@ image:
   useDigest: false
 
 env:
-  # Bypass Kong for content upload PUTs; Nest handler is PUT /scoped/upload on ingestion.
-  # The backend-service chart exposes the ingestion Service on port 80 (not 8091 as in the monorepo).
   INGESTION_UPLOAD_API_URL_INTERNAL: http://backend-service-ingestion.unique.svc.cluster.local/scoped/upload
 
 replicaCount: 2

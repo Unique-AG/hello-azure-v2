@@ -4,7 +4,7 @@ env:
   MAX_HEAP_MB: 400
   PG_DATABASE_SSL_MODE: "verify"
   SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
-  USER_API_KEY_GENERATION_ENABLED: "true" # 2026.36: replaces FEATURE_FLAG_USER_API_KEY_GENERATION_UN_11416; gates the API-key mutation, keep in sync with the web apps
+  USER_API_KEY_GENERATION_ENABLED: "true"
 hooks:
   migration:
     command: |

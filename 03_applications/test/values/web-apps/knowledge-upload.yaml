@@ -1,5 +1,4 @@
 env:
-  GRAPHQL_OPERATION_NAME_IN_URL_ENABLED: "true"
   SELF_URL: https://test-hello.azure.unique.dev/knowledge-upload
 image:
   tag: "2026.36.4"

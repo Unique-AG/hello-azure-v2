@@ -69,8 +69,6 @@ env:
   PUBSUB_REDIS_DB: 2
   PG_DATABASE_SSL_MODE: "verify"
   SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
-  # 2026.36: required. Live Unique API domains (/users, /groups, /company, ...) on /public/chat are forwarded here;
-  # if unset those requests fail with 502 (no fallback to the legacy implementation).
   UNIQUE_API_URL: http://unique-api.unique.svc.cluster.local
   ALLOW_CONTEXT_MEMORY_WITH_WEB_SEARCH_UN_22591: "false"
 envVars:

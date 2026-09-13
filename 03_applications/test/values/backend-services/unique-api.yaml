@@ -1,5 +1,3 @@
-# Test overlay for Unique API (image, hostname). Override order: after defaults/backend-services/unique-api.yaml.
-# Dedicated unique-api chart joins image.registry + image.repository (see monorepo charts/base _helpers/_image.tpl).
 image:
   registry: uqhacrtest.azurecr.io
   repository: unique/unique-api
