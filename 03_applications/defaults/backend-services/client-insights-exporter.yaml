@@ -32,7 +32,6 @@ resources:
   requests:
     cpu: 100m
     memory: 300Mi
-# CronJob only (no Deployment/Service): the chart still enables the default HTTPRoute (against gateway system/kong) unless disabled.
 routes:
   paths:
     default:
