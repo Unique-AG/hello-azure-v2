@@ -1,5 +1,7 @@
 env:
+  GRAPHQL_OPERATION_NAME_IN_URL_ENABLED: "true"
   MAX_HEAP_MB: 200
+  USER_API_KEY_GENERATION_ENABLED: "true"
 nodeSelector:
   scalability: steady
   lifecycle: persistent

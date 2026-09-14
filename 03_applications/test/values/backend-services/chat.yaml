@@ -13,14 +13,12 @@ env:
   INTERNAL_MODULES_CONFIG: >-
     [
     {"name": "SearchInVectorDBV2", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/search"},
-    {"name": "ImageSummarizer", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/image_summarizer"},
     {"name": "TranslationOneToOne", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/translation_one_to_one"},
     {"name": "WebSearch", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/web_search"},
     {"name": "ComplianceCheck", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/compliance_check"},
     {"name": "QuestionExtractor", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/question_extractor"},
     {"name": "QuestionAnswerer", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/question_answerer"},
     {"name": "Questionnaire", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/question_answerer"},
-    {"name": "QuestionPredictor", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/question_predictor"},
     {"name": "DocumentSummarizerV2", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/document_summarizer"},
     {"name": "ImageUpload", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/image_upload"},
     {"name": "DocumentTranslator", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/document_translator"},
@@ -29,8 +27,7 @@ env:
     {"name": "InvestmentResearch", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/investment_research"},
     {"name": "EarningCallsBeta", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/earning_calls"},
     {"name": "HallucinationLevelEvaluation", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/evaluations/hallucination-level"},
-    {"name": "DueDiligence", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/magic_table_dd"},
-    {"name": "RfpAgent", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/rfp_agent"},
+    {"name": "RfpAgent", "apiURL": "http://assistants-agentic-table.unique.svc.cluster.local/agentic_table"},
     {"name": "UniqueAi", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/unique_ai"},
     {"name": "UniqueAIV2", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/unique_ai_v2"},
     {"name": "KycReviewAgent", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/kyc_review_agent"}
@@ -42,7 +39,7 @@ env:
   SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
   ALLOW_CONTEXT_MEMORY_WITH_WEB_SEARCH_UN_22591: "true"
 image:
-  tag: "2026.32.5"
+  tag: "2026.36.4"
   repository: uqhacrtest.azurecr.io/backend-service-chat
 resources:
   limits:

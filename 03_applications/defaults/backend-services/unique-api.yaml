@@ -1,0 +1,67 @@
+# ── Deployment ────────────────────────────────────────────────────────────────
+env:
+  MAX_HEAP_MB: "300"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 400Mi
+  limits:
+    memory: 450Mi
+
+# ── InternalServices ──────────────────────────────────────────────────────────
+internalServices:
+  dependencies:
+    appRepository:
+      name: backend-service-app-repository
+      namespace: unique
+      servicePort: 80
+    chat:
+      name: backend-service-chat
+      namespace: unique
+      servicePort: 80
+    configurationBackend:
+      name: backend-service-configuration
+      namespace: unique
+      servicePort: 8095
+    ingestion:
+      name: backend-service-ingestion
+      namespace: unique
+      servicePort: 80
+    scopeManagement:
+      name: backend-service-scope-management
+      namespace: unique
+      servicePort: 80
+  dependents:
+    chat:
+      name: backend-service-chat
+      namespace: unique
+
+# ── HTTPRoute ─────────────────────────────────────────────────────────────────
+routes:
+  gateway:
+    name: kong
+    namespace: unique
+
+extraRoutes:
+  gateway-api:
+    enabled: true
+  openapi:
+    enabled: true
+  public-versioned:
+    enabled: true
+    annotations:
+      konghq.com/read-timeout: "3600000"
+      konghq.com/write-timeout: "3600000"
+      konghq.com/connect-timeout: "3600000"
+  swagger:
+    enabled: true
+
+# ── NetworkPolicy ─────────────────────────────────────────────────────────────
+networkPolicy:
+  enabled: false
+
+# ── HorizontalPodAutoscaler ───────────────────────────────────────────────────
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 4
