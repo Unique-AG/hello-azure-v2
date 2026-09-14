@@ -37,3 +37,8 @@ resources:
   requests:
     cpu: 100m
     memory: 300Mi
+# Scheduler, not exposed via Kong: the chart enables the default HTTPRoute (against gateway system/kong) unless disabled.
+routes:
+  paths:
+    default:
+      enabled: false

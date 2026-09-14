@@ -75,6 +75,11 @@ resources:
   requests:
     cpu: 0.5
     memory: 1Gi
+# Queue worker, not exposed via Kong: the chart enables the default HTTPRoute (against gateway system/kong) unless disabled.
+routes:
+  paths:
+    default:
+      enabled: false
 serviceAccount:
   enabled: true
   workloadIdentity:
