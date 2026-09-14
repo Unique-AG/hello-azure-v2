@@ -32,5 +32,9 @@ resources:
   requests:
     cpu: 100m
     memory: 300Mi
+routes:
+  paths:
+    default:
+      enabled: false
 service:
   enabled: false

@@ -75,6 +75,10 @@ resources:
   requests:
     cpu: 0.5
     memory: 1Gi
+routes:
+  paths:
+    default:
+      enabled: false
 serviceAccount:
   enabled: true
   workloadIdentity:
