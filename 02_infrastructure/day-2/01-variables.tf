@@ -307,7 +307,7 @@ variable "grafana_monitor_enabled" {
 variable "grafana_major_version" {
   description = "The major version of Grafana to use for the AKS cluster"
   type        = string
-  default     = "11"
+  default     = "12"
 }
 
 variable "grafana_identity_type" {

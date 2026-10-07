@@ -174,6 +174,62 @@ openai_cognitive_accounts = {
         model_version = "2024-05-13"
         sku_name      = "GlobalStandard"
         sku_capacity  = 50
+      },
+      {
+        name          = "gpt-5-2025-08-07"
+        model_name    = "gpt-5"
+        model_version = "2025-08-07"
+        sku_name      = "DataZoneStandard"
+        sku_capacity  = 1000
+      },
+      {
+        name          = "gpt-5.1-2025-11-13"
+        model_name    = "gpt-5.1"
+        model_version = "2025-11-13"
+        sku_name      = "DataZoneStandard"
+        sku_capacity  = 1000
+      },
+      {
+        name          = "gpt-5.5-2026-04-24"
+        model_name    = "gpt-5.5"
+        model_version = "2026-04-24"
+        sku_name      = "DataZoneStandard"
+        sku_capacity  = 1000
+      },
+      {
+        name          = "gpt-5.6-sol-2026-07-09"
+        model_name    = "gpt-5.6-sol"
+        model_version = "2026-07-09"
+        sku_name      = "DataZoneStandard"
+        sku_capacity  = 1000
+      },
+      {
+        name          = "gpt-5.6-terra-2026-07-09"
+        model_name    = "gpt-5.6-terra"
+        model_version = "2026-07-09"
+        sku_name      = "DataZoneStandard"
+        sku_capacity  = 1000
+      },
+      {
+        name          = "gpt-5.6-luna-2026-07-09"
+        model_name    = "gpt-5.6-luna"
+        model_version = "2026-07-09"
+        sku_name      = "DataZoneStandard"
+        sku_capacity  = 1000
+      },
+      {
+        name          = "gpt-6-luna-2026-09-22"
+        model_name    = "gpt-6-luna"
+        model_version = "2026-09-22"
+        sku_name      = "DataZoneStandard"
+        sku_capacity  = 1000
+      },
+      {
+        name          = "gpt-6-sol-2026-09-22"
+        model_name    = "gpt-6-sol"
+        model_version = "2026-09-22"
+        sku_name      = "DataZoneStandard"
+        sku_capacity  = 1000
       }
     ]
   }
