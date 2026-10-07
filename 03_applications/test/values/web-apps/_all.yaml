@@ -10,6 +10,12 @@ env:
   STATIC_BACKGROUND_COLOR: "#F7F7F7"
   STATIC_TAB_NAME: "Hello Azure"
   THEME_BACKEND_API_URL: https://api.test-hello.azure.unique.dev/configuration
+  # Release 2026.40 introduces single-use WebSocket tickets (`ticket`) as the
+  # recommended mode. It requires kong-plugins >= 2.7 with `ws_ticket_enabled`
+  # and a Redis >= 6.2 (GETDEL) reachable from Kong; Azure Cache for Redis
+  # (Standard, Redis 6.0) used on hello-azure does not qualify, so we stay on
+  # the legacy `?token=` flow until an in-cluster Redis is available (will be upgraded to 6.2 in the future).
+  WEBSOCKET_AUTH_MODE: "token"
   ZITADEL_CLIENT_ID: "362295794721685647" # needs to be updated to the correct client id in the web app configuration (e.g. unique-app)
   ZITADEL_ISSUER: https://id.test-hello.azure.unique.dev
   ZITADEL_ORG_ID: ""

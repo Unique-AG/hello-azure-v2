@@ -16,6 +16,11 @@ resources:
       jwks_extra_headers:
         forwarded: host=id.test-hello.azure.unique.dev
       jwks_uri: http://zitadel.unique.svc.cluster.local:8080/oauth/v2/keys
+      # WebSocket tickets (release 2026.40, kong-plugins >= 2.7, `ws_ticket_enabled`,
+      # `ticket_mint_path_suffixes: [/auth/ticket]`, `ticket_upgrade_path_suffixes: [/graphql]`,
+      # `ticket_record_secret`, redis_*) are intentionally NOT enabled: they need a
+      # Redis >= 6.2 (GETDEL) and the Azure Cache for Redis on hello-azure is 6.0 (will be upgraded to 6.2 in the future).
+      # Web apps therefore keep WEBSOCKET_AUTH_MODE=token (see web-apps/_all.yaml).
       uri_param_names:
         - token
       zitadel_project_id: '362295080381317263' # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)

@@ -1,0 +1,144 @@
+# Chat task-scheduler.
+#
+# backend-service-chat stays on the generic `backend-service` chart (chat.yaml). The dedicated `chat` chart
+# (uniquecr.azurecr.io/helm/chat) is used here ONLY to render its `taskScheduler` side deployment
+# (RUNNING_MODE=SCHEDULED_TASK_CRON). Everything already deployed by backend-service-chat is disabled below.
+#
+# The side deployment inherits the root values (env, secrets, image, nodeSelector) by design of the chart,
+# therefore the root values mirror the configuration of backend-service-chat (chat.yaml). Once
+# backend-service-chat moves to the dedicated chart, these values can be folded into that release. (future release)
+
+# ── Disabled: already provided by backend-service-chat ────────────────────────
+deployment:
+  enabled: false
+service:
+  enabled: false
+serviceAccount:
+  enabled: false
+  name: backend-service-chat # reuse SA + federated credential of backend-service-chat
+autoscaling:
+  enabled: false
+routes:
+  paths:
+    default:
+      enabled: false
+    versioned:
+      enabled: false
+    probe:
+      enabled: false
+extraRoutes:
+  swagger:
+    enabled: false
+  openapi:
+    enabled: false
+hooks:
+  migration:
+    enabled: false
+cronJobs:
+  data-redaction-task: null
+grafana:
+  dashboards:
+    enabled: false
+prometheus:
+  enabled: false
+networkPolicy:
+  enabled: false
+
+# ── Task Scheduler Deployment ─────────────────────────────────────────────────
+taskScheduler:
+  enabled: true
+  deployment:
+    enabled: true # root deployment.enabled=false would otherwise be inherited by the side deployment
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 768Mi
+  env:
+    # MAX_HEAP_MB is set at root (see below): the chart pre-resolves all root env keys over taskScheduler.env,
+    # so a taskScheduler.env.MAX_HEAP_MB override would be ignored.
+    PUBLIC_API_APP_ID: chat-task-scheduler # x-app-id sent to the chat public API (attribution only)
+  internalServices:
+    dependencies:
+      chat:
+        name: backend-service-chat
+        namespace: unique
+        servicePort: 80
+        podPort: 8080
+
+# ── Deployment (mirrors chat.yaml) ────────────────────────────────────────────
+env:
+  ALLOW_CONTEXT_MEMORY_WITH_WEB_SEARCH_UN_22591: "false"
+  ANONYMIZED_CHAT_INTERACTIONS_EXPORT: "false"
+  AUDIT_LOG_DIR: /dev/stdout
+  DATABASE_CONNECTION_POOL_LIMIT: "30"
+  EXPORT_PROMPTS_ACCESS_CONTROL: "true"
+  LITELLM_KEY_CLEANUP_GRACE_MINUTES: "60"
+  MAX_HEAP_MB: "600" # applies to the scheduler pod (main Deployment is disabled);
+  OPENAI_PROVIDER: azure
+
+nodeSelector:
+  scalability: steady
+  lifecycle: persistent
+
+# ── InternalServices ──────────────────────────────────────────────────────────
+internalServices:
+  dependencies:
+    appRepository:
+      name: backend-service-app-repository
+      namespace: unique
+      servicePort: 80
+    assistantsAgenticTable:
+      name: assistants-agentic-table
+      namespace: unique
+      servicePort: 80
+    assistantsCore:
+      name: assistants-core
+      namespace: unique
+      servicePort: 8081
+    configurationBackend:
+      name: backend-service-configuration
+      namespace: unique
+      servicePort: 8095
+    ingestion:
+      name: backend-service-ingestion
+      namespace: unique
+      servicePort: 80
+    scopeManagement:
+      name: backend-service-scope-management
+      namespace: unique
+      servicePort: 80
+    uniqueApi:
+      enabled: true
+      name: unique-api
+      namespace: unique
+      servicePort: 80
+
+internalModulesConfig:
+  uniqueAIV2:
+    enabled: true
+
+# ── Data ──────────────────────────────────────────────────────────────────────
+redis:
+  connection:
+    db: 2
+
+rabbitmq:
+  connection:
+    host:
+      fromSecret:
+        name: rabbitmqcluster-chat-default-user
+        key: host
+    port:
+      fromSecret:
+        name: rabbitmqcluster-chat-default-user
+        key: port
+    username:
+      fromSecret:
+        name: rabbitmqcluster-chat-default-user
+        key: username
+    password:
+      fromSecret:
+        name: rabbitmqcluster-chat-default-user
+        key: password

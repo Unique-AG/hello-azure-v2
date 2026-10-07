@@ -1,19 +1,19 @@
 spec:
-  name: assistants-agentic-table
+  name: chat-task-scheduler
   autoSync: false
   sources:
     - repoURL: "https://github.com/Unique-AG/hello-azure-v2"
       targetRevision: main
       ref: values
     - repoURL: uqhacrtest.azurecr.io/helm
-      chart: assistants-agentic-table
+      chart: chat
       targetRevision: "2026.40.5"
       helm:
         passCredentials: true
-        releaseName: assistants-agentic-table
+        releaseName: chat-task-scheduler
         valueFiles:
-          - $values/03_applications/defaults/ai-services/assistants-agentic-table.yaml
-          - $values/03_applications/test/values/ai-services/assistants-agentic-table.yaml
+          - $values/03_applications/defaults/backend-services/chat-task-scheduler.yaml
+          - $values/03_applications/test/values/backend-services/chat-task-scheduler.yaml
         valuesObject: {}
 metadata:
   annotations:
