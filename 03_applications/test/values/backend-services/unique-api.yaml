@@ -1,7 +1,7 @@
 image:
   registry: uqhacrtest.azurecr.io
   repository: unique/unique-api
-  tag: "2026.36.4"
+  tag: "2026.40.5"
   useDigest: false
 env:
   ZITADEL_PROJECT_ID: "362295080381317263" # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)

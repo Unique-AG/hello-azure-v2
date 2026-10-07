@@ -1,5 +1,4 @@
 # ── Deployment ────────────────────────────────────────────────────────────────
-# Values aligned with monorepo gitops-resources/argocd/defaults/stable/reflector.yaml
 env:
   MAX_HEAP_MB: 384
   HTML_STORE_TTL_MS: "1500"
@@ -9,6 +8,27 @@ routes:
   gateway:
     name: kong
     namespace: unique
+  paths:
+    default:
+      extraPlugins:
+        - reflector-cors
+
+# ── ExtraObjects ──────────────────────────────────────────────────────────────
+# HTML reflector is fetched with credentials, so
+# it needs its own CORS plugin with Access-Control-Allow-Credentials. Shadows
+# the cluster-global `unique-global-cors` plugin whose preflights lack that
+# header. Origin assumes routes.hostname = reflector.<chat-host>.
+extraObjects:
+  - apiVersion: configuration.konghq.com/v1
+    kind: KongPlugin
+    metadata:
+      name: reflector-cors
+    plugin: cors
+    config:
+      origins:
+        - https://{{ .Values.routes.hostname | trimPrefix "reflector." }}
+      credentials: true
+      max_age: 600
 
 resources:
   limits:

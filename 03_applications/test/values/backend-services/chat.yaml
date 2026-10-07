@@ -39,7 +39,7 @@ env:
   SCOPE_MANAGEMENT_API_URL: http://backend-service-scope-management.unique.svc
   ALLOW_CONTEXT_MEMORY_WITH_WEB_SEARCH_UN_22591: "true"
 image:
-  tag: "2026.36.4"
+  tag: "2026.40.5"
   repository: uqhacrtest.azurecr.io/backend-service-chat
 resources:
   limits:
