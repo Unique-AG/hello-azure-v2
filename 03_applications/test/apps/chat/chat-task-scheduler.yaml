@@ -1,0 +1,20 @@
+spec:
+  name: chat-task-scheduler
+  autoSync: false
+  sources:
+    - repoURL: "https://github.com/Unique-AG/hello-azure-v2"
+      targetRevision: main
+      ref: values
+    - repoURL: uqhacrtest.azurecr.io/helm
+      chart: chat
+      targetRevision: "2026.40.5"
+      helm:
+        passCredentials: true
+        releaseName: chat-task-scheduler
+        valueFiles:
+          - $values/03_applications/defaults/backend-services/chat-task-scheduler.yaml
+          - $values/03_applications/test/values/backend-services/chat-task-scheduler.yaml
+        valuesObject: {}
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
