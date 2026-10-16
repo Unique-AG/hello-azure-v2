@@ -84,13 +84,3 @@ module "kubernetes_cluster" {
   # Default activity-log alerts use this list; keeps aks_agent_pool_write_error actionable.
   default_action_group_ids = [azurerm_monitor_action_group.aks_alerts.id]
 }
-
-# 7.0.0 stopped managing the Basic-plan tables; keep them in Azure, drop them from state.
-# Delete this block once it has been applied.
-removed {
-  from = module.kubernetes_cluster.azurerm_log_analytics_workspace_table.basic_log_table
-
-  lifecycle {
-    destroy = false
-  }
-}
