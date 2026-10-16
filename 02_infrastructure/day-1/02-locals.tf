@@ -40,21 +40,19 @@ locals {
 
   # VNET
   vnet = {
-    name                = var.vnet_name
-    address_space       = var.vnet_address_space
-    location            = azurerm_resource_group.vnet.location
-    resource_group_name = azurerm_resource_group.vnet.name
+    name          = var.vnet_name
+    address_space = var.vnet_address_space
+    location      = azurerm_resource_group.vnet.location
 
     subnets = {
       "snet-aks-pods" = {
         name              = var.subnet_aks_pods_name
         address_prefixes  = [var.subnet_aks_pods_cidr]
         service_endpoints = ["Microsoft.Storage"]
-        delegation = [{
+        delegations = [{
           name = "aks-delegation"
           service_delegation = {
-            name    = "Microsoft.ContainerService/managedClusters"
-            actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+            name = "Microsoft.ContainerService/managedClusters"
           }
         }]
       }
@@ -76,13 +74,13 @@ locals {
         address_prefixes = [var.subnet_kv_cidr]
       }
       "snet-psql" = {
-        name             = var.subnet_psql_name
-        address_prefixes = [var.subnet_psql_cidr]
-        delegation = [{
+        name              = var.subnet_psql_name
+        address_prefixes  = [var.subnet_psql_cidr]
+        service_endpoints = ["Microsoft.Storage"]
+        delegations = [{
           name = "psql-delegation"
           service_delegation = {
-            name    = "Microsoft.DBforPostgreSQL/flexibleServers"
-            actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+            name = "Microsoft.DBforPostgreSQL/flexibleServers"
           }
         }]
       }
@@ -100,13 +98,10 @@ locals {
         private_link_service_network_policies_enabled = true
         private_endpoint_network_policies             = "Disabled"
         default_outbound_access_enabled               = true
-        delegation = [{
+        delegations = [{
           name = "delegation"
           service_delegation = {
             name = "GitHub.Network/networkSettings"
-            actions = [
-              "Microsoft.Network/virtualNetworks/subnets/join/action",
-            ]
           }
         }]
       }
@@ -115,6 +110,8 @@ locals {
       "snet-bastion" = {
         name             = "AzureBastionSubnet"
         address_prefixes = [var.bastion_subnet_cidr]
+        # day-3 attaches the bastion NSG; keep day-1 from detaching it on every subnet PUT.
+        ignore_body_changes = ["properties.networkSecurityGroup"]
       }
     }
   }
