@@ -11,7 +11,7 @@ resource "azurerm_public_ip" "application_gateway_public_ip" {
 }
 
 module "application_gateway" {
-  source        = "github.com/Unique-AG/terraform-modules.git//modules/azure-application-gateway?ref=79948fa4fbe988a5b46f51e087953b05f809e75a" # azure-application-gateway-6.7.0
+  source        = "github.com/Unique-AG/terraform-modules.git//modules/azure-application-gateway?ref=7372bfbef44fe87aa0b1a2199d70fafc9446e8e1" # azure-application-gateway-8.1.0
   name_prefix   = var.application_gateway_name
   explicit_name = local.application_gateway_name
   autoscale_configuration = {
@@ -41,6 +41,30 @@ module "application_gateway" {
 
   # Module 5.x defaults to blocking x-service-id at the WAF; opt out until we audit public ingress.
   waf_custom_rules_blocked_headers = []
+
+  # 8.0.0 dropped the default 5xx alert (metric_alerts now defaults to {}); keep the 6.x one as it was.
+  metric_alerts = {
+    default_5xx_error_alert = {
+      name        = "Application Gateway 5xx Error"
+      description = "Alert when 5xx errors are above 100 for more than 1 hour"
+      severity    = 1
+      frequency   = "PT1M"
+      window_size = "PT1H"
+      enabled     = true
+      criteria = {
+        metric_namespace = "microsoft.network/applicationgateways"
+        metric_name      = "ResponseStatus"
+        aggregation      = "Total"
+        operator         = "GreaterThan"
+        threshold        = 100
+        dimension = [{
+          name     = "HttpStatusGroup"
+          operator = "StartsWith"
+          values   = ["5xx"]
+        }]
+      }
+    }
+  }
 
   tags = var.tags
 
