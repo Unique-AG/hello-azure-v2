@@ -39,10 +39,11 @@ module "application_gateway" {
   # Preserve existing WAF policy name to avoid replacement
   waf_policy_settings = var.application_gateway_waf_policy_settings
 
-  # Module 5.x defaults to blocking x-service-id at the WAF; opt out until we audit public ingress.
+  # The module (5.x and later) blocks x-service-id at the WAF by default; opt out until we audit public ingress.
   waf_custom_rules_blocked_headers = []
 
-  # 8.0.0 dropped the default 5xx alert (metric_alerts now defaults to {}); keep the 6.x one as it was.
+  # 8.0.0 dropped the default 5xx alert (upstream alerts on 5xx via Kong Prometheus metrics instead).
+  # hello-azure-v2 has no Kong 5xx rule, so keep the 6.x default alert exactly as it was.
   metric_alerts = {
     default_5xx_error_alert = {
       name        = "Application Gateway 5xx Error"
