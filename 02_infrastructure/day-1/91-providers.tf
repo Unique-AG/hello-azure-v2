@@ -4,6 +4,7 @@ provider "azurerm" {
   use_oidc        = var.use_oidc
   client_id       = var.client_id
 
+  # The azurerm 4.x default, set explicitly: azurerm 5 changes the default to "none".
   resource_provider_registrations = "legacy"
 
   features {}

@@ -43,6 +43,7 @@ locals {
     name          = var.vnet_name
     address_space = var.vnet_address_space
     location      = azurerm_resource_group.vnet.location
+    parent_id     = azurerm_resource_group.vnet.id
 
     subnets = {
       "snet-aks-pods" = {

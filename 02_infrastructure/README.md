@@ -234,7 +234,7 @@ Day-3 deploys Azure Bastion, a fully managed PaaS service that provides secure R
 
 ### Security Considerations
 
-- **No NSG on AzureBastionSubnet**: Azure manages security for this subnet automatically. Use Azure RBAC for access control instead.
+- **NSG on AzureBastionSubnet**: day-3 creates the Bastion NSG and attaches it to the subnet (`day-3/33-bastion-nsg.tf`). day-1 ignores the subnet's `networkSecurityGroup`, so a day-1 apply does not detach it. Use Azure RBAC for access control.
 - **Subnet Requirements**: The subnet must be named exactly `AzureBastionSubnet` (case-sensitive) and be at least `/26` in size (64 IP addresses).
 - **Public IP**: Standard SKU public IP is required for Standard Bastion SKU.
 
