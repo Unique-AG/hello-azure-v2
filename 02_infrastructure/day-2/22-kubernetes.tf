@@ -2,14 +2,12 @@
 # This module creates an Azure Kubernetes Service cluster with node pools and monitoring
 
 module "kubernetes_cluster" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-kubernetes-service?ref=2d00d57dfab69b0ee8c883a9dc9abcde693ba96d" # v5.7.1
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-kubernetes-service?ref=cf72ea43fe88637042a95eaae05d58bf2ad3fa3e" # azure-kubernetes-service-8.0.0
 
   kubernetes_version                      = var.kubernetes_version
   application_gateway_id                  = module.application_gateway.appgw_id
   segregated_node_and_pod_subnets_enabled = var.aks_segregated_node_and_pod_subnets_enabled
   cluster_name                            = local.cluster_name
-  kubernetes_default_node_size            = var.kubernetes_default_node_size
-  kubernetes_default_node_zones           = var.kubernetes_default_node_zones
   node_rg_name                            = var.node_resource_group_name
   resource_group_location                 = data.azurerm_resource_group.core.location
   resource_group_name                     = data.azurerm_resource_group.core.name
@@ -21,6 +19,28 @@ module "kubernetes_cluster" {
   prometheus_node_recording_rules         = var.prometheus_node_recording_rules
   prometheus_kubernetes_recording_rules   = var.prometheus_kubernetes_recording_rules
   prometheus_ux_recording_rules           = var.prometheus_ux_recording_rules
+
+  # Same values as the 5.7.1 defaults; passing the object drops the module's min/max defaults.
+  default_node_pool = {
+    vm_size   = var.kubernetes_default_node_size
+    zones     = var.kubernetes_default_node_zones
+    min_count = 2
+    max_count = 5
+  }
+
+  # 7.0.0+ turns Container Insights off and keeps one control-plane category by default; keep today's behaviour.
+  data_plane_logs = { enabled = true }
+  control_plane_logs = {
+    categories = [
+      "cloud-controller-manager",
+      "cluster-autoscaler",
+      "csi-azuredisk-controller",
+      "csi-azurefile-controller",
+      "csi-snapshot-controller",
+      "kube-audit-admin",
+      "kube-scheduler",
+    ]
+  }
 
   log_analytics_workspace = {
     id                  = data.azurerm_log_analytics_workspace.log_analytics.id
@@ -61,7 +81,16 @@ module "kubernetes_cluster" {
     }
   }
 
-  # AKS 5.x: default activity-log alerts use this list; keeps aks_agent_pool_write_error actionable.
+  # Default activity-log alerts use this list; keeps aks_agent_pool_write_error actionable.
   default_action_group_ids = [azurerm_monitor_action_group.aks_alerts.id]
 }
 
+# 7.0.0 stopped managing the Basic-plan tables; keep them in Azure, drop them from state.
+# Delete this block once it has been applied.
+removed {
+  from = module.kubernetes_cluster.azurerm_log_analytics_workspace_table.basic_log_table
+
+  lifecycle {
+    destroy = false
+  }
+}
