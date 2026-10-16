@@ -12,15 +12,17 @@ data "azuread_service_principal" "msgraph" {
 }
 
 module "application_registration" {
-  source                    = "github.com/Unique-AG/terraform-modules.git//modules/azure-entra-app-registration-argocd?ref=c41d30f097c181d953a1ce8775774116d0d90797" # azure-entra-app-registration-argocd-1.0.0
-  admin_consent_enabled     = false                                                                                                                                  # 4.0.0 granted no consent; the Terraform identity lacks DelegatedPermissionGrant.ReadWrite.All
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-entra-app-registration-argocd?ref=c41d30f097c181d953a1ce8775774116d0d90797" # azure-entra-app-registration-argocd-1.0.0
+  # 4.0.0 granted no consent; the Terraform identity lacks DelegatedPermissionGrant.ReadWrite.All.
+  admin_consent_enabled     = false
   display_name              = var.application_registration_gitops_display_name
   role_assignments_required = false
   client_secret_generation_config = {
     enabled     = true
     keyvault_id = data.azurerm_key_vault.key_vault_sensitive.id
     secret_name = local.application_secret_display_name
-    # keep the 4.0.0 names that Argo CD reads from Key Vault
+    # Keep the 4.0.0 names: Argo CD reads these two Key Vault secrets, and changing the
+    # password display name would recreate the password.
     explicit_client_id_secret_name     = "aad-app-${local.application_secret_display_name}-client-id"
     explicit_client_secret_secret_name = "aad-app-${local.application_secret_display_name}-client-secret"
     explicit_password_display_name     = "unique-enterprise-gitops-app-key"
