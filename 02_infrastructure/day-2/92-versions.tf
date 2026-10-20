@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.65" # user_assigned_identity_id on federated identity credentials
+      version = "~> 5.5"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -17,10 +17,6 @@ terraform {
     azapi = {
       source  = "Azure/azapi"
       version = "~> 2.4"
-    }
-    modtm = {
-      source  = "Azure/modtm"
-      version = "0.3.2"
     }
     time = {
       source  = "hashicorp/time"

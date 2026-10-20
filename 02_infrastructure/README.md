@@ -378,5 +378,7 @@ Do **not** leave `g, maintain, role:admin` after the Entra module bump — maint
 
 Typical day-2 plan after the bump (if v4 roles are already in state): **1 in-place WAF policy update**, **6 destroys** of legacy `maintainers` Entra resources, **0 adds**. Apply Terraform, then sync the Argo application so RBAC picks up the YAML change.
 
-The generic module was later deleted from terraform-modules; the app now comes from its successor `azure-entra-app-registration-argocd` (1.0.0). The `application_support` role mapping above is unchanged, admin consent stays off (`admin_consent_enabled = false`), and the `explicit_*` inputs keep the Key Vault secret names Argo CD reads.
+The generic module was later deleted from terraform-modules; the app now comes from its successor `azure-entra-app-registration-argocd` (2.2.0). The `application_support` role mapping above is unchanged, admin consent stays off (`admin_consent_enabled = false`), and the `explicit_*` inputs keep the Key Vault secret names Argo CD reads.
+
+Since 2.2.0 the module keeps two overlapping client secrets (`<display name>-YYYYMMDD`) and creates a new one every 12 months on the next apply; Key Vault always serves the current one. When a secret is replaced, new Argo CD SSO logins can fail for a few minutes until the CSI driver re-syncs the Key Vault secret and `argocd-server` reloads it (restart the `keeper` pod, then `argocd-server`, if it takes longer).
 
