@@ -7,7 +7,7 @@
 # (see docs/upgrades/2026-10-infrastructure-upgrade.md).
 
 module "log_analytics" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-log-analytics-workspace?ref=d3f51f81fbf7e2dc61ac7834ba7481c44af98910" # azure-log-analytics-workspace-1.2.1
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-log-analytics-workspace?ref=4878b1f5014ec92145828bebf2179f02bc7f1757" # azure-log-analytics-workspace-2.0.0
 
   name                         = local.log_analytics_workspace_name
   location                     = azurerm_resource_group.core.location
