@@ -12,7 +12,6 @@ resource "azurerm_key_vault" "sensitive_kv" {
   tags                        = local.key_vault_sensitive.tags
   rbac_authorization_enabled  = local.key_vault_sensitive.rbac_authorization_enabled
   #FIXME: With private GitHub runners, we could allow only traffic from specific IP ranges here instead
-  #tfsec:ignore:azure-keyvault-specify-network-acl
 
   dynamic "network_acls" {
     for_each = local.key_vault_sensitive.network_acls != null ? [local.key_vault_sensitive.network_acls] : []
@@ -36,7 +35,6 @@ resource "azurerm_key_vault" "main_kv" {
   tags                        = local.key_vault_core.tags
   rbac_authorization_enabled  = local.key_vault_core.rbac_authorization_enabled
   #FIXME: With private GitHub runners, we could allow only traffic from specific IP ranges here instead
-  #tfsec:ignore:azure-keyvault-specify-network-acl
 
   dynamic "network_acls" {
     for_each = local.key_vault_core.network_acls != null ? [local.key_vault_core.network_acls] : []

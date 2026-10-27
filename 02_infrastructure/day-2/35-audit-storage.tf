@@ -1,5 +1,3 @@
-#tfsec:ignore:azure-keyvault-content-type-for-secret
-#tfsec:ignore:azure-keyvault-ensure-key-expiry
 module "audit_storage" {
   source = "github.com/Unique-AG/terraform-modules.git//modules/azure-storage-account?ref=9486e9f06c83a8a2b7edd4ba64c3522a6d2a697b" # azure-storage-account-8.0.1
 

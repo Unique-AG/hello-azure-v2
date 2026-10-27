@@ -1228,11 +1228,13 @@ variable "key_vault_crypto_service_encryption_user_role_name" {
 
 variable "scope_management_encryption_key_1_version" {
   description = "To rotate this SCOPE MANAGEMENT encryption key increase the version."
+  type        = string
   default     = "1"
 }
 
 variable "scope_management_encryption_key_2_version" {
   description = "To rotate this SCOPE MANAGEMENT encryption key increase the version."
+  type        = string
   default     = "1"
 }
 

@@ -6,7 +6,7 @@ quality:
 	@echo "Running quality checks..."
 	@./scripts/tf-docs.sh
 	@./scripts/tf-fmt.sh
-	@./scripts/tf-sec.sh
+	@./scripts/trivy.sh config
 	@echo "Quality checks completed."
 
 .PHONY: clean-runs

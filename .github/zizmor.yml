@@ -1,0 +1,11 @@
+# zizmor configuration (https://docs.zizmor.sh/configuration/). Each ignore states why it is accepted.
+rules:
+  # Local references (./.github/workflows/..., ./.github/actions/...) already pin to the calling commit;
+  # the newer $/... syntax is advice only.
+  self-repository:
+    disable: true
+  # The mirror workflows install one CLI with an exact version (npm install -g @unique-ag/cli@<version>).
+  adhoc-packages:
+    ignore:
+      - test.mirror-public-artifacts.yaml
+      - test.mirror-unique-artifacts.yaml

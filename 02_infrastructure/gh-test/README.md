@@ -89,6 +89,7 @@ For more information, see the [official GitHub documentation](https://docs.githu
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.17 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | 2.2.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.5 |
 
@@ -123,14 +124,14 @@ No modules.
 | <a name="input_github_org_id"></a> [github\_org\_id](#input\_github\_org\_id) | The GitHub organization database ID (numeric). Find it using: gh api orgs/{org} --jq .id | `number` | n/a | yes |
 | <a name="input_key"></a> [key](#input\_key) | The key for the tfstate | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The resource group name for the tfstate. | `string` | n/a | yes |
-| <a name="input_resource_group_vnet_name"></a> [resource\_group\_vnet\_name](#input\_resource\_group\_vnet\_name) | n/a | `any` | n/a | yes |
+| <a name="input_resource_group_vnet_name"></a> [resource\_group\_vnet\_name](#input\_resource\_group\_vnet\_name) | The resource group of the virtual network that holds the runner subnet. | `string` | n/a | yes |
 | <a name="input_storage_account_name"></a> [storage\_account\_name](#input\_storage\_account\_name) | The resource group name for the storage account name | `string` | n/a | yes |
-| <a name="input_subnet_name"></a> [subnet\_name](#input\_subnet\_name) | n/a | `any` | n/a | yes |
+| <a name="input_subnet_name"></a> [subnet\_name](#input\_subnet\_name) | The subnet delegated to GitHub-hosted runners. | `string` | n/a | yes |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The UUID ID of the suscription (not the full Azure Resource ID). | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | n/a | `any` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags applied to the created resources. | `map(string)` | n/a | yes |
 | <a name="input_tenant_id"></a> [tenant\_id](#input\_tenant\_id) | The ID of the tenenat | `string` | n/a | yes |
 | <a name="input_use_oidc"></a> [use\_oidc](#input\_use\_oidc) | Whether to use OIDC | `bool` | n/a | yes |
-| <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name) | n/a | `any` | n/a | yes |
+| <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name) | The virtual network that holds the runner subnet. | `string` | n/a | yes |
 
 ## Outputs
 

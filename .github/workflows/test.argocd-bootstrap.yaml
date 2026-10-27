@@ -24,4 +24,3 @@ jobs:
     with:
       file_name: 03_applications/argo-bootstrap.yaml.gotmpl
       action: ${{ inputs.action }}
-    secrets: inherit
