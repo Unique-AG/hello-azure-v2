@@ -283,6 +283,12 @@ variable "log_analytics_retention_in_days" {
   default     = 30
 }
 
+variable "log_analytics_local_authentication_enabled" {
+  description = "Whether the Log Analytics workspace accepts authentication with workspace keys. Defaults to true, the value existing workspaces were created with. New deployments should set this to false; only Entra ID authentication is used by the resources in this repository."
+  type        = bool
+  default     = true
+}
+
 variable "budget_contact_emails" {
   description = "List of email addresses for budget notifications"
   type        = set(string)
