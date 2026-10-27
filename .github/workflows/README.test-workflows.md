@@ -1,141 +1,65 @@
-# Test Workflows Execution Sequence
+# Test Workflows
 
-This document outlines the proper execution sequence for `test.*` workflows in the hello-azure repository.
+How the `test` environment is changed from this repository.
 
-## Overview
+## Environments
 
-The workflows are organized into three environment layers that represent the infrastructure stack:
+GitHub environments map to the infrastructure layers. Every environment is trusted by the same Entra app
+(`6d1d8c4b-…`, federated credentials in `01_bootstrap/day-0/40-federated-credentials.tf`):
 
-- **00-init** (Governance Layer): Foundation - Identity, access, and state management
-- **10-pm** (Platform Management Layer): Core infrastructure - AKS, networking, storage
-- **20-wl** (Workload Layer): Applications and services - Container images, ArgoCD, Helm deployments
+- **00-init**: day-0 (Terraform state, the CI identity, subscription settings)
+- **10-pm**: day-1, gh-test, day-2, day-3 (network, Key Vaults, AKS, App Gateway, data services, Bastion)
+- **20-wl**: workloads (image mirroring, Argo CD bootstrap, Helm)
 
-## Execution Sequence
+## Terraform: `test.terraform.yaml`
 
-### Phase 1: Foundation (Environment: 00-init)
+Plan on pull request, apply on merge, for every layer.
 
-**1. `test.governance.tf.yaml`** - **MUST RUN FIRST** ⚠️
-- **Purpose**: Initializes the tenant with foundational resources
-- **Creates**:
-  - Storage account for Terraform state (`tfstate`)
-  - Azure AD Application Registration
-  - Federated identity credentials for GitHub Actions OIDC
-  - Service principal and role assignments
-- **Dependencies**: None (manual Azure subscription access required)
-- **Environment**: `00-init`
-- **Status**: ✅ Active (workflow_dispatch + push/pull_request triggers)
+- **Pull request**: plans the changed layers and every layer downstream of them, and posts one sticky comment per
+  layer. Downstream: day-0 → all; day-1 → day-1, gh-test, day-2, day-3; day-2 → day-2, day-3.
+- **Push to `main`** (a merge): plans and applies the same layers in order day-0 → day-1 → gh-test and day-2 →
+  day-3. Each job applies exactly the plan it just made.
+- **Foundation guard**: day-0, day-1 and gh-test are hard to re-create. If their plan on `main` deletes or replaces
+  anything, the job stops before apply. Run such a change by dispatch with `confirm` = `apply-foundation`.
+- **Manual dispatch**: choose `layers` (`all` or a comma-separated list). On `main` it applies; on any other branch
+  it only plans.
+- **Required check**: the `terraform` job sums up the layer jobs; it passes when nothing needed to run.
+- **Pull requests from forks** get no Azure login, so no layer runs for them.
+- **Kill switch**: `gh workflow disable test.terraform.yaml` (re-enable with `gh workflow enable`).
+- The laptop fallback (Operator apply) is described in `02_infrastructure/README.md`.
 
-> **⚠️ Critical**: This workflow must be run manually first (or via push to `main` branch) to establish the authentication and state storage infrastructure that all subsequent workflows depend on.
+The steps of one layer live in the composite action `.github/actions/terraform`.
 
----
+## Lint and security: `tf.validate.yaml`
 
-### Phase 2: Core Infrastructure (Environment: 10-pm)
+Runs on every pull request and push to `main`: Terraform format and docs, Trivy (misconfigurations and secrets;
+fails on HIGH/CRITICAL), actionlint, zizmor and TFLint. Its `lint` job is a required check.
 
-**2. `test.infrastructure.tf.apply.yaml`** - **RUNS AFTER GOVERNANCE**
-- **Purpose**: Deploys core Azure infrastructure resources
-- **Creates**:
-  - Resource groups (core, sensitive, vnet)
-  - Azure Key Vaults (main and sensitive)
-  - Virtual Network and subnets
-  - AKS cluster (`aks-test`)
-  - Azure Container Registry (`uqhacrtest`)
-  - Redis cache (`uqharedis-test`)
-  - Storage accounts
-  - Log Analytics workspace
-  - Managed identities for various services
-  - DNS zones and records
-- **Dependencies**: 
-  - ✅ `test.governance.tf.yaml` (for Terraform state storage and authentication)
-- **Environment**: `10-pm`
-- **Status**: ✅ Active (workflow_dispatch only)
-- **Note**: `test.infrastructure.tf.plan.yaml` runs plans on pull requests and pushes to `main`; the destroy workflow was removed with the single-`main` consolidation
+## Workloads (environment `20-wl`)
 
----
+**`test.mirror-public-artifacts.yaml`**: mirrors public container images (Docker Hub, GHCR, Quay.io) to the
+Azure Container Registry `uqhacrtest`. Needs day-2 (the ACR). Currently commented out (needs ACR login and qcli
+setup).
 
-### Phase 3: Workloads (Environment: 20-wl)
+**`test.mirror-unique-artifacts.yaml`**: mirrors Unique container images to `uqhacrtest`. Needs day-2 and the
+`UNIQUECR_PASSWORD` secret.
 
-The following workflows can run in parallel after Phase 2, but have specific ordering requirements:
+**`test.argocd-bootstrap.yaml`**: bootstraps Argo CD in the AKS cluster. Run it manually with action `apply`
+after the cluster exists and the images are mirrored. It calls the reusable `test.helm.yaml` with
+`03_applications/argo-bootstrap.yaml.gotmpl`.
 
-**3. `test.gh.infra.yaml`** - **OPTIONAL, CAN RUN IN PARALLEL**
-- **Purpose**: Provisions GitHub Actions self-hosted runners infrastructure
-- **Dependencies**: 
-  - ✅ `test.governance.tf.yaml` (for authentication)
-  - ✅ `test.infrastructure.tf.apply.yaml` (for networking/VNet integration)
-- **Environment**: `20-wl`
-- **Status**: ✅ Active (workflow_dispatch + push/pull_request triggers on `main`)
+**`test.helm.yaml`**: reusable workflow (`workflow_call` only) for helmfile template, diff and sync.
 
-**4. `test.mirror-public-artifacts.yaml`** - **RUNS AFTER ACR EXISTS**
-- **Purpose**: Mirrors public container images (Docker Hub, GHCR, Quay.io) to Azure Container Registry
-- **Dependencies**: 
-  - ✅ `test.governance.tf.yaml` (for Azure authentication)
-  - ✅ `test.infrastructure.tf.apply.yaml` (ACR `uqhacrtest` must exist)
-- **Environment**: `20-wl`
-- **Status**: ✅ Active (workflow_dispatch + push trigger on `main`)
-- **Note**: Currently commented out (needs ACR login and qcli setup)
-
-**5. `test.mirror-unique-artifacts.yaml`** - **RUNS AFTER ACR EXISTS**
-- **Purpose**: Mirrors Unique-specific container images to Azure Container Registry
-- **Dependencies**: 
-  - ✅ `test.governance.tf.yaml` (for Azure authentication)
-  - ✅ `test.infrastructure.tf.apply.yaml` (ACR `uqhacrtest` must exist)
-- **Environment**: `20-wl`
-- **Status**: ✅ Active (workflow_dispatch + push trigger on `main`)
-- **Note**: Requires `UNIQUECR_PASSWORD` secret
-
-**6. `test.argocd-bootstrap.yaml`** - **RUNS AFTER AKS AND IMAGES ARE READY**
-- **Purpose**: Bootstraps ArgoCD in the AKS cluster
-- **Note**: You should manually run this workflow with 'apply' action to bootstrap the ArgoCD cluster.
-- **Dependencies**: 
-  - ✅ `test.governance.tf.yaml` (for Azure authentication)
-  - ✅ `test.infrastructure.tf.apply.yaml` (AKS cluster `aks-test` must exist)
-  - ✅ `test.mirror-public-artifacts.yaml` (ArgoCD container images should be available)
-  - ✅ `test.mirror-unique-artifacts.yaml` (if ArgoCD uses custom images)
-- **Environment**: `20-wl`
-- **Status**: ✅ Active (workflow_dispatch only)
-- **Calls**: `test.helm.yaml` reusable workflow with `03_applications/argo-bootstrap.yaml.gotmpl`
-
----
-
-## Reusable Workflows
-
-**`test.helm.yaml`** - **NOT DIRECTLY EXECUTABLE**
-- **Purpose**: Reusable workflow for Helm operations (template, diff, sync/apply)
-- **Status**: Reusable only (workflow_call) - called by `test.argocd-bootstrap.yaml`
-- **Note**: Not visible in GitHub Actions UI as it's only callable by other workflows
-
----
-
-## Quick Reference: Execution Order
+## Order for a new environment
 
 ```
-1. test.governance.tf.yaml                    [00-init] ⚠️ MUST RUN FIRST
+test.terraform.yaml (dispatch, layers=all)       day-0 → day-1 → gh-test, day-2 → day-3
    ↓
-2. test.infrastructure.tf.apply.yaml          [10-pm]
+test.mirror-public-artifacts.yaml  ┐
+test.mirror-unique-artifacts.yaml  ┘ can run in parallel
    ↓
-3. test.mirror-public-artifacts.yaml          [20-wl] ┐
-   test.mirror-unique-artifacts.yaml           [20-wl] ├─ Can run in parallel
-   test.gh.infra.yaml                          [20-wl] ┘
-   ↓
-4. test.argocd-bootstrap.yaml                  [20-wl]
-   ↓
+test.argocd-bootstrap.yaml (action=apply)
 ```
 
----
-
-## Environment Summary
-
-| Environment | Purpose | Workflows |
-|------------|---------|-----------|
-| `00-init` | Foundation - Identity & State | `test.governance.tf.yaml` |
-| `10-pm` | Platform - Core Infrastructure | `test.infrastructure.tf.apply.yaml` |
-| `20-wl` | Workloads - Applications | `test.gh.infra.yaml`, `test.mirror-*.yaml`, `test.argocd-bootstrap.yaml` |
-
----
-
-## Notes
-
-- All workflows currently use `workflow_dispatch` (manual trigger) except `test.governance.tf.yaml` which also has push/pull_request triggers
-- The environment names (`00-init`, `10-pm`, `20-wl`) indicate the execution order
-- Workflows in the same phase/environment can typically run in parallel if they don't depend on each other
-- Always verify the previous phase completed successfully before proceeding to the next phase
-
+day-0's first create is a one-time local bootstrap (`01_bootstrap/README.md`): the CI identity it creates is what
+the pipeline signs in with.
