@@ -11,6 +11,10 @@ on:
         description: "Helm action to perform: template, diff, sync or apply."
         default: template
         type: string
+      release_name:
+        description: Limit the action to one release (helmfile `-l name=<release>`); empty = all releases.
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -34,6 +38,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Azure Login action
         uses: azure/login@eec3c95657c1536435858eda1f3ff5437fee8474 #v2.3.0
@@ -70,15 +76,24 @@ jobs:
 
       - name: "🔍 Helm Template"
         if: inputs.action == 'template'
+        env:
+          FILE_NAME: ${{ inputs.file_name }}
+          RELEASE_NAME: ${{ inputs.release_name }}
         run: |
-          helmfile -e test -f ${{ inputs.file_name }} ${{ inputs.release_name && format('-l name={0}', inputs.release_name) || '' }} template
+          helmfile -e test -f "$FILE_NAME" ${RELEASE_NAME:+-l "name=$RELEASE_NAME"} template
 
       - name: "🪞 Helm Diff"
         if: inputs.action == 'diff'
+        env:
+          FILE_NAME: ${{ inputs.file_name }}
+          RELEASE_NAME: ${{ inputs.release_name }}
         run: |
-          helmfile -e test -f ${{ inputs.file_name }} --concurrency 4 ${{ inputs.release_name && format('-l name={0}', inputs.release_name) || '' }} diff
+          helmfile -e test -f "$FILE_NAME" --concurrency 4 ${RELEASE_NAME:+-l "name=$RELEASE_NAME"} diff
 
       - name: "🚀 Helm Apply/Sync"
         if: inputs.action == 'apply' || inputs.action == 'sync'
+        env:
+          FILE_NAME: ${{ inputs.file_name }}
+          RELEASE_NAME: ${{ inputs.release_name }}
         run: |
-          helmfile -e test -f ${{ inputs.file_name }} ${{ inputs.release_name && format('-l name={0}', inputs.release_name) || '' }} sync
+          helmfile -e test -f "$FILE_NAME" ${RELEASE_NAME:+-l "name=$RELEASE_NAME"} sync
