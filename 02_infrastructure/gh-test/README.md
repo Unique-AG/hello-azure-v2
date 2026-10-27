@@ -36,14 +36,14 @@ This document provides information on deploying Kubernetes workloads. These work
           }' \
     https://api.github.com/graphql | jq -r '.data.organization.databaseId')
 
-    # make sure you are inside gh-<env> folder
+    # run from 02_infrastructure/gh-test
 
     # Linux
-    sed -ri "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
+    sed -ri "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" ../environments/test/00-parameters-gh.auto.tfvars
     # MacOS
-    sed -r -i '' "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
+    sed -r -i '' "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" ../environments/test/00-parameters-gh.auto.tfvars
     # Windows
-    sed -r -i "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" variables.auto.tfvars
+    sed -r -i "s/(github_org_id(.*)=\s*).*/\1 $databaseId/" ../environments/test/00-parameters-gh.auto.tfvars
     ```
 
 3. **Apply the Terraform Configuration**: The `network_settings_id` will be returned as an output.
