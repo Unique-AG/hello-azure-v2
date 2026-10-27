@@ -2,7 +2,8 @@
 # Using the azure-redis module from terraform-modules
 
 module "redis" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-redis?ref=4878b1f5014ec92145828bebf2179f02bc7f1757" # azure-redis-3.0.0
+  # renovate: datasource=github-tags depName=azure-redis packageName=Unique-AG/terraform-modules currentValue=3.0.0
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-redis?ref=4878b1f5014ec92145828bebf2179f02bc7f1757"
 
   name                = local.redis_name
   resource_group_name = data.azurerm_resource_group.sensitive.name

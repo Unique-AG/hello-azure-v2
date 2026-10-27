@@ -12,7 +12,8 @@ data "azuread_service_principal" "msgraph" {
 }
 
 module "application_registration" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-entra-app-registration-argocd?ref=19ba05c685ebfbb97ace553affe9991aea7c1531" # azure-entra-app-registration-argocd-2.2.0
+  # renovate: datasource=github-tags depName=azure-entra-app-registration-argocd packageName=Unique-AG/terraform-modules currentValue=2.2.0
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-entra-app-registration-argocd?ref=19ba05c685ebfbb97ace553affe9991aea7c1531"
   # The old generic module (azure-entra-app-registration 4.0.0) granted no consent, and the Terraform
   # identity lacks DelegatedPermissionGrant.ReadWrite.All.
   admin_consent_enabled     = false
