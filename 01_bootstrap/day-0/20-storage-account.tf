@@ -1,5 +1,5 @@
 module "tfstate_sa" {
-  source              = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?ref=32d9495aaac9134231925f1dc682d84fb1adf6b8"
+  source              = "github.com/Unique-AG/terraform-modules.git//modules/azure-storage-account?ref=9486e9f06c83a8a2b7edd4ba64c3522a6d2a697b" # azure-storage-account-8.0.1
   name                = var.storage_account_name
   resource_group_name = azurerm_resource_group.tfstate.name
   location            = var.tfstate_location
