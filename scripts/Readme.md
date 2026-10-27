@@ -5,9 +5,9 @@ This directory contains helper scripts for Terraform development workflows. Thes
 ## Prerequisites
 
 - **Terraform CLI** - Required for `tf-fmt.sh`
-- **Docker** - Required for `tf-docs.sh` and `tf-sec.sh` (docker mode)
+- **Docker** - Required for `tf-docs.sh` and `trivy.sh` (docker mode)
 - **terraform-docs** - Required for `tf-docs.sh` (native mode), auto-installed if missing
-- **tfsec** - Required for `tf-sec.sh` (native mode), auto-installed if missing
+- **Trivy** - Required for `trivy.sh` (native mode); use the version pinned in the script
 
 ## Scripts
 
@@ -54,33 +54,28 @@ Formats all Terraform files using `terraform fmt`.
   - `02_infrastructure/`
   - `03_applications/`
 
-### tf-sec.sh
+### trivy.sh
 
-Runs [tfsec](https://github.com/aquasecurity/tfsec) security scanner on the Terraform codebase.
+Runs [Trivy](https://trivy.dev) against this repository's own code. Findings inside the downloaded
+terraform-modules are excluded (they can only be fixed in that shared repository). Accepted findings live in
+`.trivyignore.yaml`, each with its reason.
 
 **Usage:**
 
 ```bash
-# Docker mode (default - for CI/CD or environments with Docker)
-./scripts/tf-sec.sh docker
-./scripts/tf-sec.sh          # same as docker
-
-# Native mode (for WSL2 or local development without Docker)
-./scripts/tf-sec.sh native
+./scripts/trivy.sh config          # Terraform misconfigurations; fails on HIGH/CRITICAL (default)
+./scripts/trivy.sh secret          # committed secrets; fails on HIGH/CRITICAL
+./scripts/trivy.sh sarif           # all severities as trivy-results.sarif (CI uploads it to code scanning)
+./scripts/trivy.sh config native   # use a local trivy binary instead of the pinned image
 ```
 
-**Modes:**
+The Docker image is pinned by digest: the Trivy 0.69.4 release and the trivy-action tags were compromised in
+March 2026.
 
-| Mode | Description | Use Case |
-|------|-------------|----------|
-| `docker` | Runs tfsec via Docker container | CI/CD pipelines, Docker-enabled environments |
-| `native` | Runs tfsec binary directly | WSL2, local development, environments without Docker |
+### Other CI checks
 
-**What it does:**
-- Scans Terraform code for security issues
-- Uses configuration from `.github/configs/tfsec.yaml`
-- In GitHub Actions, outputs results in SARIF format for security tab integration
-- In native mode, automatically installs tfsec if not found
+The lint workflow (`.github/workflows/tf.validate.yaml`) also runs actionlint, zizmor (config:
+`.github/zizmor.yml`) and TFLint with the azurerm ruleset (config: `.tflint.hcl`, run per Terraform root).
 
 ## Pre-commit Integration
 
@@ -100,9 +95,9 @@ repos:
         entry: scripts/tf-fmt.sh
         language: script
         pass_filenames: false
-      - id: tf-sec
-        name: tf-sec
-        entry: scripts/tf-sec.sh
+      - id: trivy
+        name: trivy (Terraform misconfigurations)
+        entry: scripts/trivy.sh config
         language: script
         pass_filenames: false
 ```
@@ -126,19 +121,19 @@ pre-commit run --all-files
 # Run a specific hook
 pre-commit run tf-docs --all-files
 pre-commit run tf-fmt --all-files
-pre-commit run tf-sec --all-files
+pre-commit run trivy --all-files
 ```
 
 ## WSL2 Users
 
-If you're using WSL2 without Docker Desktop, use native mode for tf-docs and tf-sec:
+If you're using WSL2 without Docker Desktop, use native mode for tf-docs and trivy:
 
 ```bash
 # Run manually
 ./scripts/tf-docs.sh native
-./scripts/tf-sec.sh native
+./scripts/trivy.sh config native
 
 # Or temporarily update .pre-commit-config.yaml:
 # entry: scripts/tf-docs.sh native
-# entry: scripts/tf-sec.sh native
+# entry: scripts/trivy.sh config native
 ```

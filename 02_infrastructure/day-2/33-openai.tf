@@ -11,7 +11,7 @@ module "openai" {
 
   cognitive_accounts = {
     for k, v in var.openai_cognitive_accounts : k => {
-      name                          = "${v.name}"
+      name                          = v.name
       location                      = v.location
       local_auth_enabled            = v.local_auth_enabled
       custom_subdomain_name         = local.custom_subdomain_name

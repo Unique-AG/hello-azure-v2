@@ -1,7 +1,19 @@
-variable "resource_group_vnet_name" {}
-variable "tags" {}
-variable "vnet_name" {}
-variable "subnet_name" {}
+variable "resource_group_vnet_name" {
+  description = "The resource group of the virtual network that holds the runner subnet."
+  type        = string
+}
+variable "tags" {
+  description = "Tags applied to the created resources."
+  type        = map(string)
+}
+variable "vnet_name" {
+  description = "The virtual network that holds the runner subnet."
+  type        = string
+}
+variable "subnet_name" {
+  description = "The subnet delegated to GitHub-hosted runners."
+  type        = string
+}
 variable "github_org_id" {
   description = "The GitHub organization database ID (numeric). Find it using: gh api orgs/{org} --jq .id"
   type        = number

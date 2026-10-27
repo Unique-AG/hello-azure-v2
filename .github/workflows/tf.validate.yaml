@@ -1,15 +1,13 @@
 name: '[tf] Lint & Secure 🤨'
+# Runs on every PR and every push to main (no paths filter): the `lint` job is a required status check, and a
+# required check that never runs would block the PR.
 on:
   pull_request:
     branches:
       - main
-    paths:
-      - 01_bootstrap/**/*.tf
-      - 02_infrastructure/**/*.tf
-      - 03_applications/**/*.tf
-      - .github/workflows/tf.validate.yaml
-      - .github/configs/**
-      - scripts/**
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -25,6 +23,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Read Terraform version
         id: tf-version
@@ -37,9 +36,6 @@ jobs:
 
       - name: Format & Docs
         run: |
-          # ensure the lock file is generated
-          terraform init
-          # run the docs and fmt scripts
           ./scripts/tf-docs.sh
           ./scripts/tf-fmt.sh
           if [[ $(git diff --stat) != '' ]]; then
@@ -50,12 +46,51 @@ jobs:
             echo -e '\033[0;32mDocumentation and Format up to date\033[0m ✔'
           fi
 
-      - name: Sec
-        id: sec
-        run: ./scripts/tf-sec.sh
+      - name: Trivy misconfigurations (fails on HIGH/CRITICAL)
+        run: ./scripts/trivy.sh config
 
-      - name: Upload SARIF results
+      - name: Trivy secrets (fails on HIGH/CRITICAL)
+        run: ./scripts/trivy.sh secret
+
+      - name: Trivy report (all severities, SARIF)
+        id: trivy-sarif
+        if: ${{ !cancelled() }}
+        run: ./scripts/trivy.sh sarif
+
+      - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@dd677812177e0c29f9c970a6c58d8607ae1bfefd #v4
-        if: always() && steps.sec.outcome != 'skipped' # if the sec step is skipped, we don't want to upload the SARIF results
+        if: ${{ !cancelled() && steps.trivy-sarif.outcome == 'success' }}
         with:
-          sarif_file: tfsec-results.sarif
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+      - name: actionlint
+        if: ${{ !cancelled() }}
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo \
+            rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
+
+      - name: zizmor
+        if: ${{ !cancelled() }}
+        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        with:
+          version: 1.31.1
+          advanced-security: false
+
+      - name: Setup TFLint
+        if: ${{ !cancelled() }}
+        uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
+        with:
+          tflint_version: v0.65.0
+
+      - name: TFLint
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}  # plugin download from GitHub releases
+        run: |
+          tflint --init --config "$GITHUB_WORKSPACE/.tflint.hcl"
+          for root in 01_bootstrap/day-0 02_infrastructure/day-1 02_infrastructure/day-2 02_infrastructure/day-3 02_infrastructure/gh-test; do
+            echo "::group::tflint $root"
+            tflint --chdir "$root" --config "$GITHUB_WORKSPACE/.tflint.hcl"
+            echo "::endgroup::"
+          done
