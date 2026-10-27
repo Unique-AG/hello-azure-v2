@@ -1,0 +1,3 @@
+{"format_version":"1.2","resource_changes":[
+ {"address":"azurerm_key_vault.core","change":{"actions":["update"]}},
+ {"address":"azurerm_private_dns_zone.psql","change":{"actions":["delete"]}}]}

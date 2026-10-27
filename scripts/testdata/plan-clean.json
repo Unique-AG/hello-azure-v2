@@ -1,0 +1,4 @@
+{"format_version":"1.2","resource_changes":[
+ {"address":"azurerm_key_vault.core","change":{"actions":["update"]}},
+ {"address":"azurerm_role_assignment.new","change":{"actions":["create"]}},
+ {"address":"azurerm_resource_group.vnet","change":{"actions":["no-op"]}}]}
