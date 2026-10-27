@@ -42,28 +42,38 @@ jobs:
           persist-credentials: false
 
       - name: Azure Login action
-        uses: azure/login@eec3c95657c1536435858eda1f3ff5437fee8474 #v2.3.0
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 #v3.1.0
         with:
           subscription-id: 782871a0-bcee-44fb-851f-ccd3e69ada2a
           tenant-id: aeade8c4-d4f7-4ae7-9149-4975fa3a7f91
           client-id: 6d1d8c4b-9d1b-4113-a91a-dac89b2717c1 # application (client) id for the Terraform enterprise application
 
       - name: Set up kubelogin
-        uses: azure/use-kubelogin@76597ae0fcbaace21b05e13a2cbf8daee2c6e820 #v1.2
+        uses: azure/use-kubelogin@0ce7c36141aa27d4934872cf00b0120804c98a29 #v1.3
         with:
-          kubelogin-version: v0.1.6
+          kubelogin-version: v0.2.22
 
       - name: Get AKS context
-        uses: azure/aks-set-context@feeca6405be94202afcb1c395616ff29b1811b9f #v4.0.2
+        uses: azure/aks-set-context@883bdc8d8d1d0fd87e66cc4ba6f0b618f9eb5281 #v5.0.1
         with:
           resource-group: "resource-group-core"
           cluster-name: "aks-test"
           admin: 'false'
           use-kubelogin: 'true'
 
-      - name: Setup Helm
-        uses: mamezou-tech/setup-helmfile@fd46979d2984c886929c416fbdf859b1c5efa0ea #v2.1.0
-        # todo: do we need to pin dependencies? the pinned sha above uses versioned dependencies at least
+      # kubectl within one minor version of the cluster (1.35 on 2026-10-27); bump it with the cluster.
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e #v5.2.0
+        with:
+          version: v1.35.9
+
+      - name: Setup Helm and helmfile
+        uses: mamezou-tech/setup-helmfile@c04e83ec7650bf2ec910864bcb409479cf56d8e6 #v2.2.0
+        with:
+          install-kubectl: "no"
+          helm-version: v4.3.1
+          helmfile-version: v1.8.2
+          helm-diff-plugin-version: v3.15.15
 
       - name: Read Terraform version
         id: tf-version
