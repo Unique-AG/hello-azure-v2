@@ -1,7 +1,9 @@
 # Log Analytics Workspace
 # Managed through the azure-log-analytics-workspace module. The module also owns the Basic-plan
 # tables (AKSControlPlane, ContainerLogV2) that azure-kubernetes-service managed until 7.0.0.
-# Those two tables live in Azure already and are imported into this state, not created
+# azurerm_log_analytics_workspace_table only sets plan and retention on tables Azure provides, so on
+# an existing environment the first apply writes the same values the AKS module set and records the
+# tables in this state. They must be removed from day-2 state before day-2 moves to AKS >= 7.0.0
 # (see docs/upgrades/2026-10-infrastructure-upgrade.md).
 
 module "log_analytics" {
