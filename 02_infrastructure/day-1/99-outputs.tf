@@ -15,12 +15,12 @@ output "aks_public_ip_address" {
 
 output "log_analytics_workspace_name" {
   description = "Name of the Log Analytics workspace"
-  value       = azurerm_log_analytics_workspace.this.name
+  value       = module.log_analytics.workspace_name
 }
 
 output "log_analytics_workspace_id" {
   description = "ID of the Log Analytics workspace"
-  value       = azurerm_log_analytics_workspace.this.id
+  value       = module.log_analytics.workspace_id
 }
 output "postgresql_private_dns_zone_id" {
   description = "ID of the PostgreSQL private DNS zone"
