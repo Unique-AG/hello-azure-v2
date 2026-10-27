@@ -1,0 +1,45 @@
+name: '[renovate] dependency updates 🔄'
+# Self-hosted Renovate for this repository only; the config is .github/renovate.json5.
+# The renovatebot environment (GitHub App ID + key) is managed in Unique-AG/infrastructure
+# (providers/github/unique-ag/repos/hello-azure-v2.yaml, renovatebot_installation); the token is scoped to this repo.
+
+on:
+  schedule:
+    - cron: "0 7 * * FRI"
+  push:
+    branches:
+      - main
+    paths:
+      - .github/renovate.json5
+      - .github/workflows/renovate.yaml
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    environment: renovatebot
+    permissions:
+      contents: read
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: unique-ag/actions/github/app-token-create@df61dcf6fb84a7cad9c9b5f04924b40311cb016a # main
+        with:
+          app_id: ${{ vars.GH_APP_RENOVATEBOT_ID }}
+          base64_encoded_private_key: ${{ secrets.GH_APP_RENOVATEBOT_KEY_B64 }}
+          repositories: hello-azure-v2
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@1cd96b855fee0da6f230617e89dbff0e06ea393a # v46.3.5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+        env:
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_ONBOARDING: "false"
+          RENOVATE_PLATFORM_COMMIT: "enabled"

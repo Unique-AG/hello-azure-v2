@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check the Renovate directives above terraform-modules sources.
 
-1. Every terraform-modules source has a directive that the infrastructure repo's Renovate regex matches.
+1. Every terraform-modules source has a directive that the Renovate regex manager in .github/renovate.json5 matches.
 2. Each directive's currentValue is the tag at the pinned SHA (tag <depName>@<currentValue>, via git ls-remote).
 
 Run: python3 scripts/renovate-directives.test.py   (step 2 needs network; --offline skips it)
@@ -11,7 +11,7 @@ import re
 import subprocess
 import sys
 
-# Same pattern as the infrastructure repo's custom regex manager (renovate.base.libsonnet).
+# Same pattern as the custom regex manager in .github/renovate.json5.
 DIRECTIVE = re.compile(
     r"# renovate: datasource=(?P<datasource>[^\s]+) depName=(?P<depName>[^\s]+) packageName=(?P<packageName>[^\s]+)"
     r" currentValue=(?P<currentValue>[^\s]+)\n\s+source\s*=\s*\"[^\"]*\?ref=(?P<currentDigest>[a-f0-9]{40})\""
