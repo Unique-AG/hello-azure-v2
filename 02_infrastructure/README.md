@@ -234,7 +234,7 @@ Day-3 deploys Azure Bastion, a fully managed PaaS service that provides secure R
 
 ### Security Considerations
 
-- **No NSG on AzureBastionSubnet**: Azure manages security for this subnet automatically. Use Azure RBAC for access control instead.
+- **NSG on AzureBastionSubnet**: day-3 creates the Bastion NSG and attaches it to the subnet (`day-3/33-bastion-nsg.tf`). day-1 ignores the subnet's `networkSecurityGroup`, so a day-1 apply does not detach it. Use Azure RBAC for access control.
 - **Subnet Requirements**: The subnet must be named exactly `AzureBastionSubnet` (case-sensitive) and be at least `/26` in size (64 IP addresses).
 - **Public IP**: Standard SKU public IP is required for Standard Bastion SKU.
 
@@ -377,4 +377,6 @@ g, application_support, role:admin
 Do **not** leave `g, maintain, role:admin` after the Entra module bump — maintainers will authenticate but lose Argo admin until Helm values are synced.
 
 Typical day-2 plan after the bump (if v4 roles are already in state): **1 in-place WAF policy update**, **6 destroys** of legacy `maintainers` Entra resources, **0 adds**. Apply Terraform, then sync the Argo application so RBAC picks up the YAML change.
+
+The generic module was later deleted from terraform-modules; the app now comes from its successor `azure-entra-app-registration-argocd` (1.0.0). The `application_support` role mapping above is unchanged, admin consent stays off (`admin_consent_enabled = false`), and the `explicit_*` inputs keep the Key Vault secret names Argo CD reads.
 
