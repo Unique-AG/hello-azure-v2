@@ -378,3 +378,5 @@ Do **not** leave `g, maintain, role:admin` after the Entra module bump — maint
 
 Typical day-2 plan after the bump (if v4 roles are already in state): **1 in-place WAF policy update**, **6 destroys** of legacy `maintainers` Entra resources, **0 adds**. Apply Terraform, then sync the Argo application so RBAC picks up the YAML change.
 
+The generic module was later deleted from terraform-modules; the app now comes from its successor `azure-entra-app-registration-argocd` (1.0.0). The `application_support` role mapping above is unchanged, admin consent stays off (`admin_consent_enabled = false`), and the `explicit_*` inputs keep the Key Vault secret names Argo CD reads.
+

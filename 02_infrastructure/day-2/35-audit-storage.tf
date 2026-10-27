@@ -1,7 +1,7 @@
 #tfsec:ignore:azure-keyvault-content-type-for-secret
 #tfsec:ignore:azure-keyvault-ensure-key-expiry
 module "audit_storage" {
-  source = "github.com/unique-ag/terraform-modules.git//modules/azure-storage-account?ref=32d9495aaac9134231925f1dc682d84fb1adf6b8"
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-storage-account?ref=55099de28a949afc0ba8dd66a9b716364feac4ba" # azure-storage-account-7.1.1
 
   name                          = var.audit_storage_sa_name
   resource_group_name           = data.azurerm_resource_group.sensitive.name
