@@ -238,7 +238,7 @@ variable "ingestion_storage_identity_name" {
 variable "kubernetes_version" {
   description = "The version of Kubernetes to use for the AKS cluster"
   type        = string
-  default     = "1.34.0"
+  default     = "1.36.4"
 }
 
 variable "aks_segregated_node_and_pod_subnets_enabled" {
@@ -391,7 +391,7 @@ variable "postgresql_zone" {
 variable "postgresql_version" {
   description = "The version of PostgreSQL to use"
   type        = string
-  default     = "14"
+  default     = "17"
 }
 
 variable "postgresql_sku" {
