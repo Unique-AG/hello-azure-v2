@@ -1,7 +1,8 @@
 # Azure OpenAI Service
 # This module creates and configures Azure OpenAI cognitive accounts with deployments
 module "openai" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-openai?ref=4878b1f5014ec92145828bebf2179f02bc7f1757" # azure-openai-4.0.0
+  # renovate: datasource=github-tags depName=azure-openai packageName=Unique-AG/terraform-modules currentValue=4.0.0
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-openai?ref=4878b1f5014ec92145828bebf2179f02bc7f1757"
 
   resource_group_name = data.azurerm_resource_group.core.name
   endpoint_secret = {
@@ -32,7 +33,8 @@ module "openai" {
 # This module creates and configures Azure Document Intelligence (Form Recognizer) accounts
 
 module "document_intelligence" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-document-intelligence?ref=4878b1f5014ec92145828bebf2179f02bc7f1757" # azure-document-intelligence-4.0.0
+  # renovate: datasource=github-tags depName=azure-document-intelligence packageName=Unique-AG/terraform-modules currentValue=4.0.0
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-document-intelligence?ref=4878b1f5014ec92145828bebf2179f02bc7f1757"
 
   doc_intelligence_name = local.document_intelligence_name
   resource_group_name   = data.azurerm_resource_group.core.name
@@ -54,7 +56,8 @@ module "document_intelligence" {
 # Azure Speech Service
 # This module creates and configures Azure Speech Service accounts with optional private endpoints
 module "speech_service" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-speech-service?ref=4878b1f5014ec92145828bebf2179f02bc7f1757" # azure-speech-service-5.0.0
+  # renovate: datasource=github-tags depName=azure-speech-service packageName=Unique-AG/terraform-modules currentValue=5.0.0
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-speech-service?ref=4878b1f5014ec92145828bebf2179f02bc7f1757"
 
   key_vault_id        = data.azurerm_key_vault.key_vault_sensitive.id
   resource_group_name = data.azurerm_resource_group.core.name

@@ -20,7 +20,8 @@ resource "random_password" "postgres_password" {
 }
 
 module "postgresql" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-postgresql?ref=736a178e3597583950a569c3c2d8447c3ec77d84" # azure-postgresql-4.1.0
+  # renovate: datasource=github-tags depName=azure-postgresql packageName=Unique-AG/terraform-modules currentValue=4.1.0
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-postgresql?ref=736a178e3597583950a569c3c2d8447c3ec77d84"
 
   name                = "${var.postgresql_server_name}-${random_string.psql_suffix.result}"
   resource_group_name = data.azurerm_resource_group.sensitive.name
