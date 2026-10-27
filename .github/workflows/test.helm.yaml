@@ -59,10 +59,14 @@ jobs:
         uses: mamezou-tech/setup-helmfile@fd46979d2984c886929c416fbdf859b1c5efa0ea #v2.1.0
         # todo: do we need to pin dependencies? the pinned sha above uses versioned dependencies at least
 
+      - name: Read Terraform version
+        id: tf-version
+        run: echo "version=$(cat "$GITHUB_WORKSPACE/.terraform-version")" >> "$GITHUB_OUTPUT"
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 #v4.0.0
         with:
-          terraform_version: 1.12.2
+          terraform_version: ${{ steps.tf-version.outputs.version }}
 
       - name: "🔍 Helm Template"
         if: inputs.action == 'template'

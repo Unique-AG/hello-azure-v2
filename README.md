@@ -16,7 +16,7 @@ It also includes a setup of ArgoCD used for deploying workloads to the AKS clust
 
 ### Prerequisites
 - Azure CLI installed and logged in (`az login`)
-- Terraform 1.5+ installed
+- Terraform at the version in [`.terraform-version`](.terraform-version) (CI reads the same file; `tfenv install` picks it up)
 
 
 **Ready to get started?** Begin with the [Configuration Guide](/01_bootstrap/README.md) to understand how to create remote Terraform state storage, then follow the guides in 02_infrastructure and 03_applications.
