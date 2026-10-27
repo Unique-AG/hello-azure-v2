@@ -1,0 +1,137 @@
+name: "Terraform layer"
+description: >-
+  fmt, init, validate and plan one Terraform layer; on pull requests post the plan as a sticky comment;
+  in apply mode check the plan with the foundation guard, then apply exactly that plan.
+
+inputs:
+  layer_dir:
+    description: "Terraform root to run in, relative to the repository root (e.g. 02_infrastructure/day-2)"
+    required: true
+  backend_config:
+    description: "Backend config file, relative to layer_dir"
+    required: true
+  var_files:
+    description: "Space-separated var-file paths, relative to layer_dir"
+    required: false
+    default: ""
+  mode:
+    description: "plan or apply"
+    required: false
+    default: "plan"
+  foundation:
+    description: >-
+      true for layers that are hard to re-create (day-0, day-1, gh-test): in apply mode a plan that deletes or
+      replaces anything fails before apply
+    required: false
+    default: "false"
+  plan_name:
+    description: "Heading of the sticky PR comment; also used to find the comment again"
+    required: true
+  github_token:
+    description: "Token for posting the PR comment"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Read Terraform version
+      id: tf-version
+      shell: bash
+      run: echo "version=$(cat "$GITHUB_WORKSPACE/.terraform-version")" >> "$GITHUB_OUTPUT"
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 #v4.0.0
+      with:
+        terraform_version: ${{ steps.tf-version.outputs.version }}
+        terraform_wrapper: false
+
+    - name: Terraform fmt
+      id: fmt
+      shell: bash
+      working-directory: ${{ inputs.layer_dir }}
+      run: terraform fmt -check -no-color
+
+    - name: Terraform init
+      id: init
+      shell: bash
+      working-directory: ${{ inputs.layer_dir }}
+      env:
+        BACKEND_CONFIG: ${{ inputs.backend_config }}
+      run: terraform init -input=false -no-color -backend-config="$BACKEND_CONFIG"
+
+    - name: Terraform validate
+      id: validate
+      shell: bash
+      working-directory: ${{ inputs.layer_dir }}
+      run: terraform validate -no-color
+
+    - name: Terraform plan
+      id: plan
+      shell: bash
+      working-directory: ${{ inputs.layer_dir }}
+      env:
+        VAR_FILES: ${{ inputs.var_files }}
+      run: |
+        args=()
+        for f in $VAR_FILES; do args+=("-var-file=$f"); done
+        terraform plan -input=false -no-color -lock-timeout=10m -out="$RUNNER_TEMP/tfplan" "${args[@]}"
+        terraform show -no-color "$RUNNER_TEMP/tfplan" > "$RUNNER_TEMP/tfplan.txt"
+        terraform show -json "$RUNNER_TEMP/tfplan" > "$RUNNER_TEMP/tfplan.json"
+
+    - name: Post plan to the pull request
+      if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        PLAN_NAME: ${{ inputs.plan_name }}
+        FOUNDATION: ${{ inputs.foundation }}
+        FMT_OUTCOME: ${{ steps.fmt.outcome }}
+        INIT_OUTCOME: ${{ steps.init.outcome }}
+        VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        PLAN_OUTCOME: ${{ steps.plan.outcome }}
+      with:
+        github-token: ${{ inputs.github_token }}
+        script: |
+          const fs = require('fs');
+          const planName = process.env.PLAN_NAME;
+          const planPath = `${process.env.RUNNER_TEMP}/tfplan.txt`;
+          const plan = fs.existsSync(planPath) ? fs.readFileSync(planPath, 'utf8') : '';
+          const marker = `<!-- terraform-plan: ${planName} -->`;
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, per_page: 100,
+          });
+          const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+
+          const summary = (plan.match(/^(Plan: .*|No changes\..*)$/m) || ['(no plan)'])[0];
+          const planSection = plan.length > 60000
+            ? 'Plan is too large for a comment; see the workflow run log.'
+            : `<details><summary>Show plan</summary>\n\n\`\`\`\n${plan}\n\`\`\`\n</details>`;
+          const guard = process.env.FOUNDATION === 'true'
+            ? '\n> Foundation layer: on merge, a plan that deletes or replaces anything stops before apply.\n'
+            : '';
+
+          const body = `${marker}
+          ### ${planName}
+          - fmt: \`${process.env.FMT_OUTCOME}\` · init: \`${process.env.INIT_OUTCOME}\` · validate: \`${process.env.VALIDATE_OUTCOME}\` · plan: \`${process.env.PLAN_OUTCOME}\`
+          - **${summary}**
+          ${guard}
+          ${planSection}
+
+          *Commit ${context.sha.substring(0, 7)} · run ${context.runId}*`;
+
+          if (existing) {
+            await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body });
+          } else {
+            await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
+          }
+
+    - name: Foundation guard
+      if: ${{ inputs.mode == 'apply' && inputs.foundation == 'true' }}
+      shell: bash
+      run: '"$GITHUB_WORKSPACE/scripts/plan-guard.sh" "$RUNNER_TEMP/tfplan.json"'
+
+    - name: Terraform apply
+      if: ${{ inputs.mode == 'apply' }}
+      shell: bash
+      working-directory: ${{ inputs.layer_dir }}
+      run: terraform apply -input=false -no-color -lock-timeout=10m "$RUNNER_TEMP/tfplan"
