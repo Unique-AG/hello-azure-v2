@@ -1,0 +1,90 @@
+{
+  // Renovate for hello-azure-v2, run by .github/workflows/renovate.yaml in this repository.
+  // Conventions follow the Unique-AG Renovate base config (infrastructure: .github/config/renovate/renovate.base.libsonnet).
+  // Scope: Terraform providers and modules, the Terraform CLI version and GitHub Actions.
+  // Unique app versions and charts in 03_applications follow the release process, not Renovate.
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended", ":preserveSemverRanges", "mergeConfidence:all-badges"],
+  addLabels: [
+    "renovate",
+    "dependencies",
+    "{{#unless releaseTimestamp}}do-not-merge/needs-release-age-check{{/unless}}",
+    "team/soleng",
+  ],
+  automerge: false,
+  commitMessageAction: "update",
+  commitMessageExtra: "→ {{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{{newVersion}}}{{/if}}",
+  commitMessagePrefix: "chore(deps):",
+  commitMessageSuffix: "",
+  commitMessageTopic: "{{depName}}",
+  dependencyDashboard: true,
+  dependencyDashboardAutoclose: true,
+  dependencyDashboardTitle: "hello-azure-v2 Dependency Dashboard",
+  enabledManagers: ["terraform", "terraform-version", "github-actions", "custom.regex"],
+  ignorePaths: ["03_applications/**"],
+  minimumReleaseAge: "3 days",
+  minimumReleaseAgeBehaviour: "timestamp-optional",
+  pinDigests: true,
+  recreateWhen: "auto",
+  separateMajorMinor: true,
+  separateMinorPatch: false,
+  separateMultipleMajor: true,
+  separateMultipleMinor: false,
+  timezone: "Europe/Zurich",
+  vulnerabilityAlerts: { labels: ["security"] },
+  customManagers: [
+    {
+      customType: "regex",
+      description: "Update SHA-pinned terraform module sources via renovate directive comment (scripts/renovate-directives.test.py)",
+      managerFilePatterns: ["/\\.tf$/"],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+) packageName=(?<packageName>[^\\s]+) currentValue=(?<currentValue>[^\\s]+)\\n\\s+source\\s*=\\s*"[^"]*\\?ref=(?<currentDigest>[a-f0-9]{40})"',
+      ],
+      packageNameTemplate: "{{{packageName}}}",
+      extractVersionTemplate: "^{{{depName}}}@(?<version>.+)$",
+    },
+  ],
+  packageRules: [
+    {
+      description: "Catch-all: clean commit topic and extra for all deps",
+      matchDatasources: ["*"],
+      commitMessageTopic: "{{depName}}",
+      commitMessageExtra: "→ {{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{{newVersion}}}{{/if}}",
+      digest: { commitMessageTopic: "{{depName}}", commitMessageExtra: "→ {{{newDigestShort}}}" },
+      pin: { commitMessageTopic: "{{depName}}", commitMessageExtra: "" },
+    },
+    {
+      description: "Scope: chore(deps,actions) for GitHub Actions",
+      matchManagers: ["github-actions"],
+      commitMessagePrefix: "chore(deps,actions):",
+    },
+    {
+      description: "Scope: chore(deps,terraform) for Terraform",
+      matchManagers: ["terraform"],
+      commitMessagePrefix: "chore(deps,terraform):",
+    },
+    {
+      description: "Leave required_version alone; .terraform-version (terraform-version manager) is the one source",
+      matchManagers: ["terraform"],
+      matchPackageNames: ["hashicorp/terraform"],
+      enabled: false,
+    },
+    {
+      description: "Group all GitHub Actions updates into one PR",
+      matchManagers: ["github-actions"],
+      groupName: "github-actions",
+    },
+    {
+      description: "No digest for renovatebot/github-action (lookup failures) or for tool versions passed as action inputs (zizmor-action version, setup-tflint tflint_version)",
+      matchManagers: ["github-actions"],
+      matchDepNames: ["renovatebot/github-action", "ghcr.io/zizmorcore/zizmor", "tflint"],
+      pinDigests: false,
+    },
+    {
+      description: "One PR per terraform-modules module, straight to the latest release",
+      matchManagers: ["custom.regex"],
+      matchPackageNames: ["Unique-AG/terraform-modules"],
+      separateMultipleMajor: false,
+    },
+  ],
+}
