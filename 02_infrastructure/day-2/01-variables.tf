@@ -345,6 +345,62 @@ variable "kubernetes_node_pool_settings" {
   default = {}
 }
 
+# Kata node pool for Conduct sandboxes (AKS Pod Sandboxing, workload_runtime = KataVmIsolation).
+# Defaults match Unique's own clusters; see docs/rollouts/2026-11-conduct.md for the sizing rationale.
+variable "kubernetes_kata_enabled" {
+  description = "Whether to create the Kata node pool that runs Conduct sandboxes"
+  type        = bool
+  default     = true
+}
+
+variable "kubernetes_kata_node_size" {
+  description = "VM size of the Kata node pool; must support nested virtualization (Dsv5/Ddsv5/Dsv6 families do, B-series and v3 do not)"
+  type        = string
+  default     = "Standard_D8s_v5"
+}
+
+variable "kubernetes_kata_min_count" {
+  description = "Minimum number of nodes in the Kata node pool; 0 lets the pool scale to zero when no sandbox runs"
+  type        = number
+  default     = 0
+}
+
+variable "kubernetes_kata_max_count" {
+  description = "Maximum number of nodes in the Kata node pool (autoscaler ceiling; the pod subnet is the practical limit)"
+  type        = number
+  default     = 10
+}
+
+variable "kubernetes_kata_max_pods" {
+  description = "Maximum pods per Kata node; also bounds the pod IPs a node reserves from the pod subnet"
+  type        = number
+  default     = 30
+}
+
+variable "kubernetes_kata_zones" {
+  description = "Availability zones of the Kata node pool; the VM size must be offered in each of them"
+  type        = list(string)
+  default     = ["1", "3"]
+}
+
+variable "kubernetes_kata_max_surge" {
+  description = "Maximum surge for upgrades of the Kata node pool"
+  type        = string
+  default     = "30%"
+}
+
+variable "kubernetes_kata_drain_timeout_in_minutes" {
+  description = "Drain timeout for Kata nodes during AKS upgrades; Kata VMs stop slowly and sandbox pods run with restartPolicy Never"
+  type        = number
+  default     = 30
+}
+
+variable "kubernetes_kata_undrainable_node_behavior" {
+  description = "Behaviour when a Kata node cannot be drained within the timeout; Cordon keeps one stuck sandbox pod from failing the whole upgrade"
+  type        = string
+  default     = "Cordon"
+}
+
 variable "aks_public_ip_name" {
   description = "Name of the AKS public IP (created in day-1)"
   type        = string

@@ -5,10 +5,11 @@ spec:
     - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: main
       ref: values
-    - repoURL: ghcr.io/unique-ag/helm-charts
-      chart: ai-service
-      targetRevision: 2.1.1
+    - repoURL: uqhacrtest.azurecr.io/helm
+      chart: assistants-core
+      targetRevision: "2026.40.5"
       helm:
+        passCredentials: true
         releaseName: assistants-core
         valueFiles:
           - $values/03_applications/defaults/ai-services/assistants-core.yaml

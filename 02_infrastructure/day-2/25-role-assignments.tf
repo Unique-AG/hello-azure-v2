@@ -32,6 +32,17 @@ resource "azurerm_role_assignment" "aks_workload_identity_cognitive_services_use
   skip_service_principal_aad_check = true
 }
 
+# Conduct: the Azure Files CSI driver acts as the cluster's control-plane identity when it provisions the
+# sandbox checkpoint share on a storage account outside the node resource group.
+resource "azurerm_role_assignment" "ingestion_storage_aks_file_shares" {
+  count = var.kubernetes_kata_enabled ? 1 : 0
+
+  scope                            = module.ingestion_storage.storage_account_id
+  role_definition_name             = "Storage Account Contributor"
+  principal_id                     = module.kubernetes_cluster.cluster_resource.identity[0].principal_id
+  skip_service_principal_aad_check = true
+}
+
 # AGIC Identity needs at least 'Reader' access to Application Gateway's Resource Group
 resource "azurerm_role_assignment" "application_gateway_ingres_controller_reader_role" {
   scope                = data.azurerm_resource_group.core.id
@@ -104,6 +115,21 @@ resource "azurerm_role_assignment" "cluster_user_terraform" {
 # Tries to use explicit scope from variable first, then falls back to the module.kubernetes_cluster module output
 resource "azurerm_role_assignment" "cluster_rbac_admin_terraform" {
   principal_id         = data.azuread_service_principal.terraform.object_id
+  role_definition_name = local.cluster_rbac_admin_role_name
+  scope                = coalesce(var.aks_cluster_id, module.kubernetes_cluster.kubernetes_cluster_id)
+}
+
+# Admin Kubernetes Cluster group: lets its members fetch credentials and act as cluster admin through
+# Azure RBAC for Kubernetes. Membership is managed outside Terraform. Deliberately not the Contributor
+# role the Terraform service principal holds: the group needs kubectl rights, not ARM management.
+resource "azurerm_role_assignment" "cluster_user_admin_group" {
+  principal_id         = azuread_group.admin_kubernetes_cluster.object_id
+  role_definition_name = "Azure Kubernetes Service Cluster User Role"
+  scope                = coalesce(var.aks_cluster_id, module.kubernetes_cluster.kubernetes_cluster_id)
+}
+
+resource "azurerm_role_assignment" "cluster_rbac_admin_admin_group" {
+  principal_id         = azuread_group.admin_kubernetes_cluster.object_id
   role_definition_name = local.cluster_rbac_admin_role_name
   scope                = coalesce(var.aks_cluster_id, module.kubernetes_cluster.kubernetes_cluster_id)
 }

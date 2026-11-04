@@ -24,3 +24,7 @@ images:
   - name: helm/assistants-agentic-table:2026.40.5
   - name: helm/unique-api:2026.40.5
   - name: helm/chat:2026.40.5
+  - name: unique/sbx-gateway:2026.40.5
+  - name: unique/sbx-storage:2026.40.5
+  - name: unique/unique-polyagent-001:2026.40.5
+  - name: helm/assistants-core:2026.40.5

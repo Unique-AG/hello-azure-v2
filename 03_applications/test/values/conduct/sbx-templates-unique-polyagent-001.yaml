@@ -1,0 +1,75 @@
+# SandboxTemplate + SandboxWarmPool for the Unique polyagent runtime. Every sandbox is one Kata pod from
+# this template; assistants-core claims them by template name (sandboxConfig.template).
+image:
+  registry: uqhacrtest.azurecr.io
+  repository: unique/unique-polyagent-001
+  tag: "2026.40.5"
+  useDigest: false
+
+sandboxTemplate:
+  name: unique-polyagent-001
+  service: true
+  imagePullSecrets: []
+  env:
+    - name: LOG_LEVEL
+      value: "INFO"
+    - name: HTTP_PROXY
+      value: http://sbx-gateway.sbx.svc.cluster.local:3128
+    - name: HTTPS_PROXY
+      value: http://sbx-gateway.sbx.svc.cluster.local:3128
+    - name: NO_PROXY
+      value: localhost,127.0.0.1,::1
+    - name: UNIQUE_API_KEY
+      value: "dummy" # the gateway injects the user/company identity; the key is a placeholder for the SDK
+    - name: UNIQUE_API_BASE
+      value: http://backend-service-chat.unique.svc.cluster.local/public
+    - name: INGESTION_UPLOAD_API_URL_INTERNAL
+      value: http://backend-service-ingestion.unique.svc.cluster.local/scoped/upload
+    - name: SBX_STORAGE_URL
+      value: http://sbx-storage.sbx.svc.cluster.local:80
+  ciliumNetworkPolicy:
+    enabled: true
+    description: "Egress allowlist for sandbox pods - proxy-only HTTP/HTTPS via sbx-gateway."
+    enableDefaultDeny:
+      ingress: true
+      egress: true
+    ingress:
+      - fromEndpoints:
+          - matchLabels:
+              "k8s:io.kubernetes.pod.namespace": unique
+              "k8s:app": sandbox-router
+        toPorts:
+          - ports:
+              - port: "8888"
+                protocol: TCP
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              "k8s:io.kubernetes.pod.namespace": kube-system
+              "k8s:k8s-app": kube-dns
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
+      - toEndpoints:
+          - matchLabels:
+              "k8s:io.kubernetes.pod.namespace": sbx
+              "k8s:app.kubernetes.io/name": sbx-gateway
+        toPorts:
+          - ports:
+              - port: "3128"
+                protocol: TCP
+  # Pre-started sandboxes waiting for a user; see the warm pool decision in the rollout guide.
+  warmPool:
+    enabled: true
+    replicas: 2
+    updateStrategy:
+      type: Recreate
+
+prometheus:
+  enabled: false
+grafana:
+  dashboards:
+    enabled: false

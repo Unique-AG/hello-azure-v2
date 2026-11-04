@@ -1,0 +1,19 @@
+image:
+  repository: uqhacrtest.azurecr.io/agent-sandbox/agent-sandbox-controller
+
+router:
+  image:
+    repository: uqhacrtest.azurecr.io/agent-sandbox/sandbox-router-go
+  networkPolicy:
+    enabled: true
+    ingress:
+      # Only assistants-core talks to the router (SANDBOX_ROUTER_URL).
+      allowedSources:
+        - podSelector:
+            app.kubernetes.io/name: assistants-core
+          namespaceSelector:
+            kubernetes.io/metadata.name: unique
+    egress:
+      sandboxPort: 8888
+      sandboxNamespaceSelector:
+        kubernetes.io/metadata.name: sbx

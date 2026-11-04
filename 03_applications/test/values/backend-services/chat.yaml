@@ -30,7 +30,8 @@ env:
     {"name": "RfpAgent", "apiURL": "http://assistants-agentic-table.unique.svc.cluster.local/agentic_table"},
     {"name": "UniqueAi", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/unique_ai"},
     {"name": "UniqueAIV2", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/unique_ai_v2"},
-    {"name": "KycReviewAgent", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/kyc_review_agent"}
+    {"name": "KycReviewAgent", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/kyc_review_agent"},
+    {"name": "SwappableIntelligence", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/sandbox_orchestrator"}
     ]
   LOG_LEVEL: info
   MAX_HEAP_MB: 3700

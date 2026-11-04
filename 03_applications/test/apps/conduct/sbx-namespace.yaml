@@ -1,0 +1,17 @@
+spec:
+  name: sbx-namespace
+  autoSync: false
+  sources:
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: main
+      ref: values
+    - chart: raw
+      repoURL: https://bedag.github.io/helm-charts
+      targetRevision: 2.0.0
+      helm:
+        releaseName: sbx-namespace
+        valueFiles:
+          - $values/03_applications/test/values/conduct/sbx-namespace.yaml
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"

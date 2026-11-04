@@ -1,0 +1,72 @@
+# sbx-gateway: the only way out of a sandbox. An allow-listing HTTP(S) proxy (mitmproxy) that terminates
+# TLS with its own CA, enforces host/path/method rules and stamps user and company headers on requests to
+# the platform.
+image:
+  registry: uqhacrtest.azurecr.io
+  repository: unique/sbx-gateway
+  tag: "2026.40.5"
+  useDigest: false
+
+nodeSelector:
+  scalability: steady
+  lifecycle: persistent
+
+internalServices:
+  dependencies:
+    chat:
+      name: backend-service-chat
+      namespace: unique
+      servicePort: 80
+    ingestion:
+      name: backend-service-ingestion
+      namespace: unique
+      servicePort: 80
+
+egressGateway:
+  # Per-environment upstreams on top of the chart-owned chat/ingestion policy:
+  # - the public API host: the upload URL node-ingestion hands out points there
+  # - the ingestion storage account: SAS reads of uploaded documents and preview PDF writes
+  # - sbx-storage: checkpoint restore/save
+  # - PyPI: package installs inside sandboxes
+  allowHosts:
+    api.test-hello.azure.unique.dev: true
+    uqhastoragetest.blob.core.windows.net: true
+    sbx-storage.sbx.svc.cluster.local: true
+    pypi.org: true
+    files.pythonhosted.org: true
+  allowPaths:
+    api.test-hello.azure.unique.dev:
+      - /scoped/ingestion/upload
+    uqhastoragetest.blob.core.windows.net:
+      - /ingestion/*/cont_*
+    sbx-storage.sbx.svc.cluster.local:
+      - /v1/checkpoint
+      - /v1/skill-cache-base
+    pypi.org:
+      - /simple*
+    files.pythonhosted.org:
+      - /packages/*
+  allowMethods:
+    api.test-hello.azure.unique.dev:
+      - PUT
+    # GET/HEAD for SAS reads; PUT only for the preview PDF the SDK writes next to a blob it just uploaded,
+    # bounded by the SAS token in the query string and the path filter above.
+    uqhastoragetest.blob.core.windows.net:
+      - GET
+      - HEAD
+      - PUT
+    # GET restores a checkpoint, PUT saves one, HEAD is the client's probe before a streaming GET.
+    sbx-storage.sbx.svc.cluster.local:
+      - GET
+      - HEAD
+      - PUT
+    pypi.org:
+      - GET
+      - HEAD
+    files.pythonhosted.org:
+      - GET
+      - HEAD
+  injectRequestHeaders:
+    sbx-storage.sbx.svc.cluster.local:
+      x-user-id: "${context:source_pod.labels.unique.app/user-id}"
+      x-company-id: "${context:source_pod.labels.unique.app/company-id}"
