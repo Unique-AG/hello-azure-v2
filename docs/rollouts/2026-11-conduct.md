@@ -28,12 +28,10 @@ identity itself. Unique's published requirements are in
 ```mermaid
 flowchart LR
   subgraph aks [AKS - Azure CNI powered by Cilium]
-    subgraph chatNs [namespace chat]
+    subgraph platformNs [namespace unique - platform]
       nodeChat[backend-service-chat]
       assistantsCore[assistants-core]
       nodeIngestion[backend-service-ingestion]
-    end
-    subgraph systemNs [namespace system]
       controller[agent-sandbox-controller + CRDs]
       router[sandbox-router]
     end
@@ -75,11 +73,12 @@ Components added by this rollout:
 | Cilium data plane + Advanced Container Networking Services | AKS cluster (day-2 Terraform) | L7-capable policy engine; replaces the Azure data plane in place |
 | Kata node pool | AKS cluster (day-2 Terraform) | Azure Linux nodes with `workload_runtime = KataVmIsolation`, label and taint `workload-runtime=kata`; only sandbox pods schedule there |
 | Storage role assignment | day-2 Terraform | lets the Azure Files CSI driver create the checkpoint share on the ingestion storage account |
-| `agent-sandbox-controller` 1.0.1 | namespace `system` (Argo CD) | upstream [kubernetes-sigs/agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) controller: 4 CRDs, controller, `sandbox-router` |
+| `agent-sandbox-controller` 1.0.1 | namespace `unique`, system app (Argo CD) | upstream [kubernetes-sigs/agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) controller: 4 CRDs, controller, `sandbox-router` |
+| `sbx` namespace + StorageClass `sbx-backup-azurefile` | cluster scope, `conduct` app set (Argo CD) | the isolated namespace for sandbox pods and the Azure Files class on the ingestion storage account |
 | `sbx-storage` | namespace `sbx` (Argo CD) | checkpoint and skill-cache service; the only pod that mounts the ReadWriteMany share |
 | `sbx-gateway` | namespace `sbx` (Argo CD) | intercepting HTTPS proxy with allow-list; generates its MITM CA (`Secret egress-mitm-ca`) |
 | `sbx-templates` (`unique-polyagent-001`) | namespace `sbx` (Argo CD) | `SandboxTemplate` (runtime image, Kata runtime class, security context, network policy) and `SandboxWarmPool` |
-| assistants-core on its dedicated chart | namespace `chat` | the generic `ai-service` chart has no sandbox settings; the dedicated `assistants-core` chart carries `sandboxConfig` and the sandbox RBAC |
+| assistants-core on its dedicated chart | namespace `unique` | the generic `ai-service` chart has no sandbox settings; the dedicated `assistants-core` chart carries `sandboxConfig` and the sandbox RBAC |
 | Configuration | `chat` backend module config, feature flag | makes the Conduct space type available in the admin UI |
 
 Everything is additive. The Cilium switch is the only step that touches existing nodes.
@@ -128,7 +127,7 @@ changes.
 | # | Requirement | Notes |
 |---|---|---|
 | 18 | The ingestion storage account accepts SMB file shares and the node subnet reaches it | the reference account is Standard StorageV2 with public network access on and a service endpoint on the node subnet |
-| 19 | ~100 GiB of Standard (LRS) Azure Files capacity | sequential zip read/write only |
+| 19 | 64 GiB of Standard (LRS) Azure Files capacity (the chart default; checkpoints are kept 14 days) | sequential zip read/write only |
 | 20 | **[decision]** Shared or dedicated account: the Azure Files CSI driver provisions the share with the **account key**, stored as a Secret in `sbx`, which authorises the whole account. Unique's hosted tenants share the ingestion account. If your policy requires separation, create a dedicated Standard StorageV2 account and point the StorageClass at it | decide before phase 2; changing the account later recreates the share (checkpoints are transient) |
 
 ### 2.5 Decisions to take before you start
@@ -157,8 +156,8 @@ flowchart TD
   P0[Phase 0: discovery and prerequisites] --> P1["Phase 1: Cilium data plane + ACNS (day-2 Terraform, node re-image) [maintenance window]"]
   P1 --> S1[Smoke test the platform]
   S1 --> P2[Phase 2: Kata node pool + storage role assignment + image mirror]
-  P2 --> P3[Phase 3: platform wiring - assistants-core chart, chat module config, feature flag]
-  P3 --> P4[Phase 4: Conduct stack - controller, storage, gateway, templates]
+  P2 --> P3[Phase 3: Conduct stack - controller, sbx namespace, storage, gateway, templates]
+  P3 --> P4[Phase 4: platform wiring - assistants-core chart, chat module config, feature flag]
   P4 --> P5[Phase 5: verification and functional smoke tests]
 ```
 
@@ -324,7 +323,7 @@ cluster changes.
 Then the smoke test of the platform: log in to the chat, send a message, upload a document. Plan day-2
 again: `No changes`.
 
-## Phase 2: Kata node pool, storage access, image mirror *(to be validated)*
+## Phase 2: Kata node pool, storage access, image mirror
 
 **What changes.**
 
@@ -409,11 +408,113 @@ az acr repository show-tags -n <acr> --repository unique/sbx-gateway -o tsv     
 kubectl get runtimeclass kata-vm-isolation                                                                  # appears with the first Kata node; absent until then is fine
 ```
 
-## Phase 3: Platform wiring *(to be validated)*
+**Reference environment, 4 Nov 2026:** plan `2 to add, 0 to change, 0 to destroy`; apply a few minutes,
+no workload impact; pool `kata` `Succeeded` with `KataVmIsolation`, Azure Linux, `Standard_D8s_v5`, 0–10
+nodes, `max_pods` 30, zones 1 and 3; the cluster identity holds `Storage Account Contributor` on the
+ingestion storage account.
 
-## Phase 4: Conduct stack *(to be validated)*
+## Phase 3: Conduct stack *(to be validated)*
+
+Four Argo CD applications in a new `conduct` application set (destination namespace `sbx`) plus the
+controller as a system application. Nothing here touches the running platform; the stack is inert until
+assistants-core is pointed at it in phase 4.
+
+**What changes.**
+
+| File | Purpose |
+|---|---|
+| `03_applications/<env>/values/argo/argo-appsets.yaml` | new `conduct` application set reading `03_applications/<env>/apps/conduct/*.yaml`, destination namespace `sbx` |
+| `03_applications/<env>/apps/system/agent-sandbox-controller.yaml` + `values/agent-sandbox-controller/` | chart `agent-sandbox-controller` 1.0.1 from `ghcr.io/unique-ag/helm-charts`, images from your registry mirror, `ServerSideApply=true` for the large CRDs, router NetworkPolicy: ingress from `assistants-core` in `unique` only, egress to `sbx` only |
+| `apps/conduct/sbx-namespace.yaml` + `values/conduct/sbx-namespace.yaml` | `Namespace sbx` (never pruned) and `StorageClass sbx-backup-azurefile` (`file.csi.azure.com`, Standard_LRS, your ingestion storage account and its resource group, uid/gid 65534) |
+| `apps/conduct/sbx-storage.yaml` + `values/conduct/sbx-storage.yaml` | chart `sbx-storage` 2026.40.5; PVC `ReadWriteMany` on that class, chart default 64 GiB |
+| `apps/conduct/sbx-gateway.yaml` + `values/conduct/sbx-gateway.yaml` | chart `sbx-gateway` 2026.40.5; `internalServices.dependencies.chat/ingestion` point at `backend-service-chat` / `backend-service-ingestion` in `unique` (Service port 80); allow-list for your public API host, your ingestion blob host, `sbx-storage`, PyPI; `ignoreDifferences` + `RespectIgnoreDifferences` on the generated MITM CA Secret |
+| `apps/conduct/sbx-templates.yaml` + `values/conduct/sbx-templates-unique-polyagent-001.yaml` | chart `sbx-templates` 2026.40.5; runtime image from your mirror, platform URLs of this repository, warm pool `2`, CiliumNetworkPolicy ingress from the router in `unique`, Prometheus/Grafana extras off |
+
+**[manual] Adapt before you sync:** registry name, public API hostname, ingestion storage account name and
+resource group (StorageClass and gateway allow-list), warm pool size. The blob path filter
+`/ingestion/*/cont_*` assumes the ingestion container is named `ingestion`, as created by this repository.
+
+**Sync order** (all applications are `autoSync: false`; sync by hand in this order and wait for Healthy):
+
+1. `argo` (picks up the new application set; the four `conduct` applications appear)
+2. `agent-sandbox-controller`: CRDs, controller, router. Expect `kubectl get crd | grep x-k8s.io` to list
+   `sandboxes.agents.x-k8s.io`, `sandboxclaims`, `sandboxtemplates`, `sandboxwarmpools.extensions.agents.x-k8s.io`
+3. `sbx-namespace`: namespace and StorageClass
+4. `sbx-storage`: the PVC must reach `Bound` within a minute. `Pending` with `AuthorizationFailed` on
+   `listKeys` in the PVC events means the phase 2 role assignment is missing or not yet propagated; a
+   mount error on the pod means TCP 445 to the storage account is blocked
+5. `sbx-gateway`: 2 replicas `Running`, Secret `egress-mitm-ca` created
+6. `sbx-templates-unique-polyagent-001`: `SandboxTemplate` and `SandboxWarmPool` created. The warm pool
+   asks for 2 sandboxes, which schedules 2 Kata pods: the autoscaler adds the first Kata node (3–5 min),
+   then the pods pull the runtime image (several GiB, a few more minutes) and go `Running`
+
+**Stop if** a chart fails to render in Argo CD (missing Cilium CRDs means phase 1 is not complete), the
+PVC stays `Pending` for more than 5 minutes after the role assignment propagated, or the warm pool pods
+stay `Pending` for more than 10 minutes with `0/N nodes available` (Kata pool `max_count`, quota or pod
+subnet; see phase 2).
+
+**Verify**
+
+```bash
+kubectl get crd | grep x-k8s.io                                           # 4 CRDs
+kubectl -n unique get pods -l app.kubernetes.io/name=agent-sandbox-controller   # controller + 2 router pods Running
+kubectl -n sbx get pvc,pods                                               # PVC Bound; sbx-storage, 2x sbx-gateway, 2 warm sandbox pods Running
+kubectl -n sbx get sandboxtemplates,sandboxwarmpools,sandboxes            # template, pool (2/2 ready), 2 sandboxes
+kubectl get nodes -l workload-runtime=kata                                # 1 Kata node
+kubectl -n sbx get cnp                                                    # policies for sandbox pods and sbx-storage
+```
+
+## Phase 4: Platform wiring *(to be validated)*
+
+**What changes.**
+
+| File | Purpose |
+|---|---|
+| `03_applications/<env>/apps/chat/assistants-core.yaml` | chart switched from `ai-service` (`ghcr.io/unique-ag/helm-charts`) to the dedicated `assistants-core` chart from your registry mirror (`<acr>/helm`, same version as the chat release); same release name and selector labels, so the Deployment rolls in place |
+| `03_applications/defaults/ai-services/assistants-core.yaml` | rewritten for the dedicated chart's schema: `internalServices.dependencies` for `backend-service-chat` (port 80) and `backend-service-configuration` (8095), the few env values the chart does not default, `nodeSelector`, workload identity on |
+| `03_applications/<env>/values/ai-services/assistants-core.yaml` | image from your mirror, environment env values, `secretProvider` (tenant, CSI identity, vault), `workloadIdentity.azure.clientId`, and `sandboxConfig`: `namespace: sbx`, `template: unique-polyagent-001`, router `agent-sandbox-controller-router-svc` in `unique`, port 8080 |
+| `03_applications/defaults/backend-services/chat.yaml`, `03_applications/<env>/values/backend-services/chat.yaml` | `INTERNAL_MODULES_CONFIG` gains `{"name": "SwappableIntelligence", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/sandbox_orchestrator"}` (both files carry the full list) |
+| `03_applications/<env>/values/_flags.yaml` | `FEATURE_FLAG_ENABLE_SWAPPABLE_INTELLIGENCE_UN_18404: "true"` |
+
+With `sandboxConfig.enabled`, the chart renders `SANDBOX_NAMESPACE`, `SANDBOX_TEMPLATE`,
+`SANDBOX_ROUTER_URL`, `SANDBOX_CLAIM_TTL_SECONDS` on the pod and a Role/RoleBinding **in namespace
+`sbx`** for the assistants-core service account (create/patch/delete `sandboxclaims`, read templates,
+pools and sandboxes). That is why phase 3 comes first.
+
+**Sync order:** `assistants-core` (rolling update, `maxUnavailable: 0`), then `backend-service-chat`
+(rolling restart for the new module list), then `backend-service-configuration` and `reflector`, the two
+applications that load `_flags.yaml`. Chat stays available throughout; a Conduct space can be created in
+the admin UI once the flag is live.
+
+**Stop if** the assistants-core diff shows the Deployment as delete+create instead of an update (selector
+mismatch; share the diff), or pods crash-loop on start (secret provider or env; compare the rendered
+ConfigMap with the previous one).
+
+**Verify**
+
+```bash
+kubectl -n unique get deploy assistants-core -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+kubectl -n unique exec deploy/assistants-core -- env | grep SANDBOX_
+kubectl -n sbx get role,rolebinding | grep assistants-core
+kubectl -n unique exec deploy/backend-service-chat -- env | grep -c SwappableIntelligence   # 1
+```
 
 ## Phase 5: Verification *(to be validated)*
+
+Functional checks from a user's point of view, with the matching cluster-side evidence. Run them once
+the warm pool shows `2/2` ready.
+
+| # | Test | Expected |
+|---|---|---|
+| T1 | Admin UI: create a space of type Conduct (Swappable Intelligence) | the type is offered (flag live) and the space saves |
+| T2 | Chat: open the space, send a first message | an answer within ~10 s; `kubectl -n sbx get sandboxclaims` shows one claim bound to a warm sandbox and the pool starts a replacement |
+| T3 | Chat: ask the agent to read a document from the knowledge base and to produce a file (e.g. a `.docx`) | the file appears in the chat; the gateway audit log (`kubectl -n sbx logs deploy/sbx-gateway`) shows allowed `PUT /scoped/ingestion/upload` to your API host |
+| T4 | Chat: ask the agent to `pip install` a small package | succeeds (PyPI allow-listed); the audit log shows `GET pypi.org/simple/...` |
+| T5 | Chat: ask the agent to fetch `https://example.com` | denied; the audit log shows the blocked host (allow-list working) |
+| T6 | Close the chat, come back after the claim TTL or delete the claim | `kubectl -n sbx get sandboxes` shows the sandbox gone and a checkpoint written to the share (`kubectl -n sbx exec deploy/sbx-storage -- ls /backup`) |
+| T7 | Leave the cluster idle | warm pool stays at 2; the Kata node count stays at 1; with the warm pool at 0 the Kata pool scales to 0 within ~10 minutes |
+
+Also confirm the platform smoke test from phase 1 still passes (chat, upload, knowledge search).
 
 ---
 

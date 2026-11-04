@@ -1,0 +1,17 @@
+spec:
+  name: sbx-storage
+  autoSync: false
+  sources:
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: main
+      ref: values
+    - repoURL: ghcr.io/unique-ag/helm-charts
+      chart: sbx-storage
+      targetRevision: "2026.40.5"
+      helm:
+        releaseName: sbx-storage
+        valueFiles:
+          - $values/03_applications/test/values/conduct/sbx-storage.yaml
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"

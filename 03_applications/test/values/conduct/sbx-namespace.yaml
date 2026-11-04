@@ -1,0 +1,33 @@
+resources:
+  # Sandbox pods run here, isolated from the platform namespace by CiliumNetworkPolicy. Never pruned:
+  # deleting the namespace would take running user sessions with it.
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: sbx
+      annotations:
+        argocd.argoproj.io/sync-options: Prune=false
+
+  # Checkpoint share for sbx-storage: an SMB share on the ingestion storage account, provisioned by the
+  # Azure Files CSI driver with the account key (the cluster identity holds Storage Account Contributor
+  # on the account, see day-2/25-role-assignments.tf). uid/gid 65534 match sbx-storage's security context.
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: sbx-backup-azurefile
+    provisioner: file.csi.azure.com
+    parameters:
+      storageAccount: uqhastoragetest
+      resourceGroup: resource-group-sensitive
+      skuName: Standard_LRS
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    mountOptions:
+      - dir_mode=0750
+      - file_mode=0640
+      - uid=65534
+      - gid=65534
+      - mfsymlinks
+      - cache=strict
+      - nosharesock

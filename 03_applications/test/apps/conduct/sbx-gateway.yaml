@@ -1,0 +1,30 @@
+spec:
+  name: sbx-gateway
+  autoSync: false
+  # The chart generates the MITM CA on first install; later renders would produce a new key pair, so the
+  # Secret's data is ignored and RespectIgnoreDifferences keeps the sync from overwriting it.
+  additionalValues:
+    syncPolicy:
+      syncOptions:
+        - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: egress-mitm-ca
+      jsonPointers:
+        - /data/tls.crt
+        - /data/tls.key
+  sources:
+    - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
+      targetRevision: main
+      ref: values
+    - repoURL: ghcr.io/unique-ag/helm-charts
+      chart: sbx-gateway
+      targetRevision: "2026.40.5"
+      helm:
+        releaseName: sbx-gateway
+        valueFiles:
+          - $values/03_applications/test/values/conduct/sbx-gateway.yaml
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
