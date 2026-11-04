@@ -9,6 +9,7 @@ on:
       - mirroring/test/io.docker.yaml
       - mirroring/test/io.ghcr.yaml
       - mirroring/test/io.quay.yaml
+      - mirroring/test/io.k8s.registry.yaml
   workflow_dispatch:
 
 permissions:
@@ -48,3 +49,4 @@ jobs:
           qcli mirror images -f io.docker.yaml
           qcli mirror images -f io.ghcr.yaml
           qcli mirror images -f io.quay.yaml
+          qcli mirror images -f io.k8s.registry.yaml

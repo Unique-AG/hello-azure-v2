@@ -59,9 +59,14 @@ module "kubernetes_cluster" {
     }
   }
 
+  # Azure CNI powered by Cilium with Advanced Container Networking Services (ACNS). Conduct's sandbox
+  # isolation relies on CiliumNetworkPolicy; switching the data plane re-images every node pool once.
   network_profile = {
-    idle_timeout_in_minutes = var.aks_network_profile_idle_timeout_in_minutes
-    outbound_ip_address_ids = [data.azurerm_public_ip.aks_public_ip.id]
+    network_data_plane          = "cilium"
+    network_policy              = "cilium"
+    advanced_networking_enabled = true
+    idle_timeout_in_minutes     = var.aks_network_profile_idle_timeout_in_minutes
+    outbound_ip_address_ids     = [data.azurerm_public_ip.aks_public_ip.id]
   }
 
   node_pool_settings = {
@@ -80,6 +85,25 @@ module "kubernetes_cluster" {
       zones                = v.zones
     }
   }
+
+  # Kata node pool for Conduct sandboxes. The module sets workload_runtime = KataVmIsolation, Azure Linux,
+  # the label workload-runtime=kata and the taint workload-runtime=kata:NoSchedule on its own.
+  kata_node_pool_settings = var.kubernetes_kata_enabled ? {
+    kata = {
+      auto_scaling_enabled = true
+      max_count            = var.kubernetes_kata_max_count
+      max_pods             = var.kubernetes_kata_max_pods
+      min_count            = var.kubernetes_kata_min_count
+      os_disk_size_gb      = 100
+      vm_size              = var.kubernetes_kata_node_size
+      zones                = var.kubernetes_kata_zones
+      upgrade_settings = {
+        max_surge                 = var.kubernetes_kata_max_surge
+        drain_timeout_in_minutes  = var.kubernetes_kata_drain_timeout_in_minutes
+        undrainable_node_behavior = var.kubernetes_kata_undrainable_node_behavior
+      }
+    }
+  } : {}
 
   # Default activity-log alerts use this list; keeps aks_agent_pool_write_error actionable.
   default_action_group_ids = [azurerm_monitor_action_group.aks_alerts.id]
