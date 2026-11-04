@@ -108,6 +108,20 @@ resource "azurerm_role_assignment" "cluster_rbac_admin_terraform" {
   scope                = coalesce(var.aks_cluster_id, module.kubernetes_cluster.kubernetes_cluster_id)
 }
 
+# Admin Kubernetes Cluster group: lets its members fetch credentials and act as cluster admin through
+# Azure RBAC for Kubernetes. Membership is managed outside Terraform.
+resource "azurerm_role_assignment" "cluster_user_admin_group" {
+  principal_id         = azuread_group.admin_kubernetes_cluster.object_id
+  role_definition_name = local.cluster_user_role_name
+  scope                = coalesce(var.aks_cluster_id, module.kubernetes_cluster.kubernetes_cluster_id)
+}
+
+resource "azurerm_role_assignment" "cluster_rbac_admin_admin_group" {
+  principal_id         = azuread_group.admin_kubernetes_cluster.object_id
+  role_definition_name = local.cluster_rbac_admin_role_name
+  scope                = coalesce(var.aks_cluster_id, module.kubernetes_cluster.kubernetes_cluster_id)
+}
+
 # Terraform Service Principal CSI Identity Key Vault assignments
 # Tries to use explicit principal_id from variable first, then falls back to the module.kubernetes_cluster module output
 resource "azurerm_role_assignment" "csi_identity_secret_reader_main_kv" {
