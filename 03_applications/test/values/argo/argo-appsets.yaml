@@ -49,9 +49,6 @@ applicationsets:
           {{- .metadata.annotations | toYaml | nindent 4 }}
       {{- end }}
 
-  # Conduct sandbox stack: everything that runs in the isolated sbx namespace
-  # (namespace + StorageClass, checkpoint storage, egress gateway, sandbox templates).
-  # The agent-sandbox controller itself is a system app (apps/system/agent-sandbox-controller.yaml).
   conduct:
     additionalAnnotations:
       argocd.argoproj.io/sync-wave: "2"

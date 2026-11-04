@@ -9,12 +9,10 @@ image:
 sandboxTemplate:
   name: unique-polyagent-001
   service: true
-  # Pulled with the kubelet identity (AcrPull on the registry); no pull secret in this repository.
   imagePullSecrets: []
   env:
     - name: LOG_LEVEL
       value: "INFO"
-    # Everything leaves the sandbox through sbx-gateway, including calls to the platform.
     - name: HTTP_PROXY
       value: http://sbx-gateway.sbx.svc.cluster.local:3128
     - name: HTTPS_PROXY
@@ -36,7 +34,6 @@ sandboxTemplate:
       ingress: true
       egress: true
     ingress:
-      # The sandbox router (agent-sandbox-controller, platform namespace) is the only caller.
       - fromEndpoints:
           - matchLabels:
               "k8s:io.kubernetes.pod.namespace": unique
@@ -71,7 +68,6 @@ sandboxTemplate:
     updateStrategy:
       type: Recreate
 
-# Azure Managed Prometheus scrapes by annotation/config, not PodMonitor; dashboards come from Azure Managed Grafana.
 prometheus:
   enabled: false
 grafana:

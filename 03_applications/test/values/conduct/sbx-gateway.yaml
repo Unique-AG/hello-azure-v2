@@ -11,8 +11,6 @@ nodeSelector:
   scalability: steady
   lifecycle: persistent
 
-# Platform services as deployed by this repository (namespace unique, Service port 80). The chart derives
-# the chat and ingestion upstream policy from these entries.
 internalServices:
   dependencies:
     chat:
@@ -29,7 +27,7 @@ egressGateway:
   # - the public API host: the upload URL node-ingestion hands out points there
   # - the ingestion storage account: SAS reads of uploaded documents and preview PDF writes
   # - sbx-storage: checkpoint restore/save
-  # - PyPI: package installs inside sandboxes (prerequisites decision "package index access")
+  # - PyPI: package installs inside sandboxes
   allowHosts:
     api.test-hello.azure.unique.dev: true
     uqhastoragetest.blob.core.windows.net: true

@@ -1,7 +1,3 @@
-# agent-sandbox controller and router (kubernetes-sigs/agent-sandbox), packaged by Unique.
-# Runs in the platform namespace next to assistants-core; the sandbox pods live in `sbx`.
-# Images are mirrored from registry.k8s.io (mirroring/test/io.k8s.registry.yaml); the digests pinned by
-# the chart stay valid because the mirror copies manifests unchanged.
 image:
   repository: uqhacrtest.azurecr.io/agent-sandbox/agent-sandbox-controller
 

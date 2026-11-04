@@ -1,8 +1,6 @@
 spec:
   name: agent-sandbox-controller
   autoSync: false
-  # The chart ships the agents.x-k8s.io CRDs (~200 KiB each); server-side apply keeps them under the
-  # last-applied-configuration annotation limit.
   additionalValues:
     syncPolicy:
       syncOptions:

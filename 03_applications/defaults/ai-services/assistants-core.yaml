@@ -1,8 +1,3 @@
-# Defaults for the dedicated assistants-core chart (uniquecr.azurecr.io/helm/assistants-core).
-# The chart already carries the service defaults (API_BASE, CONFIGURATION_BACKEND_URL, Gunicorn, cache
-# directories, probes, security context, /tmp volume, PDB); only what differs for this repository is here.
-
-# Platform services as deployed by this repository: namespace unique, Service port 80 for chat.
 internalServices:
   dependencies:
     chat:

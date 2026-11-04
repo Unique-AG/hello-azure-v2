@@ -6,7 +6,6 @@ image:
   useDigest: false
 
 # The share is provisioned from the StorageClass in sbx-namespace.yaml. Size is the chart default (64Gi);
-# checkpoints are transient zips, retention 14 days.
 pvc:
   accessMode: ReadWriteMany
   storageClassName: sbx-backup-azurefile
