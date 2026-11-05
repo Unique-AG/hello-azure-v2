@@ -1,9 +1,13 @@
+# The public mirror re-pushes the registry.k8s.io images through Docker, which changes the manifest
+# digest; the chart's upstream digest pins are cleared so the images resolve by tag in the mirror.
 image:
   repository: uqhacrtest.azurecr.io/agent-sandbox/agent-sandbox-controller
+  digest: ""
 
 router:
   image:
     repository: uqhacrtest.azurecr.io/agent-sandbox/sandbox-router-go
+    digest: ""
   networkPolicy:
     enabled: true
     ingress:

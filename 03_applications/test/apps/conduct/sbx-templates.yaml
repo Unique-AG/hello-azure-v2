@@ -1,6 +1,18 @@
 spec:
   name: sbx-templates-unique-polyagent-001
   autoSync: false
+  # When the warm pool's KEDA cron schedule is enabled in the values (warmPool.keda), KEDA owns the pool's
+  # replica count and Argo CD must stop reconciling it, or every sync writes warmPool.replicas back over
+  # the schedule. Uncomment together with the keda block:
+  # additionalValues:
+  #   syncPolicy:
+  #     syncOptions:
+  #       - RespectIgnoreDifferences=true
+  # ignoreDifferences:
+  #   - group: extensions.agents.x-k8s.io
+  #     kind: SandboxWarmPool
+  #     jsonPointers:
+  #       - /spec/replicas
   sources:
     - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: main

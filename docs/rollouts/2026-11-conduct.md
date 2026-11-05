@@ -458,6 +458,7 @@ subnet; see phase 2).
 ```bash
 kubectl get crd | grep x-k8s.io                                           # 4 CRDs
 kubectl -n unique get pods -l app.kubernetes.io/name=agent-sandbox-controller   # controller + 2 router pods Running
+kubectl -n unique get pods -l app=sandbox-router                          # the same 2 router pods: this is the label the sandbox CiliumNetworkPolicy admits
 kubectl -n sbx get pvc,pods                                               # PVC Bound; sbx-storage, 2x sbx-gateway, 2 warm sandbox pods Running
 kubectl -n sbx get sandboxtemplates,sandboxwarmpools,sandboxes            # template, pool (2/2 ready), 2 sandboxes
 kubectl get nodes -l workload-runtime=kata                                # 1 Kata node
