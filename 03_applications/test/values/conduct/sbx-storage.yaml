@@ -5,7 +5,7 @@ image:
   tag: "2026.40.5"
   useDigest: false
 
-# The share is provisioned from the StorageClass in sbx-namespace.yaml. Size is the chart default (64Gi);
+# The share is provisioned from the StorageClass in sbx-storage-storageclass.yaml. Size is the chart default (64Gi);
 pvc:
   accessMode: ReadWriteMany
   storageClassName: sbx-backup-azurefile

@@ -5,6 +5,14 @@ spec:
     - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
       targetRevision: main
       ref: values
+    # StorageClass for the checkpoint share, delivered with the service that uses it.
+    - chart: raw
+      repoURL: https://bedag.github.io/helm-charts
+      targetRevision: 2.0.0
+      helm:
+        releaseName: sbx-storage-storageclass
+        valueFiles:
+          - $values/03_applications/test/values/conduct/sbx-storage-storageclass.yaml
     - repoURL: ghcr.io/unique-ag/helm-charts
       chart: sbx-storage
       targetRevision: "2026.40.5"
