@@ -61,12 +61,37 @@ sandboxTemplate:
           - ports:
               - port: "3128"
                 protocol: TCP
-  # Pre-started sandboxes waiting for a user; see the warm pool decision in the rollout guide.
+  # Warm pool: sandboxes started ahead of demand and handed to users as they open a Conduct chat.
+  #
+  # - Warm start: a pool sandbox is free -> the first answer arrives in seconds. The controller then
+  #   starts a replacement, so the pool returns to `replicas`.
+  # - Cold start: the pool is empty (more concurrent users than replicas, or replicas: 0) -> the user waits
+  #   for a new sandbox: ~1 min if a Kata node has room, 3-5 min if the autoscaler first has to add a node,
+  #   plus the runtime image pull on a brand-new node.
+  # - Cost: ~4 sandbox pods fit on one Standard_D8s_v5. replicas: 2 keeps one Kata node permanently allocated;
+  #   replicas: 0 lets the pool scale to zero nodes at the price of a cold start for the first user.
+  #
+  # Sizing rule of thumb: replicas = ceil(expected concurrent users / 2). Unique's tenants run 2 (starting
+  # out) to 6 (busy).
   warmPool:
     enabled: true
     replicas: 2
     updateStrategy:
       type: Recreate
+    # Optional: warm only during office hours, zero outside (the Kata node then goes away ~10 min later).
+    # Uncomment to enable, together with the ignoreDifferences block in apps/conduct/sbx-templates.yaml
+    # (KEDA then owns the replica count and Argo CD must not write it back).
+    # keda:
+    #   enabled: true
+    #   minReplicaCount: 0
+    #   triggers:
+    #     cron:
+    #       type: cron
+    #       metadata:
+    #         timezone: Europe/Zurich
+    #         start: 0 7 * * 1-5
+    #         end: 0 18 * * 1-5
+    #         desiredReplicas: "2"
 
 prometheus:
   enabled: false
