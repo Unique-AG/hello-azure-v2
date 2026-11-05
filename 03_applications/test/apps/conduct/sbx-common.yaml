@@ -1,5 +1,5 @@
 spec:
-  name: sbx-namespace
+  name: sbx-common
   autoSync: false
   sources:
     - repoURL: 'https://github.com/Unique-AG/hello-azure-v2'
@@ -9,9 +9,9 @@ spec:
       repoURL: https://bedag.github.io/helm-charts
       targetRevision: 2.0.0
       helm:
-        releaseName: sbx-namespace
+        releaseName: sbx-common
         valueFiles:
-          - $values/03_applications/test/values/conduct/sbx-namespace.yaml
+          - $values/03_applications/test/values/conduct/sbx-common.yaml
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"

@@ -1,0 +1,9 @@
+resources:
+  # Sandbox pods run here, isolated from the platform namespace by CiliumNetworkPolicy. Never pruned:
+  # deleting the namespace would take running user sessions with it.
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: sbx
+      annotations:
+        argocd.argoproj.io/sync-options: Prune=false

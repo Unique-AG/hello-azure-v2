@@ -74,8 +74,8 @@ Components added by this rollout:
 | Kata node pool | AKS cluster (day-2 Terraform) | Azure Linux nodes with `workload_runtime = KataVmIsolation`, label and taint `workload-runtime=kata`; only sandbox pods schedule there |
 | Storage role assignment | day-2 Terraform | lets the Azure Files CSI driver create the checkpoint share on the ingestion storage account |
 | `agent-sandbox-controller` 1.0.1 | namespace `unique`, system app (Argo CD) | upstream [kubernetes-sigs/agent-sandbox](https://github.com/kubernetes-sigs/agent-sandbox) controller: 4 CRDs, controller, `sandbox-router` |
-| `sbx` namespace + StorageClass `sbx-backup-azurefile` | cluster scope, `conduct` app set (Argo CD) | the isolated namespace for sandbox pods and the Azure Files class on the ingestion storage account |
-| `sbx-storage` | namespace `sbx` (Argo CD) | checkpoint and skill-cache service; the only pod that mounts the ReadWriteMany share |
+| `sbx-common` | cluster scope, `conduct` app set (Argo CD) | the isolated `sbx` namespace for sandbox pods |
+| `sbx-storage` + StorageClass `sbx-backup-azurefile` | namespace `sbx` (Argo CD) | checkpoint and skill-cache service, the only pod that mounts the ReadWriteMany share, and the Azure Files class on the ingestion storage account it is provisioned from |
 | `sbx-gateway` | namespace `sbx` (Argo CD) | intercepting HTTPS proxy with allow-list; generates its MITM CA (`Secret egress-mitm-ca`) |
 | `sbx-templates` (`unique-polyagent-001`) | namespace `sbx` (Argo CD) | `SandboxTemplate` (runtime image, Kata runtime class, security context, network policy) and `SandboxWarmPool` |
 | assistants-core on its dedicated chart | namespace `unique` | the generic `ai-service` chart has no sandbox settings; the dedicated `assistants-core` chart carries `sandboxConfig` and the sandbox RBAC |
@@ -109,7 +109,7 @@ changes.
 | 8 | Terraform 1.12.2, azurerm `~> 5.5` | as after the October upgrade |
 | 9 | Permission to update the AKS network profile, add node pools and create a role assignment on the ingestion storage account | the identity that applies day-2 |
 | 10 | `kubectl` access to the cluster | for verification |
-| 11 | The image mirroring pipeline of this repository (`mirroring/<env>/app.unique.yaml`) and pull access to `uniquecr.azurecr.io` | Conduct adds three images and one Helm chart to the mirror list |
+| 11 | Your artifact mirroring process can copy from `uniquecr.azurecr.io` (as for every release) and from `registry.k8s.io` | Conduct adds three images and one Helm chart from Unique plus two public images; the list is in phase 2 |
 
 ### 2.3 Network egress from the cluster **[manual]**
 
@@ -155,7 +155,7 @@ region, quota or network differ; the sizing note in phase 2 explains the trade-o
 flowchart TD
   P0[Phase 0: discovery and prerequisites] --> P1["Phase 1: Cilium data plane + ACNS (day-2 Terraform, node re-image) [maintenance window]"]
   P1 --> S1[Smoke test the platform]
-  S1 --> P2[Phase 2: Kata node pool + storage role assignment + image mirror]
+  S1 --> P2[Phase 2: Kata node pool + storage role assignment + artifacts]
   P2 --> P3[Phase 3: Conduct stack - controller, sbx namespace, storage, gateway, templates]
   P3 --> P4[Phase 4: platform wiring - assistants-core chart, chat module config, feature flag]
   P4 --> P5[Phase 5: verification and functional smoke tests]
@@ -323,7 +323,7 @@ cluster changes.
 Then the smoke test of the platform: log in to the chat, send a message, upload a document. Plan day-2
 again: `No changes`.
 
-## Phase 2: Kata node pool, storage access, image mirror
+## Phase 2: Kata node pool, storage access, artifacts
 
 **What changes.**
 
@@ -336,10 +336,18 @@ again: `No changes`.
   account for the cluster's control-plane identity (`module.kubernetes_cluster.cluster_resource.identity[0]`).
   The Azure Files CSI driver acts as that identity when it creates the checkpoint share, and the account
   lives outside the node resource group, where the identity has no rights by default.
-- `mirroring/test/app.unique.yaml`: `unique/sbx-gateway`, `unique/sbx-storage`, `unique/unique-polyagent-001`
-  and the chart `helm/assistants-core`, all at the chat release version.
-  `mirroring/test/io.k8s.registry.yaml` (new, wired into the public mirror workflow): the agent-sandbox
-  controller and router images from `registry.k8s.io` at the chart's `appVersion`.
+**Artifacts to mirror** into your registry with your own process, before phase 3 (the reference
+environment lists them in `mirroring/test/`):
+
+| Source | Artifact | Version |
+|---|---|---|
+| `uniquecr.azurecr.io` | images `unique/sbx-gateway`, `unique/sbx-storage`, `unique/unique-polyagent-001` | the chat release version (`2026.40.5` on the reference environment) |
+| `uniquecr.azurecr.io` | Helm chart `helm/assistants-core` | same |
+| `registry.k8s.io` | images `agent-sandbox/agent-sandbox-controller`, `agent-sandbox/sandbox-router-go` | `v1.0.1` (the chart's `appVersion`) |
+| `ghcr.io/unique-ag/helm-charts` | charts `agent-sandbox-controller` 1.0.1, `sbx-gateway`, `sbx-storage`, `sbx-templates` 2026.40.5 | pulled by Argo CD directly, like the platform charts; mirror them only if your Argo CD has no access to `ghcr.io` |
+
+The controller chart pins its two images by upstream digest; the values in this repository clear those
+pins and reference the images by tag, so a mirror that rewrites digests works as well.
 
 ### Kata pool defaults adopted from Unique's clusters
 
@@ -396,15 +404,12 @@ during upgrades; the ceiling has never been approached. What actually limits the
 **Impact.** None on running workloads: a new pool with `min_count = 0` creates no VM until a sandbox pod
 is scheduled, and the role assignment is additive. The apply takes 3–5 minutes.
 
-**Mirror.** The mirror workflows run on merge to `main` (or by hand through `workflow_dispatch` on the
-branch). Until they have run, the Conduct images do not exist in your registry and phase 4 cannot start.
-
 **Verify**
 
 ```bash
 az aks nodepool show -g $RG --cluster-name $AKS -n kata --query '{runtime:workloadRuntime, os:osSku, vm:vmSize, min:minCount, max:maxCount, maxPods:maxPods, taints:nodeTaints}' -o json
 az role assignment list --scope $(az storage account show -n <ingestion account> -g <sensitive rg> --query id -o tsv) --query "[?roleDefinitionName=='Storage Account Contributor'].principalId" -o tsv   # the cluster identity
-az acr repository show-tags -n <acr> --repository unique/sbx-gateway -o tsv                                 # after the mirror ran
+az acr repository show-tags -n <acr> --repository unique/sbx-gateway -o tsv                                 # or your registry's equivalent: all artifacts of the table above present
 kubectl get runtimeclass kata-vm-isolation                                                                  # appears with the first Kata node; absent until then is fine
 ```
 
@@ -425,8 +430,8 @@ assistants-core is pointed at it in phase 4.
 |---|---|
 | `03_applications/<env>/values/argo/argo-appsets.yaml` | new `conduct` application set reading `03_applications/<env>/apps/conduct/*.yaml`, destination namespace `sbx` |
 | `03_applications/<env>/apps/system/agent-sandbox-controller.yaml` + `values/agent-sandbox-controller/` | chart `agent-sandbox-controller` 1.0.1 from `ghcr.io/unique-ag/helm-charts`, images from your registry mirror, `ServerSideApply=true` for the large CRDs, router NetworkPolicy: ingress from `assistants-core` in `unique` only, egress to `sbx` only |
-| `apps/conduct/sbx-namespace.yaml` + `values/conduct/sbx-namespace.yaml` | `Namespace sbx` (never pruned) and `StorageClass sbx-backup-azurefile` (`file.csi.azure.com`, Standard_LRS, your ingestion storage account and its resource group, uid/gid 65534) |
-| `apps/conduct/sbx-storage.yaml` + `values/conduct/sbx-storage.yaml` | chart `sbx-storage` 2026.40.5; PVC `ReadWriteMany` on that class, chart default 64 GiB |
+| `apps/conduct/sbx-common.yaml` + `values/conduct/sbx-common.yaml` | `Namespace sbx` (never pruned); the counterpart of `sbx-common` on Unique's clusters |
+| `apps/conduct/sbx-storage.yaml` + `values/conduct/sbx-storage.yaml`, `values/conduct/sbx-storage-storageclass.yaml` | chart `sbx-storage` 2026.40.5 plus the `StorageClass sbx-backup-azurefile` it needs (`file.csi.azure.com`, Standard_LRS, your ingestion storage account and its resource group, uid/gid 65534); PVC `ReadWriteMany` on that class, chart default 64 GiB |
 | `apps/conduct/sbx-gateway.yaml` + `values/conduct/sbx-gateway.yaml` | chart `sbx-gateway` 2026.40.5; `internalServices.dependencies.chat/ingestion` point at `backend-service-chat` / `backend-service-ingestion` in `unique` (Service port 80); allow-list for your public API host, your ingestion blob host, `sbx-storage`, PyPI; `ignoreDifferences` + `RespectIgnoreDifferences` on the generated MITM CA Secret |
 | `apps/conduct/sbx-templates.yaml` + `values/conduct/sbx-templates-unique-polyagent-001.yaml` | chart `sbx-templates` 2026.40.5; runtime image from your mirror, platform URLs of this repository, warm pool `2`, CiliumNetworkPolicy ingress from the router in `unique`, Prometheus/Grafana extras off |
 
@@ -439,8 +444,8 @@ resource group (StorageClass and gateway allow-list), warm pool size. The blob p
 1. `argo` (picks up the new application set; the four `conduct` applications appear)
 2. `agent-sandbox-controller`: CRDs, controller, router. Expect `kubectl get crd | grep x-k8s.io` to list
    `sandboxes.agents.x-k8s.io`, `sandboxclaims`, `sandboxtemplates`, `sandboxwarmpools.extensions.agents.x-k8s.io`
-3. `sbx-namespace`: namespace and StorageClass
-4. `sbx-storage`: the PVC must reach `Bound` within a minute. `Pending` with `AuthorizationFailed` on
+3. `sbx-common`: the `sbx` namespace
+4. `sbx-storage`: StorageClass, service and PVC; the PVC must reach `Bound` within a minute. `Pending` with `AuthorizationFailed` on
    `listKeys` in the PVC events means the phase 2 role assignment is missing or not yet propagated; a
    mount error on the pod means TCP 445 to the storage account is blocked
 5. `sbx-gateway`: 2 replicas `Running`, Secret `egress-mitm-ca` created
@@ -471,7 +476,7 @@ kubectl -n sbx get cnp                                                    # poli
 
 | File | Purpose |
 |---|---|
-| `03_applications/<env>/apps/chat/assistants-core.yaml` | chart switched from `ai-service` (`ghcr.io/unique-ag/helm-charts`) to the dedicated `assistants-core` chart from your registry mirror (`<acr>/helm`, same version as the chat release); same release name and selector labels, so the Deployment rolls in place |
+| `03_applications/<env>/apps/chat/assistants-core.yaml` | chart switched from `ai-service` (`ghcr.io/unique-ag/helm-charts`) to the dedicated `assistants-core` chart from your registry (`<registry>/helm`, same version as the chat release); same release name and selector labels, so the Deployment rolls in place |
 | `03_applications/defaults/ai-services/assistants-core.yaml` | rewritten for the dedicated chart's schema: `internalServices.dependencies` for `backend-service-chat` (port 80) and `backend-service-configuration` (8095), the few env values the chart does not default, `nodeSelector`, workload identity on |
 | `03_applications/<env>/values/ai-services/assistants-core.yaml` | image from your mirror, environment env values, `secretProvider` (tenant, CSI identity, vault), `workloadIdentity.azure.clientId`, and `sandboxConfig`: `namespace: sbx`, `template: unique-polyagent-001`, router `agent-sandbox-controller-router-svc` in `unique`, port 8080 |
 | `03_applications/defaults/backend-services/chat.yaml`, `03_applications/<env>/values/backend-services/chat.yaml` | `INTERNAL_MODULES_CONFIG` gains `{"name": "SwappableIntelligence", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/sandbox_orchestrator"}` (both files carry the full list) |
