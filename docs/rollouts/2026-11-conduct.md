@@ -418,7 +418,7 @@ no workload impact; pool `kata` `Succeeded` with `KataVmIsolation`, Azure Linux,
 nodes, `max_pods` 30, zones 1 and 3; the cluster identity holds `Storage Account Contributor` on the
 ingestion storage account.
 
-## Phase 3: Conduct stack *(to be validated)*
+## Phase 3: Conduct stack
 
 Four Argo CD applications in a new `conduct` application set (destination namespace `sbx`) plus the
 controller as a system application. Nothing here touches the running platform; the stack is inert until
@@ -470,7 +470,17 @@ kubectl get nodes -l workload-runtime=kata                                # 1 Ka
 kubectl -n sbx get cnp                                                    # policies for sandbox pods and sbx-storage
 ```
 
-## Phase 4: Platform wiring *(to be validated)*
+**Expect probe noise on new sandbox pods.** The runtime opens port 8888 about 10–15 seconds after the
+container starts (agent stack import, bundled-skills cache); until then the readiness probe reports
+`connection refused`. A pod that is `1/1 Running` a minute after scheduling is healthy. A pod that stays
+`0/1` for several minutes is not: read its log, it ends in retries against the gateway or `sbx-storage`.
+
+**Reference environment, 5 Nov 2026:** all six applications synced in order without intervention; the
+first Kata node joined for the warm pool; both pool pods `1/1 Running` on it, runtime "ready to serve
+turns" 11 s after container start with the gateway's MITM CA loaded; `sbx-storage` PVC bound on the
+Azure Files share; 2 gateway replicas up.
+
+## Phase 4: Platform wiring
 
 **What changes.**
 
@@ -480,7 +490,7 @@ kubectl -n sbx get cnp                                                    # poli
 | `03_applications/defaults/ai-services/assistants-core.yaml` | rewritten for the dedicated chart's schema: `internalServices.dependencies` for `backend-service-chat` (port 80) and `backend-service-configuration` (8095), the few env values the chart does not default, `nodeSelector`, workload identity on |
 | `03_applications/<env>/values/ai-services/assistants-core.yaml` | image from your mirror, environment env values, `secretProvider` (tenant, CSI identity, vault), `workloadIdentity.azure.clientId`, and `sandboxConfig`: `namespace: sbx`, `template: unique-polyagent-001`, router `agent-sandbox-controller-router-svc` in `unique`, port 8080 |
 | `03_applications/defaults/backend-services/chat.yaml`, `03_applications/<env>/values/backend-services/chat.yaml` | `INTERNAL_MODULES_CONFIG` gains `{"name": "SwappableIntelligence", "apiURL": "http://assistants-core.unique.svc.cluster.local:8081/core/sandbox_orchestrator"}` (both files carry the full list) |
-| `03_applications/<env>/values/_flags.yaml` | `FEATURE_FLAG_ENABLE_SWAPPABLE_INTELLIGENCE_UN_18404: "true"` |
+| `03_applications/<env>/values/_flags.yaml` | `FEATURE_FLAG_ENABLE_SWAPPABLE_INTELLIGENCE_UN_18404: "true"` (`FEATURE_FLAG_ENABLE_SKILLS_UN_20042` must be `"true"` as well) |
 
 With `sandboxConfig.enabled`, the chart renders `SANDBOX_NAMESPACE`, `SANDBOX_TEMPLATE`,
 `SANDBOX_ROUTER_URL`, `SANDBOX_CLAIM_TTL_SECONDS` on the pod and a Role/RoleBinding **in namespace
@@ -504,6 +514,13 @@ kubectl -n unique exec deploy/assistants-core -- env | grep SANDBOX_
 kubectl -n sbx get role,rolebinding | grep assistants-core
 kubectl -n unique exec deploy/backend-service-chat -- env | grep -c SwappableIntelligence   # 1
 ```
+
+The pod environment also shows a set of `AGENT_SANDBOX_CONTROLLER_*` variables: Kubernetes service links
+for the router Services in the same namespace, not configuration.
+
+**Reference environment, 5 Nov 2026:** assistants-core rolled in place to the dedicated chart (two pods,
+two minutes apart, no restarts); `SANDBOX_*` set as above; Role and RoleBinding `assistants-core-sbx`
+present in `sbx`; chat carries the `SwappableIntelligence` module; flag live.
 
 ## Phase 5: Verification *(to be validated)*
 
