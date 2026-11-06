@@ -89,8 +89,9 @@ extraCronJobs:
           secretName: elasticsearch-ingestion-es-http-certs-public
 hooks:
   migration:
+    # Schema migrations, then the service's application data migrations, as for the other backend services.
     command: |
-      cd /home/node/app/services/node-ingestion && pnpm exec prisma migrate deploy --config prisma.config.ts;
+      cd /home/node/app/services/node-ingestion && pnpm exec prisma migrate deploy --config prisma.config.ts; cd /home/node/app/services/node-ingestion/dist; RUNNING_MODE=data-migration node /home/node/app/services/node-ingestion/dist/main.js;
     enabled: true
 nodeSelector:
   scalability: steady
