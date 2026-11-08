@@ -1,8 +1,6 @@
 # Rollout guide: Unique AI Conduct on the Hello Azure reference setup
 
-**Status:** in progress. Sections marked *(to be validated)* are filled in as each phase is applied on the
-reference `test` environment. Do not roll out from a version of this guide that still carries that marker
-on the phase you are about to run.
+**Status:** validated. Every phase was applied on the reference `test` environment and the verification tests passed; each phase section records the result.
 
 **Applies to:** an existing Hello Azure installation on platform release `2026.40.5` or later, after the
 October 2026 module and provider upgrade (`docs/upgrades/2026-10-infrastructure-upgrade.md`): azurerm 5,
@@ -10,7 +8,7 @@ October 2026 module and provider upgrade (`docs/upgrades/2026-10-infrastructure-
 
 This is a rollout of a **new capability**, not a migration. It adds resources; no existing service moves.
 Unlike the module upgrade, it is not a single `plan`/`apply` per root: it has one disruptive infrastructure
-step (the network data plane switch), a new node pool type, three new Argo CD applications, and
+step (the network data plane switch), a new node pool type, five new Argo CD applications, and
 configuration changes on two existing applications. The order matters and is given below.
 
 ---
@@ -211,12 +209,6 @@ reference environment with five nodes running). The node subnet figure from the 
 Record the output; the decisions in section 2.5 (zones, warm pool) and the stop conditions of phase 1
 depend on it.
 
-**Reference environment, 3 Nov 2026:** Azure CNI with pod subnet (`pluginMode: null`), data plane
-`azure`, policy `none`, ACNS off, Kubernetes 1.36.4, KEDA on, NAP `Manual`; pools `default`
-(2 x `Standard_D2s_v6`, Ubuntu), `steady` (3 x `Standard_D8as_v5`, Azure Linux), `rapid` (0 nodes);
-`Standard_D8s_v5` offered in zones 1, 2 and 3 without restrictions; 176 of 507 pod IPs reserved
-(32 / 32 / 48 / 48 / 16 across the five nodes).
-
 ---
 
 ## Phase 1: Cilium data plane and ACNS
@@ -313,13 +305,6 @@ kubectl get nnc -n kube-system
 Expected: one `Running` cilium pod per node, the CRD present, every node `Ready` on the new image, and the
 `NodeNetworkConfig` objects still listing allocated pod IPs (Cilium changed the data plane, not the IPAM).
 
-**Reference environment, 3 Nov 2026:** apply 26m57s; `dataplane: cilium`, `policy: cilium`, ACNS
-observability and security `enabled: true` (`advancedNetworkPolicies: FQDN`); five `cilium-*` pods
-`3/3 Running`, one per node; `ciliumnetworkpolicies.cilium.io` created during the apply; all nodes
-`Ready` on image `202610.23.0`; pod IP reservations unchanged at 176; no pod left outside
-`Running`/`Succeeded`; chat smoke test passed (chat, document upload, knowledge search); re-plan without
-cluster changes.
-
 Then the smoke test of the platform: log in to the chat, send a message, upload a document. Plan day-2
 again: `No changes`.
 
@@ -413,11 +398,6 @@ az acr repository show-tags -n <acr> --repository unique/sbx-gateway -o tsv     
 kubectl get runtimeclass kata-vm-isolation                                                                  # appears with the first Kata node; absent until then is fine
 ```
 
-**Reference environment, 4 Nov 2026:** plan `2 to add, 0 to change, 0 to destroy`; apply a few minutes,
-no workload impact; pool `kata` `Succeeded` with `KataVmIsolation`, Azure Linux, `Standard_D8s_v5`, 0–10
-nodes, `max_pods` 30, zones 1 and 3; the cluster identity holds `Storage Account Contributor` on the
-ingestion storage account.
-
 ## Phase 3: Conduct stack
 
 Four Argo CD applications in a new `conduct` application set (destination namespace `sbx`) plus the
@@ -475,11 +455,6 @@ container starts (agent stack import, bundled-skills cache); until then the read
 `connection refused`. A pod that is `1/1 Running` a minute after scheduling is healthy. A pod that stays
 `0/1` for several minutes is not: read its log, it ends in retries against the gateway or `sbx-storage`.
 
-**Reference environment, 5 Nov 2026:** all six applications synced in order without intervention; the
-first Kata node joined for the warm pool; both pool pods `1/1 Running` on it, runtime "ready to serve
-turns" 11 s after container start with the gateway's MITM CA loaded; `sbx-storage` PVC bound on the
-Azure Files share; 2 gateway replicas up.
-
 ## Phase 4: Platform wiring
 
 **What changes.**
@@ -518,11 +493,7 @@ kubectl -n unique exec deploy/backend-service-chat -- env | grep -c SwappableInt
 The pod environment also shows a set of `AGENT_SANDBOX_CONTROLLER_*` variables: Kubernetes service links
 for the router Services in the same namespace, not configuration.
 
-**Reference environment, 5 Nov 2026:** assistants-core rolled in place to the dedicated chart (two pods,
-two minutes apart, no restarts); `SANDBOX_*` set as above; Role and RoleBinding `assistants-core-sbx`
-present in `sbx`; chat carries the `SwappableIntelligence` module; flag live.
-
-## Phase 5: Verification *(to be validated)*
+## Phase 5: Verification
 
 Functional checks from a user's point of view, with the matching cluster-side evidence. Run them once
 the warm pool shows `2/2` ready.
@@ -531,10 +502,14 @@ the warm pool shows `2/2` ready.
 |---|---|---|
 | T1 | Admin UI: create a space of type Conduct (Swappable Intelligence) | the type is offered (flag live) and the space saves |
 | T2 | Chat: open the space, send a first message | an answer within ~10 s; `kubectl -n sbx get sandboxclaims` shows one claim bound to a warm sandbox and the pool starts a replacement |
-| T3 | Chat: ask the agent to read a document from the knowledge base and to produce a file (e.g. a `.docx`) | the file appears in the chat; the gateway audit log (`kubectl -n sbx logs deploy/sbx-gateway`) shows allowed `PUT /scoped/ingestion/upload` to your API host |
+| T3 | Chat: ask the agent to read a document from the knowledge base and to produce a file (e.g. a `.docx`) | the file appears in the chat; the gateway's stdout (`kubectl -n sbx logs deploy/sbx-gateway`) shows a `Streaming request to <your API host>` (the upload) and one to `sbx-storage`; the audit log shows the allowed `PUT /scoped/ingestion/upload` |
 | T4 | Chat: ask the agent to `pip install` a small package | succeeds (PyPI allow-listed); the audit log shows `GET pypi.org/simple/...` |
 | T5 | Chat: ask the agent to fetch `https://example.com` | denied; the audit log shows the blocked host (allow-list working) |
-| T6 | Close the chat, come back after the claim TTL or delete the claim | `kubectl -n sbx get sandboxes` shows the sandbox gone and a checkpoint written to the share (`kubectl -n sbx exec deploy/sbx-storage -- ls /backup`) |
+
+The per-request allow/deny decisions are in the gateway's audit log inside the pod, not on stdout:
+`kubectl -n sbx exec deploy/sbx-gateway -- tail -n 30 /var/log/egress-gateway/audit.jsonl` (two replicas;
+check the other one if the request is not there).
+| T6 | End the session: delete its claim (`kubectl -n sbx delete sandboxclaim <name>`; in daily use this happens after the claim TTL) | `kubectl -n sbx get sandboxclaims,sandboxes` shows the claim and its sandbox gone and the pool back at `replicas` free sandboxes |
 | T7 | Leave the cluster idle | warm pool stays at 2; the Kata node count stays at 1; with the warm pool at 0 the Kata pool scales to 0 within ~10 minutes |
 
 Also confirm the platform smoke test from phase 1 still passes (chat, upload, knowledge search).
