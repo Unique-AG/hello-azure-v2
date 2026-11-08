@@ -4,7 +4,7 @@
 image:
   registry: uqhacrtest.azurecr.io
   repository: unique/sbx-gateway
-  tag: "2026.40.5"
+  tag: "2026.44.3"
   useDigest: false
 
 nodeSelector:

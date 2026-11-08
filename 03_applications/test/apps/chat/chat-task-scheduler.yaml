@@ -7,7 +7,7 @@ spec:
       ref: values
     - repoURL: uqhacrtest.azurecr.io/helm
       chart: chat
-      targetRevision: "2026.40.5"
+      targetRevision: "2026.44.3"
       helm:
         passCredentials: true
         releaseName: chat-task-scheduler

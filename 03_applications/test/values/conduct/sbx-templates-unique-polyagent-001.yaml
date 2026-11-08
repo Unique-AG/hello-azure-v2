@@ -3,7 +3,7 @@
 image:
   registry: uqhacrtest.azurecr.io
   repository: unique/unique-polyagent-001
-  tag: "2026.40.5"
+  tag: "2026.44.3"
   useDigest: false
 
 sandboxTemplate:

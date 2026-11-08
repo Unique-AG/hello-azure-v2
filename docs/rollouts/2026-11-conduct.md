@@ -341,10 +341,10 @@ environment lists them in `mirroring/test/`):
 
 | Source | Artifact | Version |
 |---|---|---|
-| `uniquecr.azurecr.io` | images `unique/sbx-gateway`, `unique/sbx-storage`, `unique/unique-polyagent-001` | the chat release version (`2026.40.5` on the reference environment) |
+| `uniquecr.azurecr.io` | images `unique/sbx-gateway`, `unique/sbx-storage`, `unique/unique-polyagent-001` | the chat release version (`2026.44.3` on the reference environment) |
 | `uniquecr.azurecr.io` | Helm chart `helm/assistants-core` | same |
 | `registry.k8s.io` | images `agent-sandbox/agent-sandbox-controller`, `agent-sandbox/sandbox-router-go` | `v1.0.1` (the chart's `appVersion`) |
-| `ghcr.io/unique-ag/helm-charts` | charts `agent-sandbox-controller` 1.0.1, `sbx-gateway`, `sbx-storage`, `sbx-templates` 2026.40.5 | pulled by Argo CD directly, like the platform charts; mirror them only if your Argo CD has no access to `ghcr.io` |
+| `ghcr.io/unique-ag/helm-charts` | charts `agent-sandbox-controller` 1.0.1, `sbx-gateway`, `sbx-storage`, `sbx-templates` 2026.44.3 | pulled by Argo CD directly, like the platform charts; mirror them only if your Argo CD has no access to `ghcr.io` |
 
 The controller chart pins its two images by upstream digest; the values in this repository clear those
 pins and reference the images by tag, so a mirror that rewrites digests works as well.
@@ -431,9 +431,9 @@ assistants-core is pointed at it in phase 4.
 | `03_applications/<env>/values/argo/argo-appsets.yaml` | new `conduct` application set reading `03_applications/<env>/apps/conduct/*.yaml`, destination namespace `sbx` |
 | `03_applications/<env>/apps/system/agent-sandbox-controller.yaml` + `values/agent-sandbox-controller/` | chart `agent-sandbox-controller` 1.0.1 from `ghcr.io/unique-ag/helm-charts`, images from your registry mirror, `ServerSideApply=true` for the large CRDs, router NetworkPolicy: ingress from `assistants-core` in `unique` only, egress to `sbx` only |
 | `apps/conduct/sbx-common.yaml` + `values/conduct/sbx-common.yaml` | `Namespace sbx` (never pruned); the counterpart of `sbx-common` on Unique's clusters |
-| `apps/conduct/sbx-storage.yaml` + `values/conduct/sbx-storage.yaml`, `values/conduct/sbx-storage-storageclass.yaml` | chart `sbx-storage` 2026.40.5 plus the `StorageClass sbx-backup-azurefile` it needs (`file.csi.azure.com`, Standard_LRS, your ingestion storage account and its resource group, uid/gid 65534); PVC `ReadWriteMany` on that class, chart default 64 GiB |
-| `apps/conduct/sbx-gateway.yaml` + `values/conduct/sbx-gateway.yaml` | chart `sbx-gateway` 2026.40.5; `internalServices.dependencies.chat/ingestion` point at `backend-service-chat` / `backend-service-ingestion` in `unique` (Service port 80); allow-list for your public API host, your ingestion blob host, `sbx-storage`, PyPI; `ignoreDifferences` + `RespectIgnoreDifferences` on the generated MITM CA Secret |
-| `apps/conduct/sbx-templates.yaml` + `values/conduct/sbx-templates-unique-polyagent-001.yaml` | chart `sbx-templates` 2026.40.5; runtime image from your mirror, platform URLs of this repository, warm pool `2`, CiliumNetworkPolicy ingress from the router in `unique`, Prometheus/Grafana extras off |
+| `apps/conduct/sbx-storage.yaml` + `values/conduct/sbx-storage.yaml`, `values/conduct/sbx-storage-storageclass.yaml` | chart `sbx-storage` 2026.44.3 plus the `StorageClass sbx-backup-azurefile` it needs (`file.csi.azure.com`, Standard_LRS, your ingestion storage account and its resource group, uid/gid 65534); PVC `ReadWriteMany` on that class, chart default 64 GiB |
+| `apps/conduct/sbx-gateway.yaml` + `values/conduct/sbx-gateway.yaml` | chart `sbx-gateway` 2026.44.3; `internalServices.dependencies.chat/ingestion` point at `backend-service-chat` / `backend-service-ingestion` in `unique` (Service port 80); allow-list for your public API host, your ingestion blob host, `sbx-storage`, PyPI; `ignoreDifferences` + `RespectIgnoreDifferences` on the generated MITM CA Secret |
+| `apps/conduct/sbx-templates.yaml` + `values/conduct/sbx-templates-unique-polyagent-001.yaml` | chart `sbx-templates` 2026.44.3; runtime image from your mirror, platform URLs of this repository, warm pool `2`, CiliumNetworkPolicy ingress from the router in `unique`, Prometheus/Grafana extras off |
 
 **[manual] Adapt before you sync:** registry name, public API hostname, ingestion storage account name and
 resource group (StorageClass and gateway allow-list), warm pool size. The blob path filter

@@ -20,7 +20,7 @@ spec:
       ref: values
     - repoURL: ghcr.io/unique-ag/helm-charts
       chart: sbx-gateway
-      targetRevision: "2026.40.5"
+      targetRevision: "2026.44.3"
       helm:
         releaseName: sbx-gateway
         valueFiles:

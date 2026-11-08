@@ -66,6 +66,19 @@ taskScheduler:
         namespace: unique
         servicePort: 80
         podPort: 8080
+      # Pre-dispatch eligibility checks: the scheduler validates the task owner against scope-management and
+      # evaluates the scheduled-tasks flag against configuration-backend. The chart defaults point at the fleet
+      # service names, so they are overridden here like `chat` above.
+      configurationBackend:
+        name: backend-service-configuration
+        namespace: unique
+        servicePort: 8095
+        podPort: 8080
+      scopeManagement:
+        name: backend-service-scope-management
+        namespace: unique
+        servicePort: 80
+        podPort: 8080
 
 # ── Deployment (mirrors chat.yaml) ────────────────────────────────────────────
 env:
