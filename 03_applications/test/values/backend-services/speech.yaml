@@ -1,6 +1,6 @@
 image:
   repository: uqhacrtest.azurecr.io/backend-service-speech
-  tag: "2026.40.5"
+  tag: "2026.44.3"
 replicaCount: 2
 resources:
   limits:

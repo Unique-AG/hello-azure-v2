@@ -19,7 +19,7 @@ spec:
       ref: values
     - repoURL: ghcr.io/unique-ag/helm-charts
       chart: sbx-templates
-      targetRevision: "2026.40.5"
+      targetRevision: "2026.44.3"
       helm:
         releaseName: unique-polyagent-001
         valueFiles:

@@ -1,13 +1,13 @@
 # ── Deployment ────────────────────────────────────────────────────────────────
 env:
-  MAX_HEAP_MB: "300"
+  MAX_HEAP_MB: "768"
 
 resources:
   requests:
     cpu: 100m
-    memory: 400Mi
+    memory: 1Gi
   limits:
-    memory: 450Mi
+    memory: 2Gi
 
 # ── InternalServices ──────────────────────────────────────────────────────────
 internalServices:

@@ -15,7 +15,7 @@ spec:
           - $values/03_applications/test/values/conduct/sbx-storage-storageclass.yaml
     - repoURL: ghcr.io/unique-ag/helm-charts
       chart: sbx-storage
-      targetRevision: "2026.40.5"
+      targetRevision: "2026.44.3"
       helm:
         releaseName: sbx-storage
         valueFiles:
