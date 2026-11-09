@@ -1,0 +1,2 @@
+{"format_version":"1.2","resource_changes":[
+ {"address":"azurerm_private_dns_zone_virtual_network_link.psql","change":{"actions":["delete","create"]}}]}
