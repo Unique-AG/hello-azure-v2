@@ -49,6 +49,10 @@ dns_subdomain_records = {
     name    = "id"
     records = [] # Will be populated dynamically
   }
+  reflector = {
+    name    = "reflector"
+    records = [] # Will be populated dynamically
+  }
 }
 
 # Tags
