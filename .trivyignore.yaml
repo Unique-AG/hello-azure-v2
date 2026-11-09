@@ -1,0 +1,29 @@
+# Accepted Trivy findings for this repository's own Terraform (scripts/trivy.sh).
+# Every entry states why it is accepted. Remove an entry when its reason no longer holds.
+misconfigurations:
+  - id: AZU-0013
+    paths:
+      - "02_infrastructure/day-1/36-key-vaults.tf"
+    statement: >-
+      Terraform runs on GitHub-hosted runners without fixed egress IPs, so the Key Vault firewall stays open;
+      access is controlled by Azure RBAC (rbac_authorization_enabled). Revisit with private runners.
+  - id: AZU-0047
+    paths:
+      - "02_infrastructure/day-3/33-bastion-nsg.tf"
+    statement: >-
+      Azure Bastion requires inbound HTTPS (443) from the Internet on AzureBastionSubnet; this rule is part of
+      Microsoft's required NSG rule set for Bastion.
+  - id: AZU-0051
+    paths:
+      - "02_infrastructure/day-3/33-bastion-nsg.tf"
+    statement: >-
+      Azure Bastion requires outbound access to the Internet and AzureCloud from AzureBastionSubnet; this rule is
+      part of Microsoft's required NSG rule set for Bastion.
+  - id: AZU-0015
+    statement: >-
+      Key Vault secrets created here are generated values consumed by the platform; a content type adds no
+      control. Was excluded under tfsec (azure-keyvault-content-type-for-secret).
+  - id: AZU-0017
+    statement: >-
+      Generated secrets are rotated by Terraform (rotation inputs / key versions), not by a fixed expiry date.
+      Was excluded under tfsec (azure-keyvault-ensure-secret-expiry).
