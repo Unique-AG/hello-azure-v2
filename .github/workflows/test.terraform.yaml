@@ -1,0 +1,203 @@
+name: '[test][terraform] plan on PR, apply on merge 🏗️'
+# Pull request → plan the changed layers and their downstream layers, one sticky comment per layer.
+# Push to main → plan and apply the same layers in order: day-0 → day-1 → gh-test, day-2 → day-3.
+# day-0, day-1 and gh-test are foundation layers: apply-on-merge stops if their plan deletes or replaces
+# anything; run those changes by dispatch with confirm=apply-foundation.
+# Kill switch: gh workflow disable test.terraform.yaml
+#
+# No paths filter on purpose: the `terraform` summary job is a required status check, and a required check that
+# never runs would block the PR. Unrelated PRs run only the cheap `changes` and `terraform` jobs.
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      layers:
+        description: "Layers to run: all, or a comma-separated list of day-0, day-1, gh-test, day-2, day-3"
+        default: all
+        type: string
+      confirm:
+        description: "Type apply-foundation to let this run apply deletes/replaces in day-0, day-1 or gh-test"
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  # Applies (push, dispatch) run one at a time and are never cancelled; a newer push to a PR cancels its old plan.
+  group: ${{ github.event_name == 'pull_request' && format('terraform-pr-{0}', github.event.pull_request.number) || 'terraform-apply' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      day-0: ${{ steps.layers.outputs.day-0 }}
+      day-1: ${{ steps.layers.outputs.day-1 }}
+      gh-test: ${{ steps.layers.outputs.gh-test }}
+      day-2: ${{ steps.layers.outputs.day-2 }}
+      day-3: ${{ steps.layers.outputs.day-3 }}
+      mode: ${{ steps.layers.outputs.mode }}
+      guard: ${{ steps.layers.outputs.guard }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Map changed paths to layers
+        id: layers
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+          INPUT_LAYERS: ${{ inputs.layers }}
+          INPUT_CONFIRM: ${{ inputs.confirm }}
+        run: ./scripts/terraform-layers.sh >> "$GITHUB_OUTPUT"
+
+  day-0:
+    needs: changes
+    if: ${{ needs.changes.outputs.day-0 == 'true' }}
+    runs-on: ubuntu-latest
+    environment: 00-init
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/terraform
+        with:
+          layer_dir: 01_bootstrap/day-0
+          backend_config: ../environments/test/backend-config-day-0.hcl
+          var_files: ../environments/test/00-config-day-0.auto.tfvars ../environments/test/00-parameters-day-0.auto.tfvars
+          mode: ${{ needs.changes.outputs.mode }}
+          foundation: ${{ needs.changes.outputs.guard }}
+          plan_name: "day-0 (bootstrap)"
+          github_token: ${{ github.token }}
+
+  day-1:
+    needs: [changes, day-0]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.day-1 == 'true' }}
+    runs-on: ubuntu-latest
+    environment: 10-pm
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/terraform
+        with:
+          layer_dir: 02_infrastructure/day-1
+          backend_config: ../environments/test/backend-config-day-1.hcl
+          var_files: ../environments/test/00-config-day-1.auto.tfvars ../environments/test/00-parameters-day-1.auto.tfvars
+          mode: ${{ needs.changes.outputs.mode }}
+          foundation: ${{ needs.changes.outputs.guard }}
+          plan_name: "day-1 (foundation)"
+          github_token: ${{ github.token }}
+
+  gh-test:
+    needs: [changes, day-1]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.gh-test == 'true' }}
+    runs-on: ubuntu-latest
+    environment: 10-pm
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/terraform
+        with:
+          layer_dir: 02_infrastructure/gh-test
+          backend_config: ../environments/test/backend-config-gh-test.hcl
+          var_files: ../environments/test/00-config-gh.auto.tfvars ../environments/test/00-parameters-gh.auto.tfvars
+          mode: ${{ needs.changes.outputs.mode }}
+          foundation: ${{ needs.changes.outputs.guard }}
+          plan_name: "gh-test (GitHub runner network)"
+          github_token: ${{ github.token }}
+
+  day-2:
+    needs: [changes, day-1]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.day-2 == 'true' }}
+    runs-on: ubuntu-latest
+    environment: 10-pm
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/terraform
+        with:
+          layer_dir: 02_infrastructure/day-2
+          backend_config: ../environments/test/backend-config-day-2.hcl
+          var_files: >-
+            ../environments/test/00-config-day-2.auto.tfvars
+            ../environments/test/00-parameters-day-2.auto.tfvars
+            ../environments/test/prometheus-rules.auto.tfvars
+          mode: ${{ needs.changes.outputs.mode }}
+          foundation: "false"
+          plan_name: "day-2 (platform)"
+          github_token: ${{ github.token }}
+
+  day-3:
+    needs: [changes, day-2]
+    if: ${{ !failure() && !cancelled() && needs.changes.outputs.day-3 == 'true' }}
+    runs-on: ubuntu-latest
+    environment: 10-pm
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/terraform
+        with:
+          layer_dir: 02_infrastructure/day-3
+          backend_config: ../environments/test/backend-config-day-3.hcl
+          var_files: ../environments/test/00-config-day-3.auto.tfvars ../environments/test/00-parameters-day-3.auto.tfvars
+          mode: ${{ needs.changes.outputs.mode }}
+          foundation: "false"
+          plan_name: "day-3 (Bastion)"
+          github_token: ${{ github.token }}
+
+  # Required status check. Passes when every layer job that ran succeeded (also when none ran).
+  terraform:
+    needs: [changes, day-0, day-1, gh-test, day-2, day-3]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check layer results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for r in $RESULTS; do
+            if [[ "$r" == "failure" || "$r" == "cancelled" ]]; then
+              echo "::error::A Terraform layer job did not succeed."
+              exit 1
+            fi
+          done

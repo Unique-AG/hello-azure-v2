@@ -24,6 +24,41 @@ This directory contains the infrastructure Terraform configurations organized by
 
 ## Usage
 
+### How changes are applied
+
+Changes reach Azure through the pipeline `.github/workflows/test.terraform.yaml`
+(details in `.github/workflows/README.test-workflows.md`):
+
+1. Open a pull request. Each changed layer, and every layer downstream of it, gets a plan comment.
+2. Review the plans together with the code. Approval by a code owner approves the apply.
+3. Merge. The pipeline plans and applies the layers in order: day-0 → day-1 → gh-test and day-2 → day-3.
+
+day-0, day-1 and gh-test are foundation layers: if a merge would delete or replace anything there, the pipeline
+stops before apply. Run such a change by dispatching the workflow on `main` with `confirm` = `apply-foundation`.
+To stop all applies: `gh workflow disable test.terraform.yaml`.
+
+#### Fallback: apply from a laptop (Operator apply)
+
+Only when the pipeline cannot run, and never while a pipeline run is in progress (the state lock would block it
+anyway). Use the Terraform version in [`.terraform-version`](../.terraform-version) and your own Azure login. The
+backend files carry the pipeline's OIDC settings, so pass only their location fields:
+
+```bash
+az account set --subscription <subscription id of the environment>
+cd 02_infrastructure/day-2          # the layer to apply
+grep -E '^(resource_group_name|storage_account_name|container_name|key|subscription_id)\s*=' \
+  ../environments/test/backend-config-day-2.hcl > /tmp/backend.hcl
+ARM_USE_CLI=true ARM_USE_OIDC=false terraform init -reconfigure -backend-config=/tmp/backend.hcl
+ARM_USE_CLI=true ARM_USE_OIDC=false terraform plan -var use_oidc=false -out=tfplan \
+  -var-file=../environments/test/00-config-day-2.auto.tfvars \
+  -var-file=../environments/test/00-parameters-day-2.auto.tfvars \
+  -var-file=../environments/test/prometheus-rules.auto.tfvars
+ARM_USE_CLI=true ARM_USE_OIDC=false terraform apply tfplan
+```
+
+Never plan with `-refresh=false`. Merge the change to `main` afterwards (or before), so the pipeline's next plan
+shows no changes for it.
+
 ### Considerations When Using Terraform Cloud
 
 In case of using Terraform Cloud, when creating Terraform Cloud workspace, you should take into account the following:
