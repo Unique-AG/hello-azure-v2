@@ -91,14 +91,14 @@ For more information, see the [official GitHub documentation](https://docs.githu
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.17 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | 2.2.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.5 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 5.11.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.2.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 5.5 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 5.11.0 |
 
 ## Modules
 
@@ -109,11 +109,11 @@ No modules.
 | Name | Type |
 |------|------|
 | [azapi_resource.github_network_settings](https://registry.terraform.io/providers/Azure/azapi/2.2.0/docs/resources/resource) | resource |
-| [azurerm_network_security_group.github](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
-| [azurerm_resource_provider_registration.github_network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) | resource |
-| [azurerm_resource_group.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
-| [azurerm_subnet.subnet_github_runners](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
-| [azurerm_subscription.subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
+| [azurerm_network_security_group.github](https://registry.terraform.io/providers/hashicorp/azurerm/5.11.0/docs/resources/network_security_group) | resource |
+| [azurerm_resource_provider_registration.github_network](https://registry.terraform.io/providers/hashicorp/azurerm/5.11.0/docs/resources/resource_provider_registration) | resource |
+| [azurerm_resource_group.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/5.11.0/docs/data-sources/resource_group) | data source |
+| [azurerm_subnet.subnet_github_runners](https://registry.terraform.io/providers/hashicorp/azurerm/5.11.0/docs/data-sources/subnet) | data source |
+| [azurerm_subscription.subscription](https://registry.terraform.io/providers/hashicorp/azurerm/5.11.0/docs/data-sources/subscription) | data source |
 
 ## Inputs
 

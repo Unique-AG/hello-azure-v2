@@ -1,5 +1,6 @@
 module "audit_storage" {
-  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-storage-account?ref=9486e9f06c83a8a2b7edd4ba64c3522a6d2a697b" # azure-storage-account-8.0.1
+  # renovate: datasource=github-tags depName=azure-storage-account packageName=Unique-AG/terraform-modules currentValue=8.0.1
+  source = "github.com/Unique-AG/terraform-modules.git//modules/azure-storage-account?ref=9486e9f06c83a8a2b7edd4ba64c3522a6d2a697b"
 
   name                          = var.audit_storage_sa_name
   resource_group_name           = data.azurerm_resource_group.sensitive.name

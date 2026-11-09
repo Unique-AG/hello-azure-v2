@@ -1,7 +1,8 @@
 # Azure Defender for Cloud
 
 module "defender" {
-  source          = "github.com/Unique-AG/terraform-modules.git//modules/azure-defender?ref=e073257d3ccbc123f42ba75fb6ce9668811d27ae" # azure-defender-3.0.1
+  # renovate: datasource=github-tags depName=azure-defender packageName=Unique-AG/terraform-modules currentValue=3.0.1
+  source          = "github.com/Unique-AG/terraform-modules.git//modules/azure-defender?ref=e073257d3ccbc123f42ba75fb6ce9668811d27ae"
   subscription_id = data.azurerm_subscription.current.id
   security_contact_settings = {
     email = var.defender_security_contact_email
