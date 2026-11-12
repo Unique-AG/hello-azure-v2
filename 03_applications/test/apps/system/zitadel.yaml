@@ -6,8 +6,8 @@ spec:
       targetRevision: main
       ref: values
     - chart: zitadel
-      repoURL: https://charts.zitadel.com
-      targetRevision: 8.13.1
+      repoURL: ghcr.io/zitadel/zitadel-charts
+      targetRevision: 10.4.0
       helm:
         releaseName: zitadel
         valueFiles: 
