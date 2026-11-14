@@ -7,13 +7,13 @@ spec:
       ref: values
     - chart: zitadel
       repoURL: https://charts.zitadel.com
-      targetRevision: 8.13.1
+      targetRevision: 10.5.0
       helm:
         releaseName: zitadel
-        valueFiles: 
+        valueFiles:
           - $values/03_applications/test/values/zitadel/zitadel-extra-manifests.yaml
           - $values/03_applications/test/values/zitadel/zitadel.yaml
-        valuesObject: {} 
+        valuesObject: {}
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
