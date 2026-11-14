@@ -1,0 +1,24 @@
+spec:
+  name: gatekeeper
+  autoSync: false
+  sources:
+    - repoURL: "https://github.com/Unique-AG/hello-azure-v2"
+      targetRevision: main
+      ref: values
+    - repoURL: uqhacrtest.azurecr.io/helm
+      chart: gatekeeper
+      targetRevision: "2026.44.3"
+      helm:
+        passCredentials: true
+        releaseName: gatekeeper
+        # Not using test/values/backend-services/_all.yaml: it targets the generic
+        # backend-service chart and the dedicated chart validates against values.schema.json.
+        valueFiles:
+          - $values/03_applications/defaults/backend-services/gatekeeper.yaml
+          - $values/03_applications/test/values/backend-services/gatekeeper.yaml
+        valuesObject: {}
+metadata:
+  annotations:
+    # After backend-service-scope-management (wave 5): the first-run data migration
+    # calls Scope Management for every company, user, group and access.
+    argocd.argoproj.io/sync-wave: "6"

@@ -1,0 +1,84 @@
+# Gatekeeper — Access Control 2.0 authorization service (dedicated OCI chart `helm/gatekeeper`).
+# Environment-agnostic defaults; mirrors the fleet's defaults/stable/gatekeeper.yaml.
+# Per-environment values (image, ADMIN_ROOT_* IDs, Key Vault, hostname) go in
+# <env>/values/backend-services/gatekeeper.yaml. See 03_applications/README.md → Gatekeeper.
+
+# ── Deployment ────────────────────────────────────────────────────────────────
+env:
+  AUDIT_LOG_DIR: "/dev/stdout"
+  # report_only: every decision is evaluated and logged, access is always allowed.
+  # Do not switch to enforce here; see README → "Moving to enforce".
+  GATEKEEPER_RUNNING_MODE: "report_only"
+  MAX_HEAP_MB: "600"
+  # ADMIN_ROOT_COMPANY_ID and ADMIN_ROOT_USER_ID are mandatory per environment.
+  # Intentionally not defaulted: the chart fails rendering when they are missing.
+
+replicaCount: 1 # chart default is 2; raise for production-grade setups
+
+nodeSelector:
+  scalability: steady
+  lifecycle: persistent
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 700Mi
+  limits:
+    cpu: 1500m
+    memory: 800Mi
+
+probes:
+  readiness:
+    timeoutSeconds: 10
+    failureThreshold: 10
+
+# ── HTTPRoute ─────────────────────────────────────────────────────────────────
+# pathPrefix /gatekeeper is the chart default.
+routes:
+  gateway:
+    name: kong
+    namespace: unique
+
+# ── InternalServices ──────────────────────────────────────────────────────────
+# Hello Azure runs scope-management and chat on the generic backend-service chart
+# (service port 80), not the fleet's dedicated charts (8094 / 8093).
+internalServices:
+  dependencies:
+    scopeManagement:
+      name: backend-service-scope-management
+      namespace: unique
+      servicePort: 80
+    chat:
+      name: backend-service-chat
+      namespace: unique
+      servicePort: 80
+
+# ── PostgreSQL ────────────────────────────────────────────────────────────────
+postgresql:
+  connection:
+    sslMode: verify # matches PG_DATABASE_SSL_MODE used by the other services
+
+# ── RabbitMQ ──────────────────────────────────────────────────────────────────
+# Same credentials secret the other backend services read (created by the RabbitMQ Cluster Operator).
+rabbitmq:
+  connection:
+    host:
+      fromSecret:
+        name: rabbitmqcluster-chat-default-user
+        key: host
+    port:
+      fromSecret:
+        name: rabbitmqcluster-chat-default-user
+        key: port
+    username:
+      fromSecret:
+        name: rabbitmqcluster-chat-default-user
+        key: username
+    password:
+      fromSecret:
+        name: rabbitmqcluster-chat-default-user
+        key: password
+
+# ── NetworkPolicy ─────────────────────────────────────────────────────────────
+networkPolicy:
+  enabled: false # Hello Azure does not use Cilium network policies
