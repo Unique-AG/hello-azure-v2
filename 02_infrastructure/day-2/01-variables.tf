@@ -498,6 +498,10 @@ variable "postgresql_databases" {
       name            = "app-repository"
       prevent_destroy = false
     }
+    "gatekeeper" = {
+      name            = "gatekeeper"
+      prevent_destroy = false
+    }
   }
 }
 
@@ -1359,5 +1363,3 @@ variable "dns_zones" {
 
   default = {}
 }
-
-

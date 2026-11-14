@@ -1,0 +1,35 @@
+# Test overlay for Gatekeeper. Override order: after defaults/backend-services/gatekeeper.yaml.
+# Dedicated gatekeeper chart joins image.registry + image.repository (see monorepo charts/base _helpers.tpl).
+image:
+  registry: uqhacrtest.azurecr.io
+  repository: unique/gatekeeper
+  tag: "2026.44.3"
+  useDigest: false
+
+env:
+  # Root caller used by Gatekeeper's data migration and internal calls; it gets every permission.
+  # The company is the Zitadel root org. The user ID is deliberately not a real Zitadel user,
+  # so no human account inherits root permissions (the fleet uses arbitrary IDs the same way).
+  ADMIN_ROOT_COMPANY_ID: "361772156100608158"
+  ADMIN_ROOT_USER_ID: "gatekeeper-admin-root"
+  CORS_ALLOWED_ORIGINS: https://test-hello.azure.unique.dev
+  UNIQUE_INSTALLATION_ID: test-hello.azure.unique.dev
+  ZITADEL_PROJECT_ID: "362295080381317263" # needs to be updated to the correct project id (Cluster IAM project -> e.g. unique)
+
+secretProvider:
+  useVMManagedIdentity: "true"
+  tenantId: aeade8c4-d4f7-4ae7-9149-4975fa3a7f91
+  userAssignedIdentityID: 1f10df87-9938-4fe9-87c4-b3170f6e9611 # azurekeyvaultsecretsprovider-aks-test (client ID)
+
+postgresql:
+  connection:
+    # database-url-gatekeeper is written by the azure-postgresql Terraform module
+    # (02_infrastructure/day-2, postgresql_databases["gatekeeper"]).
+    # connection.host is only needed when networkPolicy is enabled.
+    url:
+      fromSecretProvider:
+        vault: hakv2test
+        secretKey: database-url-gatekeeper
+
+routes:
+  hostname: api.test-hello.azure.unique.dev

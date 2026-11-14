@@ -1,5 +1,7 @@
 env:
   APP_REPOSITORY_URL: http://backend-service-app-repository.unique.svc
+  GATEKEEPER_API_URL: http://gatekeeper.unique.svc
+  GATEKEEPER_RUNNING_MODE: "report_only"
   LOG_LEVEL: info
   MAX_HEAP_MB: 200
 envVars:

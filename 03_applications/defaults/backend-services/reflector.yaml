@@ -1,5 +1,7 @@
 # ── Deployment ────────────────────────────────────────────────────────────────
 env:
+  GATEKEEPER_API_URL: http://gatekeeper.unique.svc
+  GATEKEEPER_RUNNING_MODE: "report_only"
   MAX_HEAP_MB: 384
   HTML_STORE_TTL_MS: "1500"
   HTML_STORE_MAX_SLOTS: "150"

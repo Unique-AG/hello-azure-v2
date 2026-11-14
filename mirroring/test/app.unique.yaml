@@ -20,9 +20,11 @@ images:
   - name: backend-service-speech:2026.44.3
   - name: backend-service-reflector:2026.44.3
   - name: unique/unique-api:2026.44.3
+  - name: unique/gatekeeper:2026.44.3
   - name: helm/reflector:2026.44.3
   - name: helm/assistants-agentic-table:2026.44.3
   - name: helm/unique-api:2026.44.3
+  - name: helm/gatekeeper:2026.44.3
   - name: helm/chat:2026.44.3
   - name: unique/sbx-gateway:2026.44.3
   - name: unique/sbx-storage:2026.44.3

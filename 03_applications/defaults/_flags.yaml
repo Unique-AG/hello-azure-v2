@@ -69,3 +69,6 @@ env:
   FEATURE_FLAG_GENERATED_FILE_HALLUCINATION_CHECK_UN_22029: "false"
   FEATURE_FLAG_INTERRUPTED_TURN_ALERT_UN_24137: "false"
   FEATURE_FLAG_USE_OPENAI_V1_13819: "true"
+  # Access Control 2.0 UI (Gatekeeper). Keep off until Gatekeeper has run in report_only and product enables them.
+  FEATURE_FLAG_NEW_ACCESS_CONTROL_UI_UN_11268: "false"
+  FEATURE_FLAG_ENABLE_GATEKEEPER_PERMISSIONS_UN_15116: "false"

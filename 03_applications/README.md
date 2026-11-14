@@ -41,6 +41,62 @@ Alternatively, in this repository, you can simply run the `[test][bootstrap Argo
      - `kubectl get pods -n unique -l app.kubernetes.io/name=backend-service-chat`
    - Quick API reachability (no auth): `curl -sI https://api.test-hello.azure.unique.dev/chat` (may return 401/403 without a token).
 
+## Gatekeeper (Access Control 2.0)
+
+Gatekeeper is the authorization service behind Access Control 2.0. The backend services ask it whether a user may perform an action. It runs from the dedicated `helm/gatekeeper` OCI chart (mirrored into the
+environment ACR) as the `gatekeeper` Argo CD application, with its own PostgreSQL database (`database-url-gatekeeper` in the sensitive Key Vault, created by `02_infrastructure/day-2`).
+
+Background for operators: the PUBDOC pages *Gatekeeper Service Architecture* and *Access Management for Admins*.
+
+| File | Purpose |
+| --- | --- |
+| `defaults/backend-services/gatekeeper.yaml` | Environment-agnostic defaults: `report_only`, resources, RabbitMQ, Scope Management / Chat dependencies |
+| `<env>/values/backend-services/gatekeeper.yaml` | Image, `ADMIN_ROOT_COMPANY_ID` / `ADMIN_ROOT_USER_ID`, Key Vault, hostname |
+| `<env>/apps/chat/gatekeeper.yaml` | Argo CD application (sync wave 6, after Scope Management) |
+| `defaults/backend-services/*.yaml` | Consumers: `GATEKEEPER_API_URL` + `GATEKEEPER_RUNNING_MODE` |
+| `<env>/values/web-apps/_all.yaml` | `GATEKEEPER_BACKEND_API_URL` for the admin Access Management UI |
+
+### Running modes
+
+Gatekeeper and every consumer run in **`report_only`**: each decision is evaluated and logged, but access is always allowed. Users see no change. `disabled` (the default when the variable is unset) skips the check. `enforce` denies what the policies deny.
+
+Always set `GATEKEEPER_API_URL` together with a non-`disabled` mode. While the URL is set, Zitadel role changes are synced into Gatekeeper even in `disabled` mode, which keeps policies current for a later switch.
+
+### Sync order
+
+The applications are `autoSync: false`. Sync them in this order:
+
+1. `backend-service-scope-management` is **Healthy**.
+2. Sync `gatekeeper`. Its pre-sync hook Job runs `prisma migrate deploy` and then the one-time data
+   migration, which calls Scope Management for every company, user, group and access. Allow **at least
+   20 minutes** on the first sync and do not interrupt it.
+3. Sync the consumers (`backend-service-*`, `reflector`) and `web-app-admin`. Reloader restarts pods on
+   ConfigMap changes; otherwise run `kubectl -n unique rollout restart deployment/<name>`.
+
+### Health checks
+
+```bash
+kubectl -n unique get pods -l app.kubernetes.io/name=gatekeeper            # Ready
+kubectl -n unique get jobs | grep gatekeeper                               # migration Job completed
+curl -s https://api.<your-api-host>/gatekeeper/probe                       # 200 + version
+kubectl -n unique logs deploy/backend-service-chat | grep -i gatekeeper    # report_only decisions, no connection errors
+```
+
+Change a user's role in Zitadel and check that `updateUserRolesFromZitadel` appears in the Gatekeeper logs
+(scope-management forwards the Zitadel event).
+
+### Moving to `enforce` (later, separate change)
+
+1. Run in `report_only` long enough to review the logged deny decisions, and fix the policies they reveal.
+2. Switch **all** consumers and Gatekeeper to `enforce` in one change. Use `GATEKEEPER_ENFORCE_COMPANIES`
+   (comma-separated company IDs) on the consumers to roll out company by company.
+3. **Never** set scope-management to `enforce` before Gatekeeper's data migration has completed. Gatekeeper's
+   migration calls scope-management, which would then call Gatekeeper and deny: a circular deadlock.
+4. The admin UI flags `FEATURE_FLAG_NEW_ACCESS_CONTROL_UI_UN_11268` and
+   `FEATURE_FLAG_ENABLE_GATEKEEPER_PERMISSIONS_UN_15116` (`defaults/_flags.yaml`) stay `"false"` until then.
+
+To roll back, set `GATEKEEPER_RUNNING_MODE: "disabled"` on the consumers; also remove `GATEKEEPER_API_URL` to disconnect them from Gatekeeper completely.
+
 ## Troubleshooting
 
 ### "no active client not found" when opening the chat app
@@ -49,7 +105,7 @@ This error appears when the chat web app tries to restore the session (silent si
 
 **Steps to fix:**
 
-1. **Open Zitadel Console (test)**  
+1. **Open Zitadel Console (test)**
    Go to **https://id.test-hello.azure.unique.dev** and sign in with the Zitadel admin user (e.g. the FirstInstance user from your Zitadel config).
 
 2. **Get the correct IDs**
