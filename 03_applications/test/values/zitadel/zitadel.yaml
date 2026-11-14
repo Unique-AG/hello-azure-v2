@@ -3,7 +3,7 @@ chownImage:
   tag: 3.19
 image:
   repository: uqhacrtest.azurecr.io/zitadel/zitadel
-  tag: v4.20.0
+  tag: v4.19.2
 nodeSelector:
   scalability: steady
   lifecycle: persistent
@@ -11,6 +11,8 @@ ingress:
   enabled: false
 securityContext:
   allowPrivilegeEscalation: false
+login:
+  enabled: false
 env:
   - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
     value: z1t4d3l
