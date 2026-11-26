@@ -1,7 +1,7 @@
 image:
   registry: uqhacrtest.azurecr.io
   repository: ai-service-assistants-core
-  tag: "2026.44.3"
+  tag: "2026.48.1"
   useDigest: false
 
 env:
